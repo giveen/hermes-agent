@@ -1004,6 +1004,34 @@ def _resolve_endpoint_context_length(
             return context_length
     return None
 
+    # Fallback: try llama.cpp /v1/props or /props when /v1/models fails.
+    # Many servers (llama-cpp-python, custom proxies) serve chat completions
+    # but don't expose /v1/models.  The /props endpoint returns the actual
+    # runtime n_ctx allocation.
+    if not matched and base_url:
+        normalized = _normalize_base_url(base_url)
+        if normalized:
+            base = normalized.rstrip("/").replace("/v1", "")
+            _verify = _resolve_requests_verify()
+            headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
+            for props_url in (base + "/v1/props", base + "/props"):
+                try:
+                    resp = requests.get(props_url, headers=headers, timeout=5, verify=_verify)
+                    if resp.ok:
+                        props = resp.json()
+                        if not isinstance(props, dict):
+                            continue
+                        gen_settings = props.get("default_generation_settings", {})
+                        n_ctx = gen_settings.get("n_ctx") if isinstance(gen_settings, dict) else None
+                        if isinstance(n_ctx, int) and n_ctx > 0:
+                            logger.debug(
+                                "Probed runtime context %s via %s",
+                                f"{n_ctx:,}", props_url,
+                            )
+                            return n_ctx
+                except requests.RequestException:
+                    continue
+
 
 def _resolve_model_retrieve_context_length(
     model: str,
