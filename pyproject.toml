@@ -150,6 +150,7 @@ dependencies = [
   "tree-sitter-c>=0.24.2,<0.25",
   "tree-sitter-cpp>=0.23.4,<0.24",
   "fastembed>=0.7.0,<0.8",
+  "pymupdf>=1.26.0,<1.27",
 ]
 
 [project.optional-dependencies]

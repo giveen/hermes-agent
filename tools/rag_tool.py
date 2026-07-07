@@ -492,11 +492,132 @@ def rag_list_sources() -> str:
         conn.close()
 
 
-def rag_remove_source(file_path: str) -> str:
-    """Remove an ingested source and its chunks from the store.
+def rag_ingest_pdf(
+    path: str,
+    ocr: bool = True,
+    dpi: int = 300,
+    chunk_size: int = _DEFAULT_CHUNK_SIZE,
+    chunk_overlap: int = _DEFAULT_CHUNK_OVERLAP,
+) -> str:
+    """Extract text from a PDF and ingest into the RAG store.
+
+    Uses PyMuPDF for text extraction. When ``ocr=True`` and a page has
+    sparse text (likely scanned), renders the page as an image and OCRs
+    it via Tesseract. The extracted text is chunked and embedded just
+    like any other ingested document.
 
     Args:
-        file_path: File path of the source to remove (must match exactly).
+        path: Path to the PDF file.
+        ocr: When True, OCR pages with sparse text (requires tesseract).
+        dpi: DPI for page rendering when OCR is needed (higher = better OCR).
+        chunk_size: Target chunk size in characters (default: 512).
+        chunk_overlap: Overlap between chunks (default: 64).
+
+    Returns:
+        JSON string with ingestion results.
+    """
+    pdf_path = Path(path)
+    if not pdf_path.exists():
+        return json.dumps({"success": False, "error": f"File not found: {path}"})
+    if pdf_path.suffix.lower() != ".pdf":
+        return json.dumps({"success": False, "error": f"Not a PDF: {path}"})
+
+    ocr_available = False
+    if ocr:
+        try:
+            import pytesseract  # noqa: F401
+            ocr_available = True
+        except ImportError:
+            logger.warning("pytesseract not installed — OCR disabled for this run")
+
+    try:
+        import fitz  # PyMuPDF
+    except ImportError:
+        return json.dumps({
+            "success": False,
+            "error": "PyMuPDF not installed. Run: pip install pymupdf",
+        })
+
+    try:
+        doc = fitz.open(path)
+    except Exception as exc:
+        return json.dumps({"success": False, "error": f"Failed to open PDF: {exc}"})
+
+    pages_text: List[str] = []
+    ocr_pages = 0
+    text_pages = 0
+    errors = 0
+    total_chars = 0
+
+    for page_num in range(len(doc)):
+        try:
+            page = doc[page_num]
+            # Extract text via PyMuPDF
+            text = page.get_text().strip()
+
+            # If text is sparse and OCR is available, render + OCR
+            if len(text) < 50 and ocr_available:
+                pix = page.get_pixmap(dpi=dpi)
+                img_bytes = pix.tobytes("png")
+                import pytesseract
+                ocr_text = pytesseract.image_to_string(img_bytes).strip()
+                if ocr_text:
+                    pages_text.append(ocr_text)
+                    ocr_pages += 1
+                    total_chars += len(ocr_text)
+                else:
+                    pages_text.append(f"[Page {page_num + 1} — no text extracted]")
+            elif text:
+                pages_text.append(text)
+                text_pages += 1
+                total_chars += len(text)
+            else:
+                pages_text.append(f"[Page {page_num + 1} — empty]")
+        except Exception as exc:
+            logger.warning("Page %d extraction failed: %s", page_num + 1, exc)
+            pages_text.append(f"[Page {page_num + 1} — error: {exc}]")
+            errors += 1
+
+    doc.close()
+
+    if not pages_text:
+        return json.dumps({
+            "success": False,
+            "error": "No text could be extracted from the PDF",
+        })
+
+    combined = "\n\n".join(pages_text)
+
+    # Write to a temp file and ingest via the normal RAG pipeline
+    tmp_dir = _get_db_path().parent / "_tmp"
+    tmp_dir.mkdir(parents=True, exist_ok=True)
+    tmp_file = tmp_dir / f"{pdf_path.stem}_extracted.txt"
+    tmp_file.write_text(combined, encoding="utf-8")
+
+    # Ingest the temp file
+    result = ingest_file(tmp_file, chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+
+    # Clean up temp file
+    try:
+        tmp_file.unlink()
+    except OSError:
+        pass
+
+    return json.dumps({
+        "success": result.get("status") == "ingested",
+        "file": str(pdf_path),
+        "pages": len(doc) if doc else len(pages_text),
+        "text_pages": text_pages,
+        "ocr_pages": ocr_pages,
+        "error_pages": errors,
+        "total_chars": total_chars,
+        "ingest_result": result,
+    }, indent=2, ensure_ascii=False)
+def rag_remove_source(file_path: str) -> str:
+    """Remove an ingested source and its chunks from the RAG store.
+
+    Args:
+        file_path: File path of the source to remove.
 
     Returns:
         JSON string with removal result.
@@ -606,6 +727,43 @@ RAG_REMOVE_SOURCE_SCHEMA = {
     },
 }
 
+RAG_INGEST_PDF_SCHEMA = {
+    "name": "rag_ingest_pdf",
+    "description": (
+        "Extract text from a PDF and ingest into the RAG store. "
+        "Uses PyMuPDF for text extraction. When a page has very little "
+        "text (likely scanned), renders it as an image and OCRs via "
+        "Tesseract. The extracted text is chunked, embedded with "
+        "FastEmbed, and stored for semantic search."
+    ),
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "path": {
+                "type": "string",
+                "description": "Path to the PDF file.",
+            },
+            "ocr": {
+                "type": "boolean",
+                "description": "OCR scanned pages via Tesseract (default: True).",
+            },
+            "dpi": {
+                "type": "integer",
+                "description": "DPI for page rendering when OCR is needed (default: 300).",
+            },
+            "chunk_size": {
+                "type": "integer",
+                "description": "Target chunk size in characters (default: 512).",
+            },
+            "chunk_overlap": {
+                "type": "integer",
+                "description": "Overlap between chunks (default: 64).",
+            },
+        },
+        "required": ["path"],
+    },
+}
+
 
 def _check_reqs() -> bool:
     try:
@@ -654,6 +812,26 @@ registry.register(
     handler=_handle_query,
     check_fn=_check_reqs,
     emoji="🔍",
+)
+
+
+def _handle_ingest_pdf(args, **kw):
+    return rag_ingest_pdf(
+        path=args.get("path", ""),
+        ocr=args.get("ocr", True),
+        dpi=args.get("dpi", 300),
+        chunk_size=args.get("chunk_size", _DEFAULT_CHUNK_SIZE),
+        chunk_overlap=args.get("chunk_overlap", _DEFAULT_CHUNK_OVERLAP),
+    )
+
+
+registry.register(
+    name="rag_ingest_pdf",
+    toolset="rag",
+    schema=RAG_INGEST_PDF_SCHEMA,
+    handler=_handle_ingest_pdf,
+    check_fn=_check_reqs,
+    emoji="📄",
 )
 registry.register(
     name="rag_list_sources",

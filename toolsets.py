@@ -235,9 +235,7 @@ TOOLSETS = {
         "includes": []
     },
 
-    "rag": {
-        "description": "RAG (Retrieval-Augmented Generation) — ingest documents and query semantically via FastEmbed",
-        "tools": ["rag_ingest", "rag_query", "rag_list_sources", "rag_remove_source"],
+        "tools": ["rag_ingest", "rag_ingest_pdf", "rag_query", "rag_list_sources", "rag_remove_source"],
         "includes": []
     },
 
