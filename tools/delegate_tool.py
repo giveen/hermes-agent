@@ -2346,6 +2346,9 @@ def delegate_task(
     max_iterations: Optional[int] = None,
     role: Optional[str] = None,
     background: Optional[bool] = None,
+    model: Optional[str] = None,
+    provider: Optional[str] = None,
+    base_url: Optional[str] = None,
     parent_agent=None,
 ) -> str:
     """
@@ -2359,6 +2362,10 @@ def delegate_task(
     'leaf' (default) cannot; 'orchestrator' retains the delegation
     toolset and can spawn its own workers, bounded by
     delegation.max_spawn_depth.  Per-task role beats the top-level one.
+
+    Per-call model/provider/base_url override the parent's model and
+    delegation config for all subagents in this call. Per-task values
+    in the 'tasks' array beat the top-level ones.
 
     Returns JSON with results array, one entry per task.
     """
@@ -2427,6 +2434,16 @@ def delegate_task(
     except ValueError as exc:
         return tool_error(str(exc))
 
+    # Layer per-call model/provider/base_url overrides on top of config-level creds.
+    # Resolution priority: per-call arg > delegation config > parent inheritance.
+    # The dict values feed into _build_child_agent as override_* kwargs.
+    # Per-task overrides (inside tasks[]) are applied per-child in the loop below.
+    call_model = model or creds.get("model")
+    call_provider = provider or creds.get("provider")
+    call_base_url = base_url or creds.get("base_url")
+    call_api_key = creds.get("api_key")     # from delegation.api_key in config
+    call_api_mode = creds.get("api_mode")   # from delegation.api_mode in config
+
     # Normalize to task list
     max_children = _get_max_concurrent_children()
     recovered_tasks, tasks_error = _recover_tasks_from_json_string(tasks)
@@ -2485,6 +2502,11 @@ def delegate_task(
             # Per-task role beats top-level; normalise again so unknown
             # per-task values warn and degrade to leaf uniformly.
             effective_role = _normalize_role(t.get("role") or top_role)
+            # Per-task model/provider/base_url beat top-level call args, which
+            # beat delegation config, which fall back to parent inheritance.
+            task_model = t.get("model") or call_model
+            task_provider = t.get("provider") or call_provider
+            task_base_url = t.get("base_url") or call_base_url
             child = _build_child_agent(
                 task_index=i,
                 goal=t["goal"],
@@ -2492,14 +2514,14 @@ def delegate_task(
                 # Subagents always inherit the parent's toolsets; the model
                 # cannot choose or narrow them (no model-facing toolsets arg).
                 toolsets=None,
-                model=creds["model"],
+                model=task_model,
                 max_iterations=effective_max_iter,
                 task_count=n_tasks,
                 parent_agent=parent_agent,
-                override_provider=creds["provider"],
-                override_base_url=creds["base_url"],
-                override_api_key=creds["api_key"],
-                override_api_mode=creds["api_mode"],
+                override_provider=task_provider,
+                override_base_url=task_base_url,
+                override_api_key=call_api_key,
+                override_api_mode=call_api_mode,
                 override_acp_command=creds.get("command"),
                 override_acp_args=creds.get("args"),
                 role=effective_role,
@@ -3201,6 +3223,18 @@ def _build_top_level_description() -> str:
         "durable: if the parent session is closed (/new) or the process exits "
         "before a subagent finishes, that subagent's work is discarded, and "
         "/stop cancels every running background subagent.\n\n"
+        "MODEL ROUTING:\n"
+        "- Pass 'model' (e.g. \"google/gemini-3-flash-preview\"), 'provider', "
+        "or 'base_url' to route ALL subagents in this call to a different "
+        "model/backend. Use a cheaper/faster model for simple research tasks "
+        "to save cost and latency.\n"
+        "- In batch mode ('tasks' array), each task can also set its own "
+        "'model'/'provider'/'base_url' to use different models per parallel "
+        "worker — per-task values beat the top-level ones.\n"
+        "- When unset, subagents inherit from delegation config, then the "
+        "parent agent's model/provider.\n"
+        "- Leaf subagents CANNOT call delegate_task regardless of model.\n"
+        "\n"
         "IMPORTANT:\n"
         "- Subagents have NO memory of your conversation. Pass all relevant "
         "info (file paths, error messages, constraints) via the 'context' field.\n"
@@ -3324,19 +3358,11 @@ DELEGATE_TASK_SCHEMA = {
         "properties": {
             "goal": {
                 "type": "string",
-                "description": (
-                    "What the subagent should accomplish. Be specific and "
-                    "self-contained -- the subagent knows nothing about your "
-                    "conversation history."
-                ),
+                "description": "What the subagent should accomplish. Be specific and self-contained -- the subagent knows nothing about your conversation history.",
             },
             "context": {
                 "type": "string",
-                "description": (
-                    "Background information the subagent needs: file paths, "
-                    "error messages, project structure, constraints. The more "
-                    "specific you are, the better the subagent performs."
-                ),
+                "description": "Background information the subagent needs: file paths, error messages, project structure, constraints.",
             },
             "tasks": {
                 "type": "array",
@@ -3344,39 +3370,36 @@ DELEGATE_TASK_SCHEMA = {
                     "type": "object",
                     "properties": {
                         "goal": {"type": "string", "description": "Task goal"},
-                        "context": {
-                            "type": "string",
-                            "description": "Task-specific context",
-                        },
-                        "role": {
-                            "type": "string",
-                            "enum": ["leaf", "orchestrator"],
-                            "description": "Per-task role override. See top-level 'role' for semantics.",
-                        },
+                        "context": {"type": "string", "description": "Task-specific context"},
+                        "role": {"type": "string", "enum": ["leaf", "orchestrator"], "description": "Per-task role override."},
+                        "model": {"type": "string", "description": "Optional model override for this specific task."},
+                        "provider": {"type": "string", "description": "Optional provider override for this specific task."},
+                        "base_url": {"type": "string", "description": "Optional base URL override for this specific task."},
                     },
                     "required": ["goal"],
                 },
-                # No maxItems — the runtime limit is configurable via
-                # delegation.max_concurrent_children (default 3) and
-                # enforced with a clear error in delegate_task().
-                "description": "(rebuilt at get_definitions() time)",
+                "description": "Array of parallel tasks (rebuilt at runtime with current concurrency limit).",
             },
             "role": {
                 "type": "string",
                 "enum": ["leaf", "orchestrator"],
-                "description": "(rebuilt at get_definitions() time)",
+                "description": "Subagent role: leaf (default, cannot delegate further) or orchestrator (can spawn its own workers).",
             },
             "background": {
                 "type": "boolean",
-                "description": (
-                    "DEPRECATED / IGNORED. Single-task delegations always run "
-                    "in the background automatically — you do not need to (and "
-                    "cannot) opt in or out. The result re-enters the "
-                    "conversation as a new message when the subagent finishes; "
-                    "just continue working in the meantime. Setting this has no "
-                    "effect; the parameter remains only for backward "
-                    "compatibility."
-                ),
+                "description": "DEPRECATED / IGNORED. Single-task delegations always run in the background automatically.",
+            },
+            "model": {
+                "type": "string",
+                "description": "Optional model override for all subagents in this call (e.g. \"google/gemini-3-flash-preview\"). Use a cheaper/faster model for simple research or mechanical subtasks.",
+            },
+            "provider": {
+                "type": "string",
+                "description": "Optional provider override for all subagents (e.g. \"openrouter\"). Falls back to delegation.provider in config, then the parent's provider.",
+            },
+            "base_url": {
+                "type": "string",
+                "description": "Optional OpenAI-compatible base URL for subagent inference. Routes subagents to a local vLLM instance or cheaper API proxy.",
             },
         },
         "required": [],
@@ -3437,6 +3460,9 @@ registry.register(
         max_iterations=args.get("max_iterations"),
         role=args.get("role"),
         background=_model_background_value(args, kw.get("parent_agent")),
+        model=args.get("model"),
+        provider=args.get("provider"),
+        base_url=args.get("base_url"),
         parent_agent=kw.get("parent_agent"),
     ),
     check_fn=check_delegate_requirements,
