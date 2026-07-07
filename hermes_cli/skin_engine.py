@@ -187,11 +187,10 @@ _BUILTIN_SKINS: Dict[str, Dict[str, Any]] = {
             # Empty = use hardcoded defaults in display.py
         },
         "branding": {
-            "agent_name": "Hermes Agent",
-            "welcome": "Welcome to Hermes Agent! Type your message or /help for commands.",
-            "goodbye": "Goodbye! ⚕",
-            "response_label": " ⚕ Hermes ",
-            "prompt_symbol": "❯",
+            "agent_name": "Herminator",
+            "welcome": "Welcome to Herminator! Type your message or /help for commands.",
+            "goodbye": "Hasta la vista, baby! 🤖",
+            "response_label": " 🤖 Herminator ",
             "help_header": "(^_^)? Available Commands",
         },
         "tool_prefix": "┊",
