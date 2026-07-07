@@ -248,7 +248,7 @@ def _get_backend() -> str:
         except Exception as exc:  # noqa: BLE001 — a broken provider is skipped
             logger.debug("web provider %r.is_available() raised: %s", provider.name, exc)
 
-    return "crawl4ai"  # default — always available (local, no API keys)
+    return "ddgs"  # default — free search, no API keys (part of pip install)
 
 
 def _get_search_backend() -> str:
