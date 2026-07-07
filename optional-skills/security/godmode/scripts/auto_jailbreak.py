@@ -49,9 +49,9 @@ import inspect as _inspect
 _caller_globals = _inspect.stack()[0][0].f_globals if len(_inspect.stack()) > 0 else globals()
 
 if _parseltongue_path.exists():
-    exec(compile(open(_parseltongue_path).read(), str(_parseltongue_path), 'exec'), _caller_globals)
+    exec(compile(open(_parseltongue_path).read(), str(_parseltongue_path), 'exec'), _caller_globals)  # noqa: S102 — intentional, dynamic script loading
 if _race_path.exists():
-    exec(compile(open(_race_path).read(), str(_race_path), 'exec'), _caller_globals)
+    exec(compile(open(_race_path).read(), str(_race_path), 'exec'), _caller_globals)  # noqa: S102 — intentional, dynamic script loading
 
 # ═══════════════════════════════════════════════════════════════════
 # Hermes config paths

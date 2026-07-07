@@ -631,7 +631,7 @@ def rollback(backup_id: Optional[str] = None) -> Tuple[bool, str, Optional[Path]
                 tf.extractall(str(skills), filter="data")  # type: ignore[call-arg]
             except TypeError:
                 # Python < 3.12 — no filter kwarg
-                tf.extractall(str(skills))
+                tf.extractall(str(skills))  # noqa: S202 — pre-check at lines 624-629 rejects unsafe paths
     except (OSError, tarfile.TarError) as e:
         # Best-effort recover: move staged contents back
         for orig, dest in moved:

@@ -401,7 +401,7 @@ def fast_safe_load(stream: Any) -> Any:
     back to PyYAML's pure-Python ``SafeLoader`` when ``CSafeLoader`` isn't
     available, so behavior is identical everywhere — only the speed differs.
     """
-    return yaml.load(stream, Loader=_get_fast_yaml_loader())
+    return yaml.load(stream, Loader=_get_fast_yaml_loader())  # noqa: S506 — Loader is CSafeLoader|SafeLoader
 
 
 # ─── Environment Variable Helpers ─────────────────────────────────────────────

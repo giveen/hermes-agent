@@ -111,7 +111,7 @@ def yaml_load(content: str):
         loader = getattr(yaml, "CSafeLoader", None) or yaml.SafeLoader
 
         def _load(value: str):
-            return yaml.load(value, Loader=loader)
+            return yaml.load(value, Loader=loader)  # noqa: S506 — loader is CSafeLoader|SafeLoader, set at line 111
 
         _yaml_load_fn = _load
     return _yaml_load_fn(content)

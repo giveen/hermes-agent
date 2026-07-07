@@ -42,7 +42,7 @@ def _load_production_patch_helper():
     )
     helper_source = ast.get_source_segment(source, helper_node)
     namespace = {"time": time, "logger": logging.getLogger("test.cli")}
-    exec(helper_source, namespace)
+    exec(helper_source, namespace)  # noqa: S102 — test-only, AST-extracted helper registration
     return namespace["_apply_bracketed_paste_timeout_patch"]
 
 

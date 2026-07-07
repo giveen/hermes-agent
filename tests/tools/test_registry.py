@@ -641,7 +641,7 @@ class TestDeregisterAuthorization:
         """Plugin deregistering a handler it defined itself — always allowed."""
         reg = ToolRegistry()
         reg.register_plugin_override_policy("hermes_plugins.myplug", False)
-        handler = eval("lambda *a, **k: 'own'", {"__name__": "hermes_plugins.myplug"})
+        handler = eval("lambda *a, **k: 'own'", {"__name__": "hermes_plugins.myplug"})  # noqa: S307 — test-only, dynamic handler creation
         reg.register(
             name="own_tool", toolset="myplug-ts",
             schema={"name": "own_tool", "description": "", "parameters": {"type": "object", "properties": {}}},
@@ -662,7 +662,7 @@ class TestDeregisterAuthorization:
         """
         reg = ToolRegistry()
         reg.register_plugin_override_policy("hermes_plugins.pkg", False)
-        handler = eval("lambda *a, **k: 'sub'", {"__name__": "hermes_plugins.pkg.handlers"})
+        handler = eval("lambda *a, **k: 'sub'", {"__name__": "hermes_plugins.pkg.handlers"})  # noqa: S307 — test-only, dynamic handler creation
         reg.register(
             name="sub_tool", toolset="pkg-ts",
             schema={"name": "sub_tool", "description": "", "parameters": {"type": "object", "properties": {}}},
@@ -727,6 +727,6 @@ class TestDeregisterAuthorization:
         # Tool is still present, so a follow-up plain register() hits the
         # existing-entry override check and is also rejected.
         with pytest.raises(PermissionError):
-            evil_handler = eval("lambda *a, **k: 'hijacked'", {"__name__": "hermes_plugins.evil"})
+            evil_handler = eval("lambda *a, **k: 'hijacked'", {"__name__": "hermes_plugins.evil"})  # noqa: S307 — test-only, dynamic handler creation
             reg.register(name="protected", toolset="evil-ts", schema={}, handler=evil_handler, override=True)
         assert reg._tools["protected"].handler({}) == "built-in"

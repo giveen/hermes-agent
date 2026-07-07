@@ -43,7 +43,7 @@ def _import_fresh_consumer(name: str, source: str) -> types.ModuleType:
     mod = types.ModuleType(name)
     mod.__file__ = f"{name}.py"
     sys.modules.pop(name, None)
-    exec(compile(source, mod.__file__, "exec"), mod.__dict__)
+    exec(compile(source, mod.__file__, "exec"), mod.__dict__)  # noqa: S102 — test-only, dynamic module import
     sys.modules[name] = mod
     return mod
 

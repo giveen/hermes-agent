@@ -39,7 +39,7 @@ def _load_ensure_ssl():
                 return
     """)
     mod = ModuleType("_ssl_helper")
-    exec(code, mod.__dict__)
+    exec(code, mod.__dict__)  # noqa: S102 — test-only, dynamic module creation
     return mod._ensure_ssl_certs
 
 
