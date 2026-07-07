@@ -242,7 +242,8 @@ DEFAULT_CONTEXT_LENGTHS = {
     "gemma4": 256000,  # Ollama-style naming (e.g. gemma4:31b-cloud)
     "gemma-4-31b": 256000,
     "gemma-3": 131072,
-    "gemma": 8192,  # fallback for older gemma models
+    "gemma-26b": 131072,  # Gemma 26B (llama.cpp users often set high ctx-size)
+    "gemma": 64000,  # fallback — bumped from 8192 to meet Hermes minimum
     # DeepSeek — V4 family ships with a 1M context window. The legacy
     # aliases ``deepseek-chat`` / ``deepseek-reasoner`` are server-side
     # mapped to the non-thinking / thinking modes of ``deepseek-v4-flash``
