@@ -993,6 +993,61 @@ def _resolve_endpoint_context_length(
     return None
 
 
+def _resolve_model_retrieve_context_length(
+    model: str,
+    base_url: str,
+    api_key: str = "",
+) -> Optional[int]:
+    """Probe the per-model endpoint ``/v1/models/{model}`` for context length.
+
+    Some OpenAI-compatible servers include ``context_length`` (or similar
+    keys) on the individual model detail endpoint even when the list
+    endpoint (``/v1/models``) omits it.  This is a best-effort probe:
+    servers that don't support the endpoint or don't include the field
+    return None and the caller falls through.
+    """
+    normalized = _normalize_base_url(base_url)
+    if not normalized:
+        return None
+
+    # Build candidate URLs (with and without /v1 prefix)
+    candidates = []
+    base = normalized.rstrip("/")
+    for suffix in ("/v1", ""):
+        prefix = base if base.endswith(suffix) else base + suffix
+        candidates.append(prefix.rstrip("/") + "/models/" + model)
+
+    headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
+    last_error: Optional[Exception] = None
+
+    for url in candidates:
+        try:
+            response = requests.get(
+                url, headers=headers, timeout=10, verify=_resolve_requests_verify(),
+            )
+            response.raise_for_status()
+            payload = response.json()
+            if not isinstance(payload, dict):
+                continue
+            ctx = _extract_context_length(payload)
+            if ctx is not None:
+                logger.debug(
+                    "Probed context length %s for model %r via %s",
+                    f"{ctx:,}", model, url,
+                )
+                return ctx
+        except requests.RequestException as exc:
+            last_error = exc
+            continue
+
+    if last_error:
+        logger.debug(
+            "Per-model context probe failed for %s at %s: %s",
+            model, normalized, last_error,
+        )
+    return None
+
+
 def _get_context_cache_path() -> Path:
     """Return path to the persistent context length cache file."""
     from hermes_constants import get_hermes_home
@@ -2071,17 +2126,35 @@ def get_model_context_length(
                 save_context_length(model, base_url, ctx)
             return ctx
 
-    # 2. Active endpoint metadata for truly custom/unknown endpoints.
+    # 2. Active endpoint metadata from /v1/models.
     # Known providers (Copilot, OpenAI, Anthropic, etc.) skip this — their
     # /models endpoint may report a provider-imposed limit (e.g. Copilot
     # returns 128k) instead of the model's full context (400k).  models.dev
     # has the correct per-provider values and is checked at step 5+.
+    # Unknown/custom endpoints are probed via the list endpoint (2a) and
+    # the per-model endpoint (2b), which catches servers that include
+    # context_length on the individual model detail endpoint.
     if _is_custom_endpoint(base_url) and not _is_known_provider_base_url(base_url):
+        # 2a. List models endpoint — match model in response
         context_length = _resolve_endpoint_context_length(model, base_url, api_key=api_key)
         if context_length is not None:
             return context_length
+
+        # 2b. Per-model endpoint — some (non-standard) servers include
+        # context info on the individual model detail endpoint even when
+        # the list endpoint omits it.  Only run for truly unknown endpoints;
+        # known providers (OpenAI, Codex, Anthropic, etc.) have their own
+        # higher-fidelity probe paths at step 4+.
         if not _is_known_provider_base_url(base_url):
-            # 2b. Ollama native /api/show — any URL might be an Ollama server
+            ctx = _resolve_model_retrieve_context_length(model, base_url, api_key=api_key)
+            if ctx is not None:
+                return ctx
+
+        # 2c. Ollama / local probes — only for truly unknown endpoints.
+        # Known providers (OpenAI, Copilot, Anthropic, etc.) skip these;
+        # their own probe paths at step 4+ handle them with higher fidelity.
+        if not _is_known_provider_base_url(base_url):
+            # Ollama native /api/show — any URL might be an Ollama server
             # (local, cloud, or custom hosting).  Non-Ollama servers return
             # 404/405 quickly.  Fall through on failure.
             ctx = _query_ollama_api_show(model, base_url, api_key=api_key)
@@ -2089,7 +2162,7 @@ def get_model_context_length(
                 if not _skip_persistent_context_cache(base_url, provider):
                     save_context_length(model, base_url, ctx)
                 return ctx
-            # 3. Try querying local server directly
+            # Try querying local server directly
             if is_local_endpoint(base_url):
                 local_ctx = _query_local_context_length(model, base_url, api_key=api_key)
                 if local_ctx and local_ctx > 0:
@@ -2102,7 +2175,7 @@ def get_model_context_length(
                 "in config.yaml to override.",
                 model, base_url, f"{DEFAULT_FALLBACK_CONTEXT:,}",
             )
-            # 3b. Before falling back to the hard 256K default, consult the
+            # Before falling back to the hard 256K default, consult the
             # hardcoded catalog as a last resort.  A proxied/custom Anthropic
             # gateway (e.g. corporate proxy) fails the Ollama/local probes
             # above, but the model name may still match an entry in

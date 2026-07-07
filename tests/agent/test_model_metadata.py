@@ -317,6 +317,8 @@ class TestCodexOAuthContextLength:
         import agent.model_metadata as mm
         mm._codex_oauth_context_cache = {}
         mm._codex_oauth_context_cache_time = 0.0
+        mm._endpoint_model_metadata_cache.clear()
+        mm._endpoint_model_metadata_cache_time.clear()
 
     def test_fallback_table_used_without_token(self):
         """With no access token, the hardcoded Codex fallback table wins
@@ -964,6 +966,10 @@ class TestGetModelContextLength:
         with (
             patch(
                 "agent.model_metadata._resolve_endpoint_context_length",
+                return_value=None,
+            ),
+            patch(
+                "agent.model_metadata._resolve_model_retrieve_context_length",
                 return_value=None,
             ),
             patch(
