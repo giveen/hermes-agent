@@ -1,0 +1,9 @@
+name: mnemosyne-memory
+version: "1.0.0"
+description: "Mnemosyne — zero-dependency SQLite memory provider. Semantic search, knowledge graph, scratchpad. No external services."
+author: Hermes Agent
+license: MIT
+type: memory
+memory_provider: true
+requires_env: []
+post_setup: hermes mnemosyne setup
