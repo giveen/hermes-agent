@@ -952,8 +952,23 @@ def fetch_endpoint_model_metadata(
                         gen_settings = props.get("default_generation_settings", {})
                         n_ctx = gen_settings.get("n_ctx")
                         model_alias = props.get("model_alias", "")
-                        if n_ctx and model_alias and model_alias in cache:
-                            cache[model_alias]["context_length"] = n_ctx
+                        if n_ctx and model_alias:
+                            if model_alias in cache:
+                                cache[model_alias]["context_length"] = n_ctx
+                            else:
+                                # model_alias doesn't match any /v1/models entry
+                                # (e.g. different casing or naming convention).
+                                # Add it directly so the per-model lookup can
+                                # find the real allocated context. (#local-ctx)
+                                cache[model_alias] = {
+                                    "context_length": n_ctx,
+                                    "name": model_alias,
+                                }
+                            # Also update the first llama.cpp model in the cache
+                            # as a fallback for model IDs that don't match the alias.
+                            for _mid, _entry in cache.items():
+                                if isinstance(_entry, dict) and _entry.get("context_length", 0) < n_ctx:
+                                    _entry["context_length"] = n_ctx
                 except Exception:
                     pass
 
