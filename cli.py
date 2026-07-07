@@ -9546,7 +9546,11 @@ class HermesCLI(CLIAgentSetupMixin, CLICommandsMixin):
         which would otherwise early-return before any credits showed.
         """
         if not self.agent:
-            if not self._print_nous_credits_block():
+            _prov = (getattr(self, "provider", None) or "").lower()
+            if _prov == "nous":
+                if not self._print_nous_credits_block():
+                    print("(._.) No active agent -- send a message first.")
+            else:
                 print("(._.) No active agent -- send a message first.")
             return
 
@@ -9554,7 +9558,11 @@ class HermesCLI(CLIAgentSetupMixin, CLICommandsMixin):
         calls = agent.session_api_calls
 
         if calls == 0:
-            if not self._print_nous_credits_block():
+            _prov = (getattr(agent, "provider", None) or "").lower()
+            if _prov == "nous":
+                if not self._print_nous_credits_block():
+                    print("(._.) No API calls made yet in this session.")
+            else:
                 print("(._.) No API calls made yet in this session.")
             return
 
@@ -9600,6 +9608,26 @@ class HermesCLI(CLIAgentSetupMixin, CLICommandsMixin):
         print(f"  Messages:         {msg_count}")
         print(f"  Compressions:     {compressions}")
 
+        # ── Estimated cost ──────────────────────────────────────────
+        try:
+            from agent.usage_pricing import CanonicalUsage, estimate_usage_cost
+            model_name = getattr(agent, "model", "") or ""
+            if model_name:
+                cost = estimate_usage_cost(
+                    model_name,
+                    CanonicalUsage(
+                        input_tokens=input_tokens,
+                        output_tokens=output_tokens,
+                        reasoning_tokens=reasoning_tokens,
+                    ),
+                    provider=getattr(agent, "provider", None),
+                    base_url=getattr(agent, "base_url", None),
+                )
+                if cost.status != "unknown" and cost.amount_usd is not None:
+                    print(f"  Estimated cost:            {cost.label:>10}")
+        except Exception:
+            pass
+
         # Account limits -- fetched off-thread with a hard timeout so slow
         # provider APIs don't hang the prompt.
         provider = getattr(agent, "provider", None) or getattr(self, "provider", None)
@@ -9623,9 +9651,10 @@ class HermesCLI(CLIAgentSetupMixin, CLICommandsMixin):
             for line in account_lines:
                 print(line)
 
-        # Nous credits magnitudes + monthly-grant gauge (agent-independent — also
-        # runs at the no-agent / no-calls early-returns above). See the helper.
-        self._print_nous_credits_block()
+        # Nous credits — only show when the active provider IS Nous
+        current_provider = (getattr(agent, "provider", None) or getattr(self, "provider", None) or "").lower()
+        if current_provider == "nous":
+            self._print_nous_credits_block()
 
         if self.verbose:
             logging.getLogger().setLevel(logging.DEBUG)

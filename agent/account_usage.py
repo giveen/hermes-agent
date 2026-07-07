@@ -675,6 +675,57 @@ def _fetch_openrouter_account_usage(base_url: Optional[str], api_key: Optional[s
     )
 
 
+
+def _fetch_deepseek_account_usage(base_url: Optional[str], api_key: Optional[str]) -> Optional[AccountUsageSnapshot]:
+    """Fetch DeepSeek account balance via their user/balance endpoint."""
+    runtime = resolve_runtime_provider(
+        requested="deepseek",
+        explicit_base_url=base_url,
+        explicit_api_key=api_key,
+    )
+    token = str(runtime.get("api_key", "") or "").strip()
+    if not token:
+        return None
+    normalized = str(runtime.get("base_url", "") or "").rstrip("/")
+    balance_url = f"{normalized}/user/balance"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/json",
+    }
+    try:
+        with httpx.Client(timeout=10.0) as client:
+            resp = client.get(balance_url, headers=headers)
+            resp.raise_for_status()
+            data = resp.json()
+    except Exception:
+        return None
+
+    is_available = data.get("is_available", False)
+    balance_infos = data.get("balance_infos") or []
+    details: list[str] = []
+    windows: list[AccountUsageWindow] = []
+
+    for b in balance_infos:
+        currency = str(b.get("currency", "USD"))
+        total = float(b.get("total_balance", 0))
+        granted = float(b.get("granted_balance", 0))
+        topped_up = float(b.get("topped_up_balance", 0))
+        if currency == "CNY":
+            details.append(f"Balance: ¥{total:.2f} (¥{topped_up:.2f} topped up, ¥{granted:.2f} granted)")
+        else:
+            details.append(f"Balance: ${total:.2f} (${topped_up:.2f} topped up, ${granted:.2f} granted)")
+
+    if not is_available and balance_infos:
+        details.append("⚠ Balance insufficient — API calls may be rejected.")
+
+    return AccountUsageSnapshot(
+        provider="deepseek",
+        source="balance_api",
+        fetched_at=_utc_now(),
+        windows=tuple(windows),
+        details=tuple(details),
+    )
+
 def fetch_account_usage(
     provider: Optional[str],
     *,
@@ -691,6 +742,8 @@ def fetch_account_usage(
             return _fetch_anthropic_account_usage()
         if normalized == "openrouter":
             return _fetch_openrouter_account_usage(base_url, api_key)
+        if normalized == "deepseek":
+            return _fetch_deepseek_account_usage(base_url, api_key)
     except Exception:
         return None
     return None
