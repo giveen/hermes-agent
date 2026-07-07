@@ -52,6 +52,8 @@ _HERMES_CORE_TOOLS = [
     "text_to_speech",
     # Planning & memory
     "todo", "memory",
+    # Scratchpad — shared workspace for parallel subagents
+    "scratchpad",
     # NOTE: the desktop Project tools (project_list/create/switch) are
     # deliberately NOT here. They only make sense where a GUI can follow the
     # move, so they live in the `project` toolset and are enabled solely by the
@@ -209,6 +211,11 @@ TOOLSETS = {
     "memory": {
         "description": "Persistent memory across sessions (personal notes + user profile)",
         "tools": ["memory"],
+        "includes": []
+    },
+    "scratchpad": {
+        "description": "Shared scratchpad for parallel subagent research — append-only, no overwrites",
+        "tools": ["scratchpad_create", "scratchpad_append", "scratchpad_read", "scratchpad_merge"],
         "includes": []
     },
 
