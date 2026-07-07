@@ -56,6 +56,8 @@ _HERMES_CORE_TOOLS = [
     "scratchpad",
     # Code structure analysis — tree-sitter powered, no LSP required
     "code",
+    # RAG — semantic document search via FastEmbed
+    "rag",
     # NOTE: the desktop Project tools (project_list/create/switch) are
     # deliberately NOT here. They only make sense where a GUI can follow the
     # move, so they live in the `project` toolset and are enabled solely by the
@@ -232,10 +234,10 @@ TOOLSETS = {
         "tools": ["code_structure", "code_symbol"],
         "includes": []
     },
-    
-    "session_search": {
-        "description": "Search and recall past conversations with summarization",
-        "tools": ["session_search"],
+
+    "rag": {
+        "description": "RAG (Retrieval-Augmented Generation) — ingest documents and query semantically via FastEmbed",
+        "tools": ["rag_ingest", "rag_query", "rag_list_sources", "rag_remove_source"],
         "includes": []
     },
 
