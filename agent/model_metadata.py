@@ -934,43 +934,39 @@ def fetch_endpoint_model_metadata(
                     entry["pricing"] = pricing
                 _add_model_aliases(cache, model_id, entry)
 
-            # If this is a llama.cpp server, query /props for actual allocated context
-            is_llamacpp = any(
-                m.get("owned_by") == "llamacpp"
-                for m in payload.get("data", []) if isinstance(m, dict)
-            )
-            if is_llamacpp:
-                try:
-                    # Try /v1/props first (current llama.cpp); fall back to /props for older builds
-                    base = candidate.rstrip("/").replace("/v1", "")
-                    _verify = _resolve_requests_verify()
-                    props_resp = requests.get(base + "/v1/props", headers=headers, timeout=5, verify=_verify)
-                    if not props_resp.ok:
-                        props_resp = requests.get(base + "/props", headers=headers, timeout=5, verify=_verify)
-                    if props_resp.ok:
-                        props = props_resp.json()
-                        gen_settings = props.get("default_generation_settings", {})
-                        n_ctx = gen_settings.get("n_ctx")
-                        model_alias = props.get("model_alias", "")
-                        if n_ctx and model_alias:
+            # Try /v1/props for runtime context — llama.cpp serves this endpoint
+            # with the actual allocated n_ctx (vs the model's native context window
+            # reported in /v1/models).  Non-llama.cpp servers return 404 quickly.
+            # The owned_by field is unreliable across versions, so probe regardless.
+            try:
+                base = candidate.rstrip("/").replace("/v1", "")
+                _verify = _resolve_requests_verify()
+                props_resp = requests.get(base + "/v1/props", headers=headers, timeout=5, verify=_verify)
+                if not props_resp.ok:
+                    props_resp = requests.get(base + "/props", headers=headers, timeout=5, verify=_verify)
+                if props_resp.ok:
+                    props = props_resp.json()
+                    gen_settings = props.get("default_generation_settings", {})
+                    n_ctx = gen_settings.get("n_ctx")
+                    model_alias = props.get("model_alias", "")
+                    if n_ctx:
+                        if model_alias:
                             if model_alias in cache:
                                 cache[model_alias]["context_length"] = n_ctx
                             else:
-                                # model_alias doesn't match any /v1/models entry
-                                # (e.g. different casing or naming convention).
-                                # Add it directly so the per-model lookup can
-                                # find the real allocated context. (#local-ctx)
                                 cache[model_alias] = {
                                     "context_length": n_ctx,
                                     "name": model_alias,
                                 }
-                            # Also update the first llama.cpp model in the cache
-                            # as a fallback for model IDs that don't match the alias.
-                            for _mid, _entry in cache.items():
-                                if isinstance(_entry, dict) and _entry.get("context_length", 0) < n_ctx:
-                                    _entry["context_length"] = n_ctx
-                except Exception:
-                    pass
+                        # Update any entry with a smaller context value.
+                        # Catches mismatched/missing aliases and models where
+                        # /v1/models reports the native window while /props
+                        # has the runtime allocation.
+                        for _mid, _entry in cache.items():
+                            if isinstance(_entry, dict) and _entry.get("context_length", 0) < n_ctx:
+                                _entry["context_length"] = n_ctx
+            except Exception:
+                pass
 
             _endpoint_model_metadata_cache[normalized] = cache
             _endpoint_model_metadata_cache_time[normalized] = time.time()
