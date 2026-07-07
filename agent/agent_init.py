@@ -1353,7 +1353,7 @@ def init_agent(
     agent._memory_manager = None
     if not skip_memory:
         try:
-            _mem_provider_name = mem_config.get("provider", "") if mem_config else ""
+            _mem_provider_name = mem_config.get("provider", "mnemosyne") if mem_config else "mnemosyne"
 
             if _mem_provider_name and _mem_provider_name.strip():
                 from agent.memory_manager import MemoryManager as _MemoryManager
