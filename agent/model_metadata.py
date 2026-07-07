@@ -994,7 +994,7 @@ def _resolve_endpoint_context_length(
             matched = next(iter(endpoint_metadata.values()))
         else:
             for key, entry in endpoint_metadata.items():
-                if model in key or key in model:
+                if model.lower() == key.lower() or model.lower() in key.lower() or key.lower() in model.lower():
                     matched = entry
                     break
     if matched:
