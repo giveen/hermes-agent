@@ -115,11 +115,11 @@ _EARLY_INTERFACE_CACHE: "list | None" = None
 
 def _config_default_interface_early() -> str:
     """Return the configured default interface ("cli"/"tui") via a minimal
-    YAML read. Best-effort: any error falls back to "cli" (legacy behavior)."""
+    YAML read. Best-effort: any error falls back to "tui" (new default)."""
     global _EARLY_INTERFACE_CACHE
     if _EARLY_INTERFACE_CACHE is not None:
         return _EARLY_INTERFACE_CACHE[0]
-    value = "cli"
+    value = "tui"
     try:
         home = os.environ.get("HERMES_HOME")
         if home:
@@ -136,10 +136,14 @@ def _config_default_interface_early() -> str:
             disp = raw.get("display", {})
             if isinstance(disp, dict):
                 iface = disp.get("interface")
-                if isinstance(iface, str) and iface.strip().lower() == "tui":
-                    value = "tui"
+                if isinstance(iface, str):
+                    iface_lower = iface.strip().lower()
+                    if iface_lower == "tui":
+                        value = "tui"
+                    elif iface_lower == "cli":
+                        value = "cli"
     except Exception:
-        value = "cli"  # best-effort — default to classic REPL on any error
+        value = "tui"  # best-effort — default to TUI on any error
     _EARLY_INTERFACE_CACHE = [value]
     return value
 
@@ -1999,8 +2003,8 @@ def _launch_tui(
     max_turns: Optional[int] = None,
     accept_hooks: bool = False,
 ):
-    """Replace current process with the TUI."""
-    tui_dir = PROJECT_ROOT / "ui-tui"
+    """Replace current process with the Textual TUI."""
+
 
     import tempfile
 
@@ -2020,7 +2024,6 @@ def _launch_tui(
     )
     env.setdefault("HERMES_PYTHON", sys.executable)
     env.setdefault("HERMES_CWD", os.getcwd())
-    env.setdefault("NODE_ENV", "development" if tui_dev else "production")
 
     wt_info = None
     if worktree:
@@ -2082,24 +2085,6 @@ def _launch_tui(
         env["HERMES_TUI_TOOL_PROGRESS"] = "off"
     if accept_hooks:
         env["HERMES_ACCEPT_HOOKS"] = "1"
-    # Guarantee a generous V8 heap for the TUI. Default node cap is ~1.5–4GB
-    # depending on version and can fatal-OOM on long sessions with large
-    # transcripts / reasoning blobs. We target 8GB on an unconstrained host,
-    # but V8 is NOT cgroup-aware: in a memory-limited Docker/k8s container a
-    # flat 8GB heap grows past the container limit and the cgroup OOM-killer
-    # SIGKILLs Node — running no JS handler, writing no breadcrumb, leaving the
-    # user with only a bare gateway `stdin EOF`. _resolve_tui_heap_mb() reads
-    # the real cgroup limit and sizes the cap below it so V8 GCs/exits
-    # gracefully (and the memory monitor's onCritical breadcrumb can fire)
-    # instead of being reaped silently. Token-level merge: respect any
-    # user-supplied --max-old-space-size (they may have set it higher).
-    # --expose-gc is *not* added here: Node rejects it in NODE_OPTIONS
-    # ("--expose-gc is not allowed in NODE_OPTIONS") and refuses to start.
-    # It is passed as a direct argv flag in _make_tui_argv() instead.
-    _tokens = env.get("NODE_OPTIONS", "").split()
-    if not any(t.startswith("--max-old-space-size=") for t in _tokens):
-        _tokens.append(f"--max-old-space-size={_resolve_tui_heap_mb()}")
-    env["NODE_OPTIONS"] = " ".join(_tokens)
     # HERMES_TUI_RESUME is an internal hand-off from the Python wrapper to the
     # Ink app.  Because we start from os.environ.copy(), an exported/stale value
     # in the user's shell would otherwise make a plain `hermes --tui` try to
@@ -2111,7 +2096,8 @@ def _launch_tui(
     if resume_session_id:
         env["HERMES_TUI_RESUME"] = resume_session_id
 
-    argv, cwd = _make_tui_argv(tui_dir, tui_dev)
+    argv = [sys.executable, "-m", "tui_textual"]
+    cwd = os.getcwd()
     code: Optional[int] = None
     try:
         try:
@@ -2187,7 +2173,6 @@ def _sync_bundled_skills_quietly() -> None:
     except Exception:
         pass
 
-
 def _resolve_use_tui(args) -> bool:
     """Decide whether to launch the TUI for a chat/bare invocation.
 
@@ -2195,7 +2180,7 @@ def _resolve_use_tui(args) -> bool:
       1. ``--cli`` flag         → always classic REPL
       2. ``--tui`` flag / ``HERMES_TUI=1`` → always TUI
       3. ``display.interface`` config value ("cli" | "tui")
-      4. default → classic REPL
+      4. default → TUI
 
     Explicit flags always win over config so muscle memory and scripts keep
     working regardless of the configured default.
@@ -2207,10 +2192,17 @@ def _resolve_use_tui(args) -> bool:
     try:
         from hermes_cli.config import load_config
 
-        iface = (load_config().get("display", {}) or {}).get("interface", "cli")
-        return isinstance(iface, str) and iface.strip().lower() == "tui"
+        cfg = load_config().get("display", {}) or {}
+        iface = cfg.get("interface", "tui")
+        if isinstance(iface, str):
+            iface_lower = iface.strip().lower()
+            if iface_lower == "tui":
+                return True
+            elif iface_lower == "cli":
+                return False
+        return True  # default to TUI
     except Exception:
-        return False
+        return True  # default to TUI on error
 
 
 def cmd_chat(args):

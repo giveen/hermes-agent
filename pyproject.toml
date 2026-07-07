@@ -137,6 +137,7 @@ dependencies = [
   # Hence the ``sys_platform == 'win32'`` marker: the dep (and its portalocker
   # / pywin32 tree) ships only where it's actually used.
   "concurrent-log-handler==0.9.29; sys_platform == 'win32'",
+  "textual==8.2.8",
 ]
 
 [project.optional-dependencies]
@@ -168,6 +169,10 @@ matrix = ["mautrix[encryption]==0.21.1", "aiosqlite==0.22.1", "asyncpg==0.31.0",
 # here to keep the dependency local to wecom_callback's threat model.
 wecom = ["defusedxml==0.7.1"]
 cli = ["simple-term-menu==1.6.6"]
+# Textual TUI — replaces the Node.js/Ink-based TUI.
+# Install with: pip install hermes-agent[tui] or hermes-agent[all]
+# Or just `pip install textual` before running `hermes --tui`.
+tui = ["textual==8.2.8"]
 tts-premium = ["elevenlabs==2.56.0"]
 voice = [
   # Local STT pulls in wheel-only transitive deps (ctranslate2, onnxruntime),
@@ -301,6 +306,7 @@ all = [
   "hermes-agent[acp]",
   "hermes-agent[google]",
   "hermes-agent[web]",
+  "hermes-agent[tui]",
   "hermes-agent[youtube]",
 ]
 
@@ -352,9 +358,8 @@ plugins = [
   "**/plugin.yml",
   "**/README.md",
 ]
-
 [tool.setuptools.packages.find]
-include = ["agent", "agent.*", "tools", "tools.*", "hermes_cli", "hermes_cli.*", "gateway", "gateway.*", "tui_gateway", "tui_gateway.*", "cron", "cron.*", "acp_adapter", "plugins", "plugins.*", "providers", "providers.*"]
+include = ["agent", "agent.*", "tools", "tools.*", "hermes_cli", "hermes_cli.*", "gateway", "gateway.*", "tui_gateway", "tui_gateway.*", "tui_textual", "tui_textual.*", "cron", "cron.*", "acp_adapter", "plugins", "plugins.*", "providers", "providers.*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
