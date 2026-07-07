@@ -635,6 +635,27 @@ def run_conversation(
             should_review_memory=_should_review_memory,
         )
 
+
+    # Incremental token estimation cache — messages grow monotonically
+    # between compressions, so we only count the delta instead of
+    # re-scanning the entire transcript every turn.
+    _tok_cache_total: int = 0
+    _tok_cache_count: int = 0
+
+    def _estimate_tokens(messages_list: list) -> int:
+        nonlocal _tok_cache_total, _tok_cache_count
+        n = len(messages_list)
+        if n >= _tok_cache_count:
+            new_msgs = messages_list[_tok_cache_count:]
+            if new_msgs:
+                _tok_cache_total += estimate_messages_tokens_rough(new_msgs)
+            _tok_cache_count = n
+            return _tok_cache_total
+        # Shrunk (compression) — full re-count
+        _tok_cache_total = estimate_messages_tokens_rough(messages_list)
+        _tok_cache_count = n
+        return _tok_cache_total
+
     while (api_call_count < agent.max_iterations and agent.iteration_budget.remaining > 0) or agent._budget_grace_call:
         # Reset per-turn checkpoint dedup so each iteration can take one snapshot
         agent._checkpoint_mgr.new_turn()
@@ -958,7 +979,7 @@ def run_conversation(
         # tool-heavy turns do not creep up to the context ceiling and leave
         # no room for the model's final answer.
         total_chars = sum(len(str(msg)) for msg in api_messages)
-        approx_tokens = estimate_messages_tokens_rough(api_messages)
+        approx_tokens = _estimate_tokens(api_messages)
         request_pressure_tokens = estimate_request_tokens_rough(
             api_messages, tools=agent.tools or None
         )
@@ -3366,8 +3387,7 @@ def run_conversation(
                         }
                     agent._buffer_status(f"⚠️  Request payload too large (413) — compression attempt {compression_attempts}/{max_compression_attempts}...")
 
-                    original_len = len(messages)
-                    original_tokens = estimate_messages_tokens_rough(messages)
+                    original_tokens = _estimate_tokens(messages)
                     messages, active_system_prompt = agent._compress_context(
                         messages, system_message, approx_tokens=approx_tokens,
                         task_id=effective_task_id,
@@ -3380,7 +3400,9 @@ def run_conversation(
                     # compression (tool-result pruning, in-place summarization)
                     # can materially reduce request size without reducing the
                     # message array.  (#39550)
-                    new_tokens = estimate_messages_tokens_rough(messages)
+                    # Invalidate incremental cache — messages were replaced
+                    _tok_cache_count = 0
+                    new_tokens = _estimate_tokens(messages)
                     approx_tokens = new_tokens  # update for downstream logging
 
                     if len(messages) < original_len or (new_tokens > 0 and new_tokens < original_tokens * 0.95):
@@ -3590,7 +3612,7 @@ def run_conversation(
                     agent._buffer_status(f"🗜️ Context too large (~{approx_tokens:,} tokens) — compressing ({compression_attempts}/{max_compression_attempts})...")
 
                     original_len = len(messages)
-                    original_tokens = estimate_messages_tokens_rough(messages)
+                    original_tokens = _estimate_tokens(messages)
                     messages, active_system_prompt = agent._compress_context(
                         messages, system_message, approx_tokens=approx_tokens,
                         task_id=effective_task_id,
@@ -3603,7 +3625,9 @@ def run_conversation(
                     # compression (tool-result pruning, in-place summarization)
                     # can materially reduce request size without reducing the
                     # message array.  (#39550)
-                    new_tokens = estimate_messages_tokens_rough(messages)
+                    # Invalidate incremental cache — messages were replaced
+                    _tok_cache_count = 0
+                    new_tokens = _estimate_tokens(messages)
                     approx_tokens = new_tokens  # update for downstream logging
 
                     if len(messages) < original_len or (new_tokens > 0 and new_tokens < original_tokens * 0.95) or (new_ctx and new_ctx < old_ctx):
