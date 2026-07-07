@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import json
 import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
+from pathlib import Path
 from typing import Any, Dict, Literal, Optional
-
 from agent.model_metadata import fetch_endpoint_model_metadata, fetch_model_metadata
 from utils import base_url_host_matches
 
@@ -397,37 +398,52 @@ _OFFICIAL_DOCS_PRICING: Dict[tuple[str, str], PricingEntry] = {
         source_url="https://platform.claude.com/docs/en/about-claude/pricing",
         pricing_version="anthropic-pricing-2026-05",
     ),
-    # DeepSeek
+    # DeepSeek — https://api-docs.deepseek.com/quick_start/pricing
+    # deepseek-chat / deepseek-reasoner are deprecated aliases for v4-flash
+    # (non-thinking / thinking modes), same pricing.
     (
         "deepseek",
         "deepseek-chat",
     ): PricingEntry(
         input_cost_per_million=Decimal("0.14"),
         output_cost_per_million=Decimal("0.28"),
+        cache_read_cost_per_million=Decimal("0.0028"),
         source="official_docs_snapshot",
         source_url="https://api-docs.deepseek.com/quick_start/pricing",
-        pricing_version="deepseek-pricing-2026-03-16",
+        pricing_version="deepseek-pricing-2026-07-07",
     ),
     (
         "deepseek",
         "deepseek-reasoner",
     ): PricingEntry(
-        input_cost_per_million=Decimal("0.55"),
-        output_cost_per_million=Decimal("2.19"),
+        input_cost_per_million=Decimal("0.14"),
+        output_cost_per_million=Decimal("0.28"),
+        cache_read_cost_per_million=Decimal("0.0028"),
         source="official_docs_snapshot",
         source_url="https://api-docs.deepseek.com/quick_start/pricing",
-        pricing_version="deepseek-pricing-2026-03-16",
+        pricing_version="deepseek-pricing-2026-07-07",
+    ),
+    (
+        "deepseek",
+        "deepseek-v4-flash",
+    ): PricingEntry(
+        input_cost_per_million=Decimal("0.14"),
+        output_cost_per_million=Decimal("0.28"),
+        cache_read_cost_per_million=Decimal("0.0028"),
+        source="official_docs_snapshot",
+        source_url="https://api-docs.deepseek.com/quick_start/pricing",
+        pricing_version="deepseek-pricing-2026-07-07",
     ),
     (
         "deepseek",
         "deepseek-v4-pro",
     ): PricingEntry(
-        input_cost_per_million=Decimal("1.74"),
-        output_cost_per_million=Decimal("3.48"),
-        cache_read_cost_per_million=Decimal("0.0145"),
+        input_cost_per_million=Decimal("0.435"),
+        output_cost_per_million=Decimal("0.87"),
+        cache_read_cost_per_million=Decimal("0.003625"),
         source="official_docs_snapshot",
         source_url="https://api-docs.deepseek.com/quick_start/pricing",
-        pricing_version="deepseek-pricing-2026-05-12",
+        pricing_version="deepseek-pricing-2026-07-07",
     ),
     # Google Gemini
     (
@@ -590,7 +606,7 @@ def resolve_billing_route(
     model = (model_name or "").strip()
     if not provider_name and "/" in model:
         inferred_provider, bare_model = model.split("/", 1)
-        if inferred_provider in {"anthropic", "openai", "google"}:
+        if inferred_provider in {"anthropic", "openai", "google", "deepseek", "minimax"}:
             provider_name = inferred_provider
             model = bare_model
 
@@ -677,6 +693,54 @@ def _lookup_official_docs_pricing(route: BillingRoute) -> Optional[PricingEntry]
     return None
 
 
+
+def _litellm_pricing_entry(route: BillingRoute) -> Optional[PricingEntry]:
+    """Fallback pricing lookup from bundled LiteLLM model_prices_and_context_window.json."""
+    try:
+        _litellm_data = getattr(_litellm_pricing_entry, "_cache", None)
+        if _litellm_data is None:
+            _path = Path(__file__).resolve().parent / "litellm_pricing.json"
+            if _path.exists():
+                with open(_path) as _f:
+                    _litellm_pricing_entry._cache = json.load(_f)
+                _litellm_data = _litellm_pricing_entry._cache
+        if not _litellm_data:
+            return None
+
+        # Try multiple key formats
+        model = (route.model or "").strip()
+        prov = (route.provider or "").strip()
+        candidates = [model]
+        if prov and model:
+            candidates.insert(0, f"{prov}/{model}")
+        # Also try the full model string from resolve_billing_route
+        full_model = (route.model or "").strip()
+        if full_model and full_model not in candidates:
+            candidates.append(full_model)
+
+        for key in candidates:
+            entry = _litellm_data.get(key)
+            if entry and entry.get("mode") == "chat":
+                inp = entry.get("input_cost_per_token")
+                out = entry.get("output_cost_per_token")
+                cache_in = entry.get("input_cost_per_token_cache_hit") or entry.get("cache_read")
+                if inp is not None or out is not None:
+                    def _to_dec(val):
+                        if val is None:
+                            return None
+                        return Decimal(str(val)) * _ONE_MILLION
+                    return PricingEntry(
+                        input_cost_per_million=_to_dec(inp),
+                        output_cost_per_million=_to_dec(out),
+                        cache_read_cost_per_million=_to_dec(cache_in),
+                        source="litellm_pricing",
+                        source_url="https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json",
+                        pricing_version="litellm",
+                    )
+        return None
+    except Exception:
+        return None
+
 def _openrouter_pricing_entry(route: BillingRoute) -> Optional[PricingEntry]:
     return _pricing_entry_from_metadata(
         fetch_model_metadata(),
@@ -757,7 +821,10 @@ def get_pricing_entry(
         )
         if entry:
             return entry
-    return _lookup_official_docs_pricing(route)
+    entry = _lookup_official_docs_pricing(route)
+    if entry:
+        return entry
+    return _litellm_pricing_entry(route)
 
 
 def normalize_usage(
