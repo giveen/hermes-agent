@@ -32,6 +32,7 @@ from typing import Dict, Any, List, Optional, Tuple
 from tools.registry import discover_builtin_tools, registry
 from toolsets import resolve_toolset, validate_toolset
 
+from tools.tool_cache import is_cacheable, get_cached_result, set_cached_result
 logger = logging.getLogger(__name__)
 
 # Tracks platform-bundle names already flagged in disabled_toolsets so the
@@ -1016,6 +1017,21 @@ def _emit_post_tool_call_hook(
         logger.debug("post_tool_call hook error: %s", _hook_err)
 
 
+def _get_cached_tool_result(tool_name: str, args: dict) -> str | None:
+    """Check the diskcache for a cached tool result. Returns None on miss."""
+    try:
+        return get_cached_result(tool_name, args)
+    except Exception:
+        return None
+
+
+def _set_cached_tool_result(tool_name: str, args: dict, result: str) -> None:
+    """Store a tool result in the diskcache (errors are filtered internally)."""
+    try:
+        set_cached_result(tool_name, args, result)
+    except Exception:
+        pass
+
 def handle_function_call(
     function_name: str,
     function_args: Dict[str, Any],
@@ -1236,6 +1252,11 @@ def handle_function_call(
         # dashboards, budget alerts, and regression canaries without having
         # to wrap every tool manually.  We use monotonic() so the value is
         # unaffected by wall-clock adjustments during the call.
+        # ── Tool result cache check ────────────────────────────
+        cached = _get_cached_tool_result(function_name, function_args)
+        if cached is not None:
+            return cached
+        # ──
         _dispatch_start = time.monotonic()
         _approval_tokens = None
         try:
@@ -1288,6 +1309,8 @@ def handle_function_call(
                     reset_current_observability_context(_approval_tokens)
                 except Exception:
                     pass
+        # Store in cache (skip errors — already filtered by set_cached_result)
+        _set_cached_tool_result(function_name, function_args, result)
         duration_ms = int((time.monotonic() - _dispatch_start) * 1000)
 
         _emit_post_tool_call_hook(
