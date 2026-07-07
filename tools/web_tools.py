@@ -248,7 +248,7 @@ def _get_backend() -> str:
         except Exception as exc:  # noqa: BLE001 — a broken provider is skipped
             logger.debug("web provider %r.is_available() raised: %s", provider.name, exc)
 
-    return "firecrawl"  # default (backward compat)
+    return "crawl4ai"  # default — always available (local, no API keys)
 
 
 def _get_search_backend() -> str:
@@ -849,7 +849,7 @@ async def web_extract_tool(
                             "error": (
                                 f"{provider.display_name} is a search-only "
                                 "backend and cannot extract URL content. "
-                                "Set web.extract_backend to firecrawl, "
+                                "Set web.extract_backend to crawl4ai, firecrawl, "
                                 "tavily, exa, or parallel."
                             ),
                         },
@@ -883,7 +883,8 @@ async def web_extract_tool(
                             "success": False,
                             "error": (
                                 "No web extract provider configured. "
-                                "Set web.extract_backend to firecrawl, "
+                                "Run ``hermes tools`` to set one up, or "
+                                "set web.extract_backend to crawl4ai, firecrawl, "
                                 "tavily, exa, or parallel."
                             ),
                         },
@@ -1065,16 +1066,16 @@ if __name__ == "__main__":
             print("   Using direct Firecrawl cloud API")
         elif tool_gateway_available:
             print(f"   Using Firecrawl tool-gateway: {_get_firecrawl_gateway_url()}")
-        else:
-            print("   Firecrawl backend selected but not configured")
+        # Crawl4AI is the default — no branch needed since it's always available
+        if backend == "crawl4ai":
+            print("   Using Crawl4AI (local, no API keys)")
     else:
         print("❌ No web search backend configured")
         print(
-            "Set EXA_API_KEY, PARALLEL_API_KEY, TAVILY_API_KEY, FIRECRAWL_API_KEY, FIRECRAWL_API_URL"
+            "Set EXA_API_KEY, PARALLEL_API_KEY, TAVILY_API_KEY, FIRECRAWL_API_KEY, "
+            "or install crawl4ai (shipped with Hermes) for local extraction."
             f"{_firecrawl_backend_help_suffix()}"
         )
-
-    if not web_available:
         sys.exit(1)
 
     print("🛠️  Web tools ready for use!")
