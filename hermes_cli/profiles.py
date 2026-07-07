@@ -1444,11 +1444,7 @@ def _rmtree_with_retry(profile_dir: Path, onexc_handler) -> None:
     last_exc: OSError | None = None
     for attempt in range(attempts):
         try:
-            # ``onexc`` was added in 3.12; fall back to ``onerror`` on 3.11.
-            try:
-                shutil.rmtree(profile_dir, onexc=onexc_handler)
-            except TypeError:
-                shutil.rmtree(profile_dir, onerror=onexc_handler)
+            shutil.rmtree(profile_dir, onexc=onexc_handler)
             return
         except OSError as e:
             last_exc = e
@@ -1560,17 +1556,13 @@ def delete_profile(name: str, yes: bool = False) -> Path:
             1. The path itself isn't writable (e.g. a file with mode 0444)
             2. The *parent* directory isn't writable (e.g. mode 0555)
 
-            Compatible with both the ``onexc`` API (3.12+, receives an
-            exception instance) and the ``onerror`` API (3.11-, receives
-            ``sys.exc_info()`` tuple).
+            Called via ``onexc`` (3.12+), receives ``(func, path, exc_instance)``.
             """
             import stat as _stat
 
-            # Normalise the two callback signatures:
-            #   onexc(func, path, exc_instance)   — 3.12+
-            #   onerror(func, path, exc_info_tuple) — 3.11
+            # onexc passes the exception directly; no tuple normalization needed
             if isinstance(exc, tuple):
-                exc = exc[1]  # exc_info → actual exception object
+                exc = exc[1]  # safety belt (shouldn't hit on 3.12+)
 
             if isinstance(exc, PermissionError):
                 # Make the path writable

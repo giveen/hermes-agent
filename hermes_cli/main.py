@@ -7686,10 +7686,7 @@ def _install_python_dependencies_with_optional_fallback(
 
 def _load_console_script_names() -> list[str]:
     """Return ``[project.scripts]`` entry-point names from pyproject.toml."""
-    try:
-        import tomllib  # Python 3.11+
-    except ImportError:  # pragma: no cover
-        return []
+    import tomllib
 
     pyproject = PROJECT_ROOT / "pyproject.toml"
     if not pyproject.is_file():
@@ -7792,10 +7789,7 @@ def _verify_core_dependencies_installed(
     update — but the warning makes the partial install visible at the spot
     that caused it, instead of hours later in a downstream subprocess.
     """
-    try:
-        import tomllib  # Python 3.11+
-    except ImportError:  # pragma: no cover — Python < 3.11 unsupported but be safe
-        return
+    import tomllib
 
     pyproject = PROJECT_ROOT / "pyproject.toml"
     if not pyproject.is_file():

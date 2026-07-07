@@ -137,7 +137,7 @@ def test_managed_modal_execute_polls_until_completed(monkeypatch):
     monkeypatch.setattr(managed_modal.requests, "request", fake_request)
     monkeypatch.setattr(modal_common.time, "sleep", lambda _: None)
 
-    env = managed_modal.ManagedModalEnvironment(image="python:3.11")
+    env = managed_modal.ManagedModalEnvironment(image="python:3.12")
     result = env.execute("echo hello")
     env.cleanup()
 
@@ -161,7 +161,7 @@ def test_managed_modal_create_sends_a_stable_idempotency_key(monkeypatch):
 
     monkeypatch.setattr(managed_modal.requests, "request", fake_request)
 
-    env = managed_modal.ManagedModalEnvironment(image="python:3.11")
+    env = managed_modal.ManagedModalEnvironment(image="python:3.12")
     env.cleanup()
 
     assert len(create_headers) == 1
@@ -196,7 +196,7 @@ def test_managed_modal_execute_cancels_on_interrupt(monkeypatch):
     monkeypatch.setattr(managed_modal.requests, "request", fake_request)
     monkeypatch.setattr(modal_common.time, "sleep", fake_sleep)
 
-    env = managed_modal.ManagedModalEnvironment(image="python:3.11")
+    env = managed_modal.ManagedModalEnvironment(image="python:3.12")
     result = env.execute("sleep 30")
     env.cleanup()
 
@@ -230,7 +230,7 @@ def test_managed_modal_execute_returns_descriptive_error_on_missing_exec(monkeyp
     monkeypatch.setattr(managed_modal.requests, "request", fake_request)
     monkeypatch.setattr(modal_common.time, "sleep", lambda _: None)
 
-    env = managed_modal.ManagedModalEnvironment(image="python:3.11")
+    env = managed_modal.ManagedModalEnvironment(image="python:3.12")
     result = env.execute("echo hello")
     env.cleanup()
 
@@ -257,14 +257,14 @@ def test_managed_modal_create_and_cleanup_preserve_gateway_persistence_fields(mo
     monkeypatch.setattr(managed_modal.requests, "request", fake_request)
 
     env = managed_modal.ManagedModalEnvironment(
-        image="python:3.11",
+        image="python:3.12",
         task_id="task-managed-persist",
         persistent_filesystem=False,
     )
     env.cleanup()
 
     assert create_payloads == [{
-        "image": "python:3.11",
+        "image": "python:3.12",
         "cwd": "/root",
         "cpu": 1.0,
         "memoryMiB": 5120.0,
@@ -286,7 +286,7 @@ def test_managed_modal_rejects_host_credential_passthrough():
     managed_modal = _load_tool_module("tools.environments.managed_modal", "environments/managed_modal.py")
 
     with pytest.raises(ValueError, match="credential-file passthrough"):
-        managed_modal.ManagedModalEnvironment(image="python:3.11")
+        managed_modal.ManagedModalEnvironment(image="python:3.12")
 
 
 def test_managed_modal_execute_times_out_and_cancels(monkeypatch):
@@ -315,7 +315,7 @@ def test_managed_modal_execute_times_out_and_cancels(monkeypatch):
     monkeypatch.setattr(modal_common.time, "monotonic", lambda: next(monotonic_values))
     monkeypatch.setattr(modal_common.time, "sleep", lambda _: None)
 
-    env = managed_modal.ManagedModalEnvironment(image="python:3.11")
+    env = managed_modal.ManagedModalEnvironment(image="python:3.12")
     result = env.execute("sleep 30", timeout=2)
     env.cleanup()
 

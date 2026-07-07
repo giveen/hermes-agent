@@ -36,7 +36,7 @@ def _mock_subprocess_run(monkeypatch):
 def _make_dummy_env(**kwargs):
     """Helper to construct DockerEnvironment with minimal required args."""
     return docker_env.DockerEnvironment(
-        image=kwargs.get("image", "python:3.11"),
+        image=kwargs.get("image", "python:3.12"),
         cwd=kwargs.get("cwd", "/root"),
         timeout=kwargs.get("timeout", 60),
         cpu=kwargs.get("cpu", 0),
@@ -226,7 +226,7 @@ def test_non_persistent_cleanup_removes_container(monkeypatch):
     monkeypatch.setattr(threading, "Thread", _FakeThread)
 
     env = docker_env.DockerEnvironment(
-        image="python:3.11", cwd="/root", timeout=60,
+        image="python:3.12", cwd="/root", timeout=60,
         task_id="ephemeral-task", persistent_filesystem=False,
         persist_across_processes=False,
     )
@@ -882,7 +882,7 @@ def test_no_reuse_when_persist_across_processes_disabled(monkeypatch):
     calls = _mock_subprocess_run_with_reuse(monkeypatch, ps_state="running")
 
     env = docker_env.DockerEnvironment(
-        image="python:3.11", cwd="/root", timeout=60,
+        image="python:3.12", cwd="/root", timeout=60,
         task_id="no-reuse", persist_across_processes=False,
     )
 
@@ -1139,7 +1139,7 @@ def test_cleanup_with_persist_disabled_stops_and_rms(monkeypatch):
     # Note: persistent_filesystem=True (the prior-leak scenario) + the new
     # cross-process toggle OFF must still result in a clean rm.
     env = docker_env.DockerEnvironment(
-        image="python:3.11", cwd="/root", timeout=60,
+        image="python:3.12", cwd="/root", timeout=60,
         task_id="cleanup-no-persist", persistent_filesystem=True,
         persist_across_processes=False,
     )
@@ -1644,7 +1644,7 @@ def test_image_uses_init_entrypoint_false_for_plain_image(monkeypatch):
         return subprocess.CompletedProcess(cmd, 0, stdout='["/bin/sh","-c"]', stderr="")
 
     monkeypatch.setattr(docker_env.subprocess, "run", _run)
-    assert docker_env._image_uses_init_entrypoint("/usr/bin/docker", "python:3.11") is False
+    assert docker_env._image_uses_init_entrypoint("/usr/bin/docker", "python:3.12") is False
 
 
 def test_image_uses_init_entrypoint_false_for_null_entrypoint(monkeypatch):
@@ -1701,7 +1701,7 @@ def test_plain_image_keeps_docker_init_and_run_noexec(monkeypatch):
     monkeypatch.setattr(docker_env, "find_docker", lambda: "/usr/bin/docker")
     calls = _mock_subprocess_run_with_entrypoint(monkeypatch, '["/bin/sh","-c"]')
 
-    _make_dummy_env(image="python:3.11")
+    _make_dummy_env(image="python:3.12")
 
     run_calls = [c for c in calls if isinstance(c[0], list) and len(c[0]) >= 2 and c[0][1] == "run"]
     assert run_calls, "docker run should have been called"

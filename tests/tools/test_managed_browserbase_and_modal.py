@@ -475,7 +475,7 @@ def test_terminal_tool_prefers_managed_modal_when_gateway_ready_and_no_direct_cr
         ):
             result = terminal_tool._create_environment(
                 env_type="modal",
-                image="python:3.11",
+                image="python:3.12",
                 cwd="/root",
                 timeout=60,
                 container_config={
@@ -511,7 +511,7 @@ def test_terminal_tool_auto_mode_prefers_managed_modal_when_available():
         ):
             result = terminal_tool._create_environment(
                 env_type="modal",
-                image="python:3.11",
+                image="python:3.12",
                 cwd="/root",
                 timeout=60,
                 container_config={
@@ -547,7 +547,7 @@ def test_terminal_tool_auto_mode_falls_back_to_direct_modal_when_managed_unavail
         ):
             result = terminal_tool._create_environment(
                 env_type="modal",
-                image="python:3.11",
+                image="python:3.12",
                 cwd="/root",
                 timeout=60,
                 container_config={
@@ -581,7 +581,7 @@ def test_terminal_tool_respects_direct_modal_mode_without_falling_back_to_manage
             with pytest.raises(ValueError, match="direct Modal credentials"):
                 terminal_tool._create_environment(
                     env_type="modal",
-                    image="python:3.11",
+                    image="python:3.12",
                     cwd="/root",
                     timeout=60,
                     container_config={

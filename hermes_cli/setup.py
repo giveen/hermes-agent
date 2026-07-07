@@ -1244,7 +1244,7 @@ def setup_terminal_backend(config: dict):
 
         # Image and resource limits use defaults; tune via `hermes setup terminal`.
         config["terminal"].setdefault(
-            "docker_image", "nikolaik/python-nodejs:python3.11-nodejs20"
+            "docker_image", "nikolaik/python-nodejs:python3.12-nodejs20"
         )
 
     elif selected_backend == "singularity":
@@ -1263,7 +1263,7 @@ def setup_terminal_backend(config: dict):
         # Image and resource limits use defaults; tune via `hermes setup terminal`.
         config["terminal"].setdefault(
             "singularity_image",
-            "docker://nikolaik/python-nodejs:python3.11-nodejs20",
+            "docker://nikolaik/python-nodejs:python3.12-nodejs20",
         )
 
     elif selected_backend == "modal":
@@ -1383,7 +1383,7 @@ def setup_terminal_backend(config: dict):
 
         # Image and resource limits use defaults; tune via `hermes setup terminal`.
         config["terminal"].setdefault(
-            "daytona_image", "nikolaik/python-nodejs:python3.11-nodejs20"
+            "daytona_image", "nikolaik/python-nodejs:python3.12-nodejs20"
         )
 
     elif selected_backend == "ssh":

@@ -204,7 +204,7 @@ def test_modal_environment_migrates_legacy_snapshot_key_and_uses_snapshot_id(tmp
     snapshot_store.write_text(json.dumps({"task-legacy": "im-legacy123"}))
 
     modal_module = _load_module("tools.environments.modal", TOOLS_DIR / "environments" / "modal.py")
-    env = modal_module.ModalEnvironment(image="python:3.11", task_id="task-legacy")
+    env = modal_module.ModalEnvironment(image="python:3.12", task_id="task-legacy")
 
     try:
         assert state["from_id_calls"] == ["im-legacy123"]
@@ -221,12 +221,12 @@ def test_modal_environment_prunes_stale_direct_snapshot_and_retries_base_image(t
     snapshot_store.write_text(json.dumps({"direct:task-stale": "im-stale123"}))
 
     modal_module = _load_module("tools.environments.modal", TOOLS_DIR / "environments" / "modal.py")
-    env = modal_module.ModalEnvironment(image="python:3.11", task_id="task-stale")
+    env = modal_module.ModalEnvironment(image="python:3.12", task_id="task-stale")
 
     try:
         assert [call["image"] for call in state["create_calls"]] == [
             {"kind": "snapshot", "image_id": "im-stale123"},
-            {"kind": "registry", "image": "python:3.11"},
+            {"kind": "registry", "image": "python:3.12"},
         ]
         assert json.loads(snapshot_store.read_text()) == {}
     finally:
@@ -238,7 +238,7 @@ def test_modal_environment_cleanup_writes_namespaced_snapshot_key(tmp_path):
     snapshot_store = state["snapshot_store"]
 
     modal_module = _load_module("tools.environments.modal", TOOLS_DIR / "environments" / "modal.py")
-    env = modal_module.ModalEnvironment(image="python:3.11", task_id="task-cleanup")
+    env = modal_module.ModalEnvironment(image="python:3.12", task_id="task-cleanup")
     env.cleanup()
 
     assert json.loads(snapshot_store.read_text()) == {"direct:task-cleanup": "im-cleanup456"}
@@ -249,10 +249,10 @@ def test_resolve_modal_image_uses_snapshot_ids_and_registry_images(tmp_path):
     modal_module = _load_module("tools.environments.modal", TOOLS_DIR / "environments" / "modal.py")
 
     snapshot_image = modal_module._resolve_modal_image("im-snapshot123")
-    registry_image = modal_module._resolve_modal_image("python:3.11")
+    registry_image = modal_module._resolve_modal_image("python:3.12")
 
     assert snapshot_image == {"kind": "snapshot", "image_id": "im-snapshot123"}
-    assert registry_image == {"kind": "registry", "image": "python:3.11"}
+    assert registry_image == {"kind": "registry", "image": "python:3.12"}
     assert state["from_id_calls"] == ["im-snapshot123"]
-    assert state["registry_calls"][0][0] == "python:3.11"
+    assert state["registry_calls"][0][0] == "python:3.12"
     assert "ensurepip" in state["registry_calls"][0][1][0]

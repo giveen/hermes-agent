@@ -137,7 +137,7 @@ def _parse_requirements(text: str) -> list[tuple[str, str]]:
 def _parse_pyproject_pins(text: str) -> list[tuple[str, str]]:
     """Pull ``name==version`` pins from a ``pyproject.toml`` ``dependencies`` list.
 
-    Uses stdlib ``tomllib`` (3.11+). Same exact-pin policy as requirements.
+    Uses stdlib ``tomllib`` (3.12+). Same exact-pin policy as requirements.
     """
     try:
         import tomllib

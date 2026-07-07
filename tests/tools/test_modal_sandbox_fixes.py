@@ -142,7 +142,7 @@ class TestCwdHandling:
 
         env = _tt_mod._create_environment(
             env_type="docker",
-            image="python:3.11",
+            image="python:3.12",
             cwd="/workspace",
             timeout=60,
             container_config={"docker_mount_cwd_to_workspace": True},
