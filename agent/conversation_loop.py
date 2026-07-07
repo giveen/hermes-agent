@@ -52,6 +52,7 @@ from agent.model_metadata import (
     estimate_messages_tokens_rough,
     estimate_request_tokens_rough,
     get_context_length_from_provider_error,
+    is_local_endpoint,
     is_output_cap_error,
     parse_available_output_tokens_from_error,
     save_context_length,
@@ -1582,7 +1583,12 @@ def run_conversation(
                         }
                     
                     # Backoff before retry — jittered exponential: 5s base, 120s cap
-                    wait_time = jittered_backoff(retry_count, base_delay=5.0, max_delay=120.0)
+                    # Local/private endpoints (llama.cpp, Ollama, etc.) don't
+                    # rate-limit, so use much shorter delays.
+                    if is_local_endpoint(agent.base_url or ""):
+                        wait_time = jittered_backoff(retry_count, base_delay=0.5, max_delay=5.0)
+                    else:
+                        wait_time = jittered_backoff(retry_count, base_delay=5.0, max_delay=120.0)
                     agent._buffer_vprint(f"⏳ Retrying in {wait_time:.1f}s ({_failure_hint})...")
                     logger.warning(f"Invalid API response (retry {retry_count}/{max_retries}): {', '.join(error_details)} | Provider: {provider_name}")
                     
@@ -4131,7 +4137,12 @@ def run_conversation(
                                 _retry_after = min(float(_ra_raw), 600)
                             except (TypeError, ValueError):
                                 pass
-                wait_time = _retry_after if _retry_after else jittered_backoff(retry_count, base_delay=2.0, max_delay=60.0)
+                _local_ep = is_local_endpoint(str(agent.base_url or ""))
+                wait_time = _retry_after if _retry_after else jittered_backoff(
+                    retry_count,
+                    base_delay=0.5 if _local_ep else 2.0,
+                    max_delay=5.0 if _local_ep else 60.0,
+                )
                 _backoff_policy = None
                 if (is_rate_limited or _is_zai_coding_overload) and not _retry_after:
                     wait_time, _backoff_policy = adaptive_rate_limit_backoff(
