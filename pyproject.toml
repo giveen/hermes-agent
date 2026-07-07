@@ -141,6 +141,14 @@ dependencies = [
   "mnemosyne-memory>=3.11.0,<4",
   "ddgs>=9.14.4,<10",
   "crawl4ai>=0.9.0,<0.11",
+  "tree-sitter>=0.26.0,<0.27",
+  "tree-sitter-python>=0.25.0,<0.26",
+  "tree-sitter-typescript>=0.23.2,<0.24",
+  "tree-sitter-rust>=0.24.2,<0.25",
+  "tree-sitter-go>=0.25.0,<0.26",
+  "tree-sitter-java>=0.23.5,<0.24",
+  "tree-sitter-c>=0.24.2,<0.25",
+  "tree-sitter-cpp>=0.23.4,<0.24",
 ]
 
 [project.optional-dependencies]

@@ -54,6 +54,8 @@ _HERMES_CORE_TOOLS = [
     "todo", "memory",
     # Scratchpad — shared workspace for parallel subagents
     "scratchpad",
+    # Code structure analysis — tree-sitter powered, no LSP required
+    "code",
     # NOTE: the desktop Project tools (project_list/create/switch) are
     # deliberately NOT here. They only make sense where a GUI can follow the
     # move, so they live in the `project` toolset and are enabled solely by the
@@ -222,6 +224,12 @@ TOOLSETS = {
     "context_engine": {
         "description": "Runtime tools exposed by the active context engine",
         "tools": [],
+        "includes": []
+    },
+
+    "code": {
+        "description": "Code structure analysis — tree-sitter powered, no LSP required",
+        "tools": ["code_structure", "code_symbol"],
         "includes": []
     },
     
