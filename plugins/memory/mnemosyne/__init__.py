@@ -19,6 +19,47 @@ from tools.registry import tool_error
 
 logger = logging.getLogger(__name__)
 
+# ── Eager initialization ─────────────────────────────────────────────
+# On first import, auto-create the database and verify the SDK is working.
+# This makes Mnemosyne usable with zero setup steps.
+_DB_INITIALIZED = False
+
+
+def _ensure_db() -> bool:
+    """Create the Mnemosyne database directory and initialize the DB.
+
+    Safe to call multiple times — no-ops after first success.
+    Returns True if the DB is ready.
+    """
+    global _DB_INITIALIZED
+    if _DB_INITIALIZED:
+        return True
+    try:
+        import mnemosyne as _mn
+    except ImportError:
+        logger.warning("mnemosyne SDK not installed — memory unavailable")
+        return False
+
+    try:
+        from hermes_constants import get_hermes_home
+        _data_dir = get_hermes_home() / "mnemosyne" / "data"
+        _data_dir.mkdir(parents=True, exist_ok=True)
+        _db_path = _data_dir / "mnemosyne.db"
+        # Touch the DB by creating a client instance
+        _client = _mn.Mnemosyne(db_path=_db_path)
+        # Verify with a lightweight stats call
+        _client.get_stats()
+        _DB_INITIALIZED = True
+        logger.info("Mnemosyne database ready at %s", _db_path)
+        return True
+    except Exception as exc:
+        logger.debug("Mnemosyne eager init failed: %s", exc)
+        return False
+
+
+# Run eager init on import
+_ensure_db()
+
 # ---------- tool schemas ----------
 
 RECALL_SCHEMA = {
