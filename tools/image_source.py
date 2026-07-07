@@ -92,12 +92,12 @@ async def resolve_image_source(src: str, ctx: ResolveContext) -> ResolvedImage:
     s = src.strip()
     if s.startswith("data:"):
         data, mime = _resolve_data_url(s)
-        return _finalize(data, mime, "data", s)
+        return _finalize(data, "data", s)
     if s.startswith(("http://", "https://")):
         reason = _http_block_reason(s)
         if reason:
             raise SourceUnsafe(reason, src=s)
-        return _finalize(await _download_to_bytes(s), "", "http", s)
+        return _finalize(await _download_to_bytes(s), "http", s)
 
     if _SCHEME_RE.match(s) and not s.lower().startswith("file://"):
         raise UnsupportedScheme(
@@ -134,7 +134,7 @@ async def resolve_image_source(src: str, ctx: ResolveContext) -> ResolvedImage:
             except ValueError as exc:
                 raise SourceUnsafe(str(exc), src=s, origin="file")
         data = await asyncio.to_thread(host_target.read_bytes)
-        return _finalize(data, "", "file", s)
+        return _finalize(data, "file", s)
     if _is_local_terminal_backend():
         # Local backend: any path was host-readable, so a miss simply means
         # the file doesn't exist — no sandbox to fall back to.
@@ -313,10 +313,10 @@ async def _resolve_container_fallback(p: Path, ctx: ResolveContext, src: str) ->
         raise NotAnImage(f"sandbox returned non-image data for '{p}': {exc}", src=src)
     if len(data) > _MAX_INGEST_BYTES:
         raise SourceTooLarge("image exceeds size limit", src=src, origin="container")
-    return _finalize(data, "", "container", src)
+    return _finalize(data, "container", src)
 
 
-def _finalize(data: bytes, declared_mime: str, origin: str, src: str) -> ResolvedImage:
+def _finalize(data: bytes, origin: str, src: str) -> ResolvedImage:
     """Intrinsic-correctness chokepoint: ingest byte cap + magic-byte sniff.
 
     The cap here is the generous 50MB *ingest* budget, not the 20MB provider

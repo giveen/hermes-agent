@@ -435,7 +435,6 @@ _GENERIC_DESCRIPTION = (
 
 def _format_model_caveats(
     model_meta: Dict[str, Any],
-    backend_caps: Dict[str, Any],
 ) -> List[str]:
     """Pull human-readable caveats out of one model's catalog metadata.
 
@@ -520,7 +519,7 @@ def _build_dynamic_video_schema() -> Dict[str, Any]:
     parts.append(line)
 
     # Model-specific caveats (the high-signal stuff)
-    for c in _format_model_caveats(model_meta, caps):
+    for c in _format_model_caveats(model_meta):
         parts.append(f"- {c}")
 
     # Backend modality summary — only useful when the backend supports

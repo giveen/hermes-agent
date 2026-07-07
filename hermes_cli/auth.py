@@ -36,7 +36,7 @@ import webbrowser
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from http.server import BaseHTTPRequestHandler, HTTPServer, ThreadingHTTPServer
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from typing import Any, Callable, Dict, FrozenSet, Iterable, List, Optional, Tuple
 from urllib.parse import parse_qs, urlencode, urlparse
@@ -7715,8 +7715,7 @@ def build_minimax_oauth_token_provider() -> Callable[[], str]:
 
 
 def resolve_minimax_oauth_runtime_credentials(
-    *, min_token_ttl_seconds: int = MINIMAX_OAUTH_REFRESH_SKEW_SECONDS,
-    as_token_provider: bool = False,
+    *, as_token_provider: bool = False,
 ) -> Dict[str, Any]:
     """Return {provider, api_key, base_url, source} for minimax-oauth.
 

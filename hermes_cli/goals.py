@@ -1383,14 +1383,9 @@ class GoalManager:
         self,
         last_response: str,
         *,
-        user_initiated: bool = True,
         background_processes: Optional[List[Dict[str, Any]]] = None,
     ) -> Dict[str, Any]:
         """Run the judge and update state. Return a decision dict.
-
-        ``user_initiated`` distinguishes a real user prompt (True) from a
-        continuation prompt we fed ourselves (False). Both increment
-        ``turns_used`` because both consume model budget.
 
         ``background_processes`` is the live ``process_registry.list_sessions()``
         snapshot for this session. It's handed to the judge so it can decide

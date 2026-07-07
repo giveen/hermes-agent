@@ -1560,9 +1560,6 @@ def delete_profile(name: str, yes: bool = False) -> Path:
             """
             import stat as _stat
 
-            # onexc passes the exception directly; no tuple normalization needed
-            if isinstance(exc, tuple):
-                exc = exc[1]  # safety belt (shouldn't hit on 3.12+)
 
             if isinstance(exc, PermissionError):
                 # Make the path writable
