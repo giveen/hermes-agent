@@ -566,6 +566,25 @@ def run_conversation(
         except Exception:
             pass
 
+
+    # ── Response cache check ─────────────────────────────────
+    # Skip LLM call entirely if the exact same question was answered before
+    # with the same system context (model, tools, system prompt).
+    try:
+        from tools.tool_cache import get_cached_response
+        cached = get_cached_response(user_message, agent)
+        if cached is not None:
+            logger.debug("Returning cached response for: %s", user_message[:60])
+            # Build a minimal result dict matching normal return shape
+            return {
+                "final_response": cached,
+                "messages": [{"role": "user", "content": user_message},
+                             {"role": "assistant", "content": cached}],
+                "api_call_count": 0,
+                "cached": True,
+            }
+    except Exception:
+        pass
     # ── Per-turn setup (the prologue) ──
     # All once-per-turn setup — stdio guarding, retry-counter resets, user
     # message sanitization, todo/nudge hydration, system-prompt restore-or-
@@ -5321,10 +5340,17 @@ def run_conversation(
                 # session resume (avoids consecutive user messages).
                 messages.append({"role": "assistant", "content": final_response})
                 break
-    
-    # Post-loop turn finalization extracted to agent/turn_finalizer.finalize_turn
-    # (god-file decomposition Phase 1 step 4). Behavior-neutral: the assembled
-    # result dict is returned exactly as before.
+
+    # ── Cache direct responses for future reuse ────────────────
+    if final_response and api_call_count <= 1 and not any(
+        msg.get("tool_calls") for msg in messages if msg.get("role") == "assistant"
+    ):
+        try:
+            from tools.tool_cache import set_cached_response
+            set_cached_response(user_message, final_response, agent)
+        except Exception:
+            pass
+    # ──
     from agent.turn_finalizer import finalize_turn
     return finalize_turn(
         agent,

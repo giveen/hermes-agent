@@ -114,3 +114,79 @@ def set_cached_result(tool_name: str, args: dict, result: str, ttl: int = _DEFAU
         logger.debug("Tool cache SET: %s (ttl=%ds)", key[:60], ttl)
     except Exception as exc:
         logger.debug("Tool cache write error: %s", exc)
+
+
+# ── Question→answer response caching ─────────────────────────────────
+# Caches direct LLM responses (no tool calls) keyed on normalized question
+# text + a hash of the system context.  TTL is days-scale — if you ask
+# "what is the capital of France" twice, the second hit returns instantly.
+
+# Default TTL for response cache: 7 days
+_RESPONSE_TTL_S = 7 * 24 * 3600
+
+
+def _system_context_hash(agent: Any) -> str:
+    """Build a hash of the agent's current system context.
+
+    When skills, tools, model, or personality change, the hash changes
+    and previously cached responses are invalidated.
+    """
+    parts = [
+        str(getattr(agent, "model", "") or ""),
+        str(getattr(agent, "provider", "") or ""),
+        str(getattr(agent, "_cached_system_prompt", "") or ""),
+    ]
+    try:
+        tools = sorted(getattr(agent, "tools", []) or [])
+        parts.append(str(tools))
+    except Exception:
+        pass
+    raw = "|".join(parts)
+    return hashlib.sha256(raw.encode()).hexdigest()[:16]
+
+
+def get_cached_response(user_message: str, agent: Any = None) -> str | None:
+    """Return a cached direct response for this question, or None.
+
+    Matches on normalized question text + system context hash.
+    Returns None on cache miss, error, or context mismatch.
+    """
+    cache = _get_cache()
+    if not cache:
+        return None
+    question = user_message.strip().lower()
+    if not question:
+        return None
+    ctx = _system_context_hash(agent) if agent is not None else ""
+    key = f"response:{ctx}:{hashlib.sha256(question.encode()).hexdigest()}"
+    try:
+        result = cache.get(key)
+        if result is not None:
+            logger.debug("Response cache HIT: %s...", question[:50])
+        return result
+    except Exception as exc:
+        logger.debug("Response cache read error: %s", exc)
+        return None
+
+
+def set_cached_response(user_message: str, response: str, agent: Any = None, *, ttl: int = _RESPONSE_TTL_S) -> None:
+    """Cache a direct LLM response for this question.
+
+    Only caches text-only responses (no tool calls).  Errors and empty
+    responses are not cached.
+    """
+    if not response or response.startswith("I apologize") or len(response) < 5:
+        return
+    question = user_message.strip().lower()
+    if not question:
+        return
+    cache = _get_cache()
+    if not cache:
+        return
+    ctx = _system_context_hash(agent) if agent is not None else ""
+    key = f"response:{ctx}:{hashlib.sha256(question.encode()).hexdigest()}"
+    try:
+        cache.set(key, response, expire=ttl)
+        logger.debug("Response cache SET: %s... (ttl=%ds)", question[:50], ttl)
+    except Exception as exc:
+        logger.debug("Response cache write error: %s", exc)
