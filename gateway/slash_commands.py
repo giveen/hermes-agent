@@ -2931,7 +2931,7 @@ class GatewaySlashCommandsMixin:
 
         # Write temp file + ingest
         def _ingest() -> str:
-            from tools.rag_tool import _get_db_path
+            from tools.rag_tool import rag_ingest, _get_db_path
             tmp_dir = _get_db_path().parent / "_tmp"
             tmp_dir.mkdir(parents=True, exist_ok=True)
             safe_name = _re.sub(r"[^a-zA-Z0-9_\-]", "_", url.split("//", 1)[-1].split("/")[0])

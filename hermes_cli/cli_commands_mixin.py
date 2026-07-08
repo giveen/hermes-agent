@@ -1795,7 +1795,7 @@ class CLICommandsMixin:
 
         # ── Write to temp file and ingest ──────────────────────────────
         try:
-            from tools.rag_tool import _get_db_path
+            from tools.rag_tool import rag_ingest, _get_db_path
             tmp_dir = _get_db_path().parent / "_tmp"
             tmp_dir.mkdir(parents=True, exist_ok=True)
 
