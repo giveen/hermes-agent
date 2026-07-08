@@ -52,6 +52,8 @@ _HERMES_CORE_TOOLS = [
     "text_to_speech",
     # Planning & memory
     "todo", "memory",
+    # Credential management
+    "keyring",
     # Scratchpad — shared workspace for parallel subagents
     "scratchpad",
     # Code structure analysis — tree-sitter powered, no LSP required
@@ -235,6 +237,8 @@ TOOLSETS = {
         "includes": []
     },
 
+    "rag": {
+        "description": "Retrieval-Augmented Generation over local document stores",
         "tools": ["rag_ingest", "rag_ingest_pdf", "rag_query", "rag_list_sources", "rag_remove_source"],
         "includes": []
     },

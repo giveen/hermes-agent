@@ -2323,6 +2323,16 @@ def _get_section_config_summary(config: dict, section_key: str) -> Optional[str]
             return ", ".join(tools)
         return None
 
+    elif section_key == "secrets":
+        bwc = cfg_get(config, "secrets", "bitwarden", default={})
+        if not isinstance(bwc, dict):
+            bwc = {}
+        project_id = bwc.get("project_id", "")
+        if get_env_value("BWS_ACCESS_TOKEN") and project_id:
+            short = str(project_id)[:8]
+            return f"Bitwarden (project …{short})"
+        return None
+
     return None
 
 
@@ -2596,6 +2606,294 @@ def _offer_openclaw_migration(hermes_home: Path) -> bool:
     return True
 
 
+
+
+def setup_secrets(config: dict):
+    """Configure a secret source for Hermes.
+
+    Supports:
+      - LLM Secrets (scrt4) — local passkey-protected vault
+      - Bitwarden Secrets Manager — cloud BSM subscription
+    """
+    print_header("Secret Management")
+    print_info(
+        "Hermes can pull API keys from an external secret source at startup"
+        " so they don't have to live in plaintext in ~/.hermes/.env."
+    )
+    print()
+
+    secret_choice = prompt_choice(
+        "Which secret source would you like to configure?",
+        [
+            "System Keyring (libsecret) — native Ubuntu keyring (recommended)",
+            "LLM Secrets (scrt4) — passkey-protected vault",
+            "Bitwarden Secrets Manager — cloud BSM subscription",
+        ],
+        0,
+    )
+
+    if secret_choice == 0:
+        _setup_libsecret(config)
+    elif secret_choice == 1:
+        _setup_llm_secrets(config)
+    else:
+        _setup_bitwarden_secrets(config)
+
+
+
+def _setup_libsecret(config: dict):
+    """Configure the system keyring (libsecret) as the credential backend."""
+    print_header("System Keyring (libsecret)")
+    print_info(
+        "Hermes uses your system keyring (GNOME Keyring / KDE Wallet)"
+        " to store and read credentials securely."
+    )
+    print()
+
+    # Check availability
+    from agent.secret_sources.libsecret import check_available, store_env_var, lookup_env_var, _list_all
+
+    available, msg = check_available()
+    if not available:
+        print_warning(f"Keyring not available: {msg}")
+        print_info("The keyring is only available in a desktop session.")
+        return
+
+    print_success("System keyring is available and unlocked.")
+    print()
+
+    # Show existing Hermes secrets
+    existing = _list_all()
+    if existing:
+        print_info(f"Found {len(existing)} existing Hermes credential(s) in keyring:")
+        for key in sorted(existing):
+            print_info(f"  ✓ {key}")
+        print()
+        if not prompt_yes_no("Add more credentials?", True):
+            cfg = config.setdefault("secrets", {}).setdefault("libsecret", {})
+            cfg["enabled"] = True
+            cfg["override_existing"] = True
+            save_config(config)
+            print_success("System keyring is enabled.")
+            return
+        print()
+
+    # Add credentials
+    print_info("Enter credentials to store in the keyring.")
+    print_info("These are common Hermes env vars — add the ones you use:")
+    print()
+
+    common_vars = [
+        "OPENROUTER_API_KEY",
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "GEMINI_API_KEY",
+        "GOOGLE_API_KEY",
+        "XAI_API_KEY",
+        "OPENAI_BASE_URL",
+        "GITHUB_TOKEN",
+        "SSHPASS",
+        "SUDO_PASSWORD",
+    ]
+
+    for var in common_vars:
+        existing_val = lookup_env_var(var) or os.environ.get(var) or get_env_value(var)
+        if existing_val:
+            print_info(f"  {var}: already configured")
+            if not prompt_yes_no(f"    Update {var}?", False):
+                continue
+        else:
+            print_info(f"  {var}")
+            if not prompt_yes_no(f"    Add {var}?", False):
+                continue
+
+        value = prompt(f"    {var}", password=True)
+        if value:
+            store_env_var(var, value)
+            print_success(f"    {var} saved to keyring.")
+        else:
+            print_info(f"    Skipped.")
+        print()
+
+    # Save config
+    cfg = config.setdefault("secrets", {}).setdefault("libsecret", {})
+    cfg["enabled"] = True
+    cfg["override_existing"] = True
+    save_config(config)
+
+    print()
+    print_success("System keyring is enabled.")
+    print_info("Credentials will be read from the keyring at startup.")
+    print_info("Manage with: hermes secrets keyring list|add|remove")
+
+def _setup_llm_secrets(config: dict):
+    """Configure LLM Secrets (scrt4) as the credential backend."""
+    import subprocess, shutil
+
+    print_header("LLM Secrets (scrt4)")
+    print_info(
+        "LLM Secrets stores API keys in a passkey-protected encrypted vault."
+        " Secrets are unlocked with your phone, laptop, or security key."
+    )
+    print()
+
+    # Check if scrt4 is installed
+    binary = shutil.which("scrt4") or shutil.which("scrt4-daemon")
+    if binary:
+        print_success("scrt4 is installed.")
+    else:
+        print_info("scrt4 is not installed.")
+        if prompt_yes_no("Install scrt4 now? (curl + sh)", True):
+            try:
+                env = os.environ.copy()
+                env["SCRT4_SKIP_DEPS"] = "1"
+                env["SCRT4_SKIP_SERVICE"] = "1"
+                r = subprocess.run(
+                    ["sh", "-c", "curl -fsSL https://install.llmsecrets.com/native | sh"],
+                    capture_output=True, text=True, timeout=120,
+                    env=env,
+                )
+                if r.returncode == 0:
+                    print_success("scrt4 installed.")
+                else:
+                    print_warning(f"Install failed: {r.stderr[:200]}")
+                    print_info("Install manually: curl -fsSL https://install.llmsecrets.com/native | sh")
+                    return
+            except Exception as exc:
+                print_warning(f"Install failed: {exc}")
+                return
+        else:
+            print_info("Install manually: curl -fsSL https://install.llmsecrets.com/native | sh")
+            print_info("Then re-run: hermes setup secrets")
+            return
+
+    # Check daemon + session status
+    from agent.secret_sources.llm_secrets import (
+        _daemon_is_reachable, _start_daemon, _daemon_is_active,
+        _daemon_request,
+    )
+
+    if not _daemon_is_reachable():
+        print_info("Starting scrt4 daemon...")
+        if not _start_daemon():
+            print_warning("Could not start scrt4 daemon.")
+            print_info("Start manually: scrt4-daemon &")
+            print_info("Then re-run: hermes setup secrets")
+            return
+        print_success("Daemon started.")
+
+    if not _daemon_is_active():
+        print_info("No active scrt4 session.")
+        print_info("You need to unlock your vault with your passkey:")
+        print_info("  1. Run in a terminal: scrt4 unlock")
+        print_info("  2. Tap your phone/security key when prompted")
+        print_info("  3. Re-run: hermes setup secrets")
+        print()
+        if prompt_yes_no("Open the unlock URL in a browser instead?", False):
+            # scrt4 supports unlocking via localhost WebAuthn
+            try:
+                subprocess.Popen(
+                    [str(shutil.which("scrt4") or ""), "unlock", "--agent"],
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                )
+                print_info("Follow the QR code or URL in your terminal.")
+            except Exception:
+                pass
+        return
+
+    # Check what secrets are available
+    names_data = _daemon_request("list")
+    available = names_data.get("names", []) if names_data else []
+    if available:
+        print_success(f"Vault unlocked — {len(available)} secret(s) available.")
+        for name in sorted(available):
+            print_info(f"  • {name}")
+    else:
+        print_info("Vault is unlocked but has no secrets.")
+        print_info("Import from .env: scrt4 import .env")
+        print_info("Or add manually:   scrt4 add KEY=value")
+        return
+
+    # Save config
+    cfg = config.setdefault("secrets", {}).setdefault("llm_secrets", {})
+    cfg["enabled"] = True
+    cfg["override_existing"] = True
+    save_config(config)
+
+    print()
+    print_success("LLM Secrets is enabled.")
+    print_info("Secrets will be pulled from the vault at startup.")
+    print_info("Keep your vault unlocked with: scrt4 unlock")
+    print_info("Manage: hermes secrets llm-secrets status")
+
+
+def _setup_bitwarden_secrets(config: dict):
+    """Configure Bitwarden Secrets Manager as the credential backend (existing flow)."""
+    from agent.secret_sources.bitwarden import (
+        find_bws,
+        install_bws,
+        fetch_bitwarden_secrets,
+    )
+
+    print_header("Bitwarden Secrets Manager")
+    print_info(
+        "Hermes pulls API keys from Bitwarden Secrets Manager at startup"
+        " so they don't have to live in plaintext in ~/.hermes/.env."
+    )
+    print()
+    print_info("You'll need a Bitwarden Secrets Manager subscription and")
+    print_info("a machine-account access token. Vaultwarden (self-hosted)")
+    print_info("does not implement the BSM API, so a cloud Bitwarden")
+    print_info("account or a BSM-compatible server is required.")
+    print()
+    # ── Connect to existing Bitwarden instance ──
+    cfg = config.setdefault("secrets", {}).setdefault("bitwarden", {})
+    token_env = str(cfg.get("access_token_env", "BWS_ACCESS_TOKEN"))
+    existing_token = get_env_value(token_env)
+    existing_project = str(cfg.get("project_id", ""))
+
+
+
+
+
+
+
+
+def _wizard_list_bw_projects(binary, token, server_url=""):
+    """List Bitwarden projects visible to this machine account.
+
+    Returns list of dicts with 'id' and 'name', or None on failure.
+    """
+    import json
+    import subprocess
+
+    env = os.environ.copy()
+    env["BWS_ACCESS_TOKEN"] = token
+    env.setdefault("NO_COLOR", "1")
+    if server_url:
+        env["BWS_SERVER_URL"] = server_url
+    try:
+        res = subprocess.run(
+            [str(binary), "project", "list", "--output", "json"],
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=15,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+
+    if res.returncode != 0:
+        return None
+
+    try:
+        data = json.loads(res.stdout or "[]")
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(data, list):
+        return []
+    return [p for p in data if isinstance(p, dict) and p.get("id")]
+
 # =============================================================================
 # Main Wizard Orchestrator
 # =============================================================================
@@ -2603,7 +2901,7 @@ def _offer_openclaw_migration(hermes_home: Path) -> bool:
 SETUP_SECTIONS = [
     ("model", "Model & Provider", setup_model_provider),
     ("tts", "Text-to-Speech", setup_tts),
-    ("terminal", "Terminal Backend", setup_terminal_backend),
+    ("secrets", "Secret Management (Bitwarden)", setup_secrets),
     ("gateway", "Messaging Platforms (Gateway)", setup_gateway),
     ("tools", "Tools", setup_tools),
     ("agent", "Agent Settings", setup_agent_settings),
@@ -2902,23 +3200,29 @@ def run_setup_wizard(args):
     if not (migration_ran and _skip_configured_section(config, "model", "Model & Provider")):
         setup_model_provider(config)
 
-    # Section 2: Terminal Backend
+    # Section 2: Secret Management (Bitwarden) — runs early so downstream
+    # sections (tools, messaging) see the resolved credentials.
+    if not (migration_ran and _skip_configured_section(config, "secrets", "Secret Management (Bitwarden)")):
+        setup_secrets(config)
+
+    # Section 3: Terminal Backend
     if not (migration_ran and _skip_configured_section(config, "terminal", "Terminal Backend")):
         setup_terminal_backend(config)
 
-    # Section 3: Agent Settings — no longer prompted. First installs get the
+    # Section 4: Agent Settings — no longer prompted. First installs get the
     # recommended defaults silently; existing installs keep whatever they have.
     # Tune later with `hermes setup agent`.
     if not is_existing:
         _apply_default_agent_settings(config)
 
-    # Section 4: Messaging Platforms
+    # Section 5: Messaging Platforms
     if not (migration_ran and _skip_configured_section(config, "gateway", "Messaging Platforms")):
         setup_gateway(config)
 
-    # Section 5: Tools
+    # Section 6: Tools
     if not (migration_ran and _skip_configured_section(config, "tools", "Tools")):
         setup_tools(config, first_install=not is_existing)
+
 
     # Save and show summary
     save_config(config)
@@ -2971,13 +3275,28 @@ def _run_first_time_quick_setup(config: dict, hermes_home, is_existing: bool):
     # Step 2: Terminal Backend — where commands run is a core decision
     setup_terminal_backend(config)
 
-    # Step 3: Apply defaults for everything else
+    # Step 3: Secret Management (Bitwarden) — optional but recommended
+    print()
+    bwc = prompt_yes_no(
+        "Set up Bitwarden Secrets Manager for credential storage? "
+        "(Recommended for production use.)",
+        False,
+    )
+    if bwc:
+        setup_secrets(config)
+        save_config(config)
+        # Re-sync config dict after setup_secrets writes to disk
+        _refreshed2 = load_config()
+        config.clear()
+        config.update(_refreshed2)
+
+
+    # Step 4: Apply defaults for everything else
     _apply_default_agent_settings(config)
 
     save_config(config)
 
-    # Step 4: Offer messaging gateway setup
-    print()
+    # Step 5: Offer messaging gateway setup
     gateway_choice = prompt_choice(
         "Connect a messaging platform? (Telegram, Discord, etc.)",
         [

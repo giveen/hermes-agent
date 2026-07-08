@@ -174,6 +174,20 @@ def _ensure_builtin_sources() -> None:
     except Exception:  # noqa: BLE001 — never block startup
         logger.warning("Failed to register bundled 1Password secret source",
                        exc_info=True)
+    try:
+        from agent.secret_sources.llm_secrets import LLMSecretsSource
+
+        register_source(LLMSecretsSource())
+    except Exception:  # noqa: BLE001 — never block startup
+        logger.warning("Failed to register bundled LLM Secrets source",
+                       exc_info=True)
+    try:
+        from agent.secret_sources.libsecret import LibsecretSource
+
+        register_source(LibsecretSource())
+    except Exception:  # noqa: BLE001 — never block startup
+        logger.warning("Failed to register bundled libsecret source",
+                       exc_info=True)
 
 
 def _reset_registry_for_tests() -> None:

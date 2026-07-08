@@ -3093,10 +3093,11 @@ DEFAULT_CONFIG = {
         # Example: sources: [onepassword, bitwarden]
         # "sources": [],
         "bitwarden": {
-            # Master switch.  When false, BSM is never contacted and the
-            # bws binary is never auto-installed — same as not having
-            # this section at all.
-            "enabled": False,
+            # Master switch.  When true (default), Bitwarden BSM is
+            # contacted at startup to pull credentials.  New installs
+            # configure this during `hermes setup`; existing installs
+            # can opt in via `hermes secrets bitwarden setup`.
+            "enabled": True,
             # Name of the env var that holds the Bitwarden machine-account
             # access token.  This is the one bootstrap secret; it lives
             # in ~/.hermes/.env (or your shell) and never in config.yaml.
@@ -3149,6 +3150,27 @@ DEFAULT_CONFIG = {
             # When True (default), resolved values overwrite existing env
             # vars so rotating a secret in 1Password takes effect on next
             # start.  Flip to false to let .env / shell exports win locally.
+            "override_existing": True,
+        },
+        "llm_secrets": {
+            # Master switch.  When true, the scrt4 daemon is contacted at
+            # startup to pull secrets from an unlocked vault.
+            "enabled": False,
+            # Seconds to re-fetch from the daemon.  The daemon holds values
+            # in memory during an active session, so this is an in-process
+            # cache TTL, not a network re-fetch.
+            "cache_ttl_seconds": 300,
+            # When True (default), scrt4 values overwrite existing env vars.
+            "override_existing": True,
+            # Optional absolute path to the scrt4 binary.  Empty = resolve
+            # via PATH, then check common install locations.
+            "binary_path": "",
+        },
+        "libsecret": {
+            # Master switch.  When true, Hermes reads credentials from
+            # the system keyring (GNOME Keyring / KDE Wallet) at startup.
+            "enabled": False,
+            # When True (default), keyring values overwrite .env/shell values.
             "override_existing": True,
         },
     },
