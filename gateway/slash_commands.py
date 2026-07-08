@@ -2775,6 +2775,188 @@ class GatewaySlashCommandsMixin:
                    "reject <id>, approval <on|off>.")
         return out
 
+
+    async def _handle_rag_command(self, event: MessageEvent) -> str:
+        """Handle /rag — query RAG, list sources, or ingest a URL.
+
+        URL ingestion works in the gateway (no local file access needed).
+        Local file ingestion (/rag ingest <path>) is CLI-only.
+        """
+        raw_args = event.get_command_args().strip()
+        if not raw_args:
+            return ("Usage:\n"
+                    "  /rag ingest <url>                — scrape URL into RAG\n"
+                    "  /rag query <text> [--top-k N]   — semantic search\n"
+                    "  /rag list                        — show ingested sources\n"
+                    "  /rag remove <path>               — use from CLI\n"
+                    "  /rag ingest <path>               — CLI only (local file)")
+
+        sub = raw_args.split()[0].lower()
+        sub_args = raw_args[len(sub):].strip()
+
+        try:
+            from tools.rag_tool import (
+                rag_ingest,
+                rag_query,
+                rag_list_sources,
+                rag_remove_source,
+            )
+        except ImportError:
+            return "RAG tool not available (fastembed not installed)."
+
+        if sub == "query":
+            _top_k = 5
+            _parts = sub_args.split()
+            _query_end = len(_parts)
+            for i, t in enumerate(_parts):
+                if t == "--top-k" and i + 1 < len(_parts):
+                    try:
+                        _top_k = int(_parts[i + 1])
+                    except ValueError:
+                        pass
+                    _query_end = i
+                    break
+            _query = " ".join(_parts[:_query_end])
+            if not _query:
+                return "Usage: /rag query <text> [--top-k N]"
+            # rag_query is synchronous (SQLite + FastEmbed, no I/O wait)
+            result = await asyncio.to_thread(rag_query, query=_query, top_k=_top_k)
+            return result
+
+        elif sub == "list":
+            result = await asyncio.to_thread(rag_list_sources)
+            return result
+
+        elif sub == "remove":
+            if not sub_args:
+                return "Usage: /rag remove <path>"
+            result = await asyncio.to_thread(
+                rag_remove_source, file_path=sub_args.split()[0]
+            )
+            return result
+
+        elif sub == "ingest":
+            if not sub_args:
+                return "Usage: /rag ingest <path|url>"
+            target = sub_args.split()[0]
+
+            # Local path — CLI only
+            if not target.startswith(("http://", "https://")):
+                return "/rag ingest <path> requires local file access — use it from the CLI."
+
+            # URL — fetch + extract + ingest
+            try:
+                result = await self._rag_ingest_url(target)
+                return result
+            except Exception as exc:
+                return f"URL ingestion failed: {exc}"
+
+        else:
+            return (f"Unknown /rag subcommand: {sub}. "
+                    "Use: ingest <url>, query, list.")
+
+    async def _rag_ingest_url(self, url: str) -> str:
+        """Fetch a URL, extract text, and ingest into the RAG store.
+
+        Runs synchronously in a thread pool to avoid blocking the event loop.
+        """
+        import json
+        import re as _re
+        import tempfile
+        from html.parser import HTMLParser
+        from pathlib import Path
+
+        import httpx
+
+        # Fetch
+        try:
+            async with httpx.AsyncClient(follow_redirects=True, timeout=30.0) as client:
+                resp = await client.get(url)
+                resp.raise_for_status()
+        except Exception as exc:
+            return json.dumps({"success": False, "error": f"Failed to fetch URL: {exc}"})
+
+        content_type = (resp.headers.get("content-type") or "").lower()
+        url_lower = url.lower()
+
+        is_pdf = "pdf" in content_type or url_lower.endswith(".pdf")
+        is_plain = any(
+            ct in content_type
+            for ct in ("text/plain", "text/markdown", "application/json",
+                       "application/xml", "text/xml")
+        ) or url_lower.endswith((".md", ".txt", ".json", ".xml", ".yaml", ".yml", ".csv"))
+
+        # Extract text
+        def _extract() -> str:
+            if is_pdf:
+                tmp = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
+                try:
+                    tmp.write(resp.content)
+                    tmp.close()
+                    from tools.rag_tool import _extract_pdf_text
+                    return _extract_pdf_text(Path(tmp.name))
+                finally:
+                    Path(tmp.name).unlink(missing_ok=True)
+
+            if is_plain:
+                return resp.text
+
+            # HTML
+            class _TE(HTMLParser):
+                def __init__(self):
+                    super().__init__()
+                    self.parts: list[str] = []
+                    self._skip = False
+                def handle_starttag(self, tag, attrs):
+                    if tag in ("script", "style", "noscript"):
+                        self._skip = True
+                    if tag in ("p", "br", "h1", "h2", "h3", "h4", "h5", "h6",
+                               "li", "tr", "th", "td", "div", "section", "header"):
+                        self.parts.append("\n")
+                def handle_endtag(self, tag):
+                    if tag in ("script", "style", "noscript"):
+                        self._skip = False
+                def handle_data(self, data):
+                    if not self._skip:
+                        t = data.strip()
+                        if t:
+                            self.parts.append(t + " ")
+            p = _TE()
+            p.feed(resp.text)
+            return _re.sub(r"\n{3,}", "\n\n", "".join(p.parts)).strip()
+
+        text = await asyncio.to_thread(_extract)
+        if not text:
+            return json.dumps({"success": False, "error": "No extractable text"})
+
+        # Write temp file + ingest
+        def _ingest() -> str:
+            from tools.rag_tool import _get_db_path
+            tmp_dir = _get_db_path().parent / "_tmp"
+            tmp_dir.mkdir(parents=True, exist_ok=True)
+            safe_name = _re.sub(r"[^a-zA-Z0-9_\-]", "_", url.split("//", 1)[-1].split("/")[0])
+            tmp_file = tmp_dir / f"url_{safe_name}.txt"
+            tmp_file.write_text(text, encoding="utf-8")
+
+            result = rag_ingest(path=str(tmp_file), recursive=False)
+
+            # Rename source to URL for discoverability
+            from tools.rag_tool import _get_connection
+            conn = _get_connection()
+            try:
+                conn.execute(
+                    "UPDATE rag_sources SET file_path = ? WHERE file_path = ?",
+                    (url, str(tmp_file)),
+                )
+                conn.commit()
+            except Exception:
+                conn.rollback()
+            finally:
+                conn.close()
+            return result
+
+        return await asyncio.to_thread(_ingest)
+
     async def _handle_skills_command(self, event: MessageEvent) -> str:
         """Handle /skills on the gateway — pending skill-write review only.
 

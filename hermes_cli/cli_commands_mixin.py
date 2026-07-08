@@ -1589,6 +1589,253 @@ class CLICommandsMixin:
                    "Use: pending, approve <id>, reject <id>, approval <on|off>.")
         print(out)
 
+
+    def _handle_rag_command(self, cmd: str):
+        """Handle /rag — ingest documents or query the RAG store.
+
+        Subcommands:
+          /rag ingest <path|url> [--ocr] [--chunk-size N] [--chunk-overlap N]
+          /rag query <text> [--top-k N]
+          /rag list
+          /rag remove <path>
+        """
+        parts = cmd.strip().split(maxsplit=1)
+        args_raw = (parts[1] if len(parts) > 1 else "").strip()
+
+        if not args_raw:
+            print("Usage:")
+            print("  /rag ingest <path|url> [--ocr] [--chunk-size N]  — file or URL")
+            print("  /rag query <text> [--top-k N]                    — semantic search")
+            print("  /rag list                                        — show sources")
+            print("  /rag remove <path>                               — remove source")
+            return
+
+        subcmd = args_raw.split()[0].lower()
+        sub_args = args_raw[len(subcmd):].strip()
+
+        try:
+            from tools.rag_tool import (
+                rag_ingest,
+                rag_query,
+                rag_list_sources,
+                rag_remove_source,
+            )
+        except ImportError:
+            print("  RAG tool not available. Install with: pip install fastembed")
+            return
+
+        if subcmd == "ingest":
+            if not sub_args:
+                print("  Usage: /rag ingest <path|url> [--ocr] [--chunk-size N]")
+                return
+
+            # Parse --flags
+            _parts = sub_args.split()
+            _target = _parts[0]
+            _ocr = "--ocr" in _parts
+            _chunk_size = 512
+            _chunk_overlap = 64
+            for i, t in enumerate(_parts):
+                if t == "--chunk-size" and i + 1 < len(_parts):
+                    try:
+                        _chunk_size = int(_parts[i + 1])
+                    except ValueError:
+                        pass
+                if t == "--chunk-overlap" and i + 1 < len(_parts):
+                    try:
+                        _chunk_overlap = int(_parts[i + 1])
+                    except ValueError:
+                        pass
+
+            # URL detection
+            if _target.startswith(("http://", "https://")):
+                result = self._rag_ingest_url(
+                    _target,
+                    chunk_size=_chunk_size,
+                    chunk_overlap=_chunk_overlap,
+                )
+            elif _ocr and _target.lower().endswith(".pdf"):
+                from tools.rag_tool import rag_ingest_pdf
+                result = rag_ingest_pdf(path=_target, ocr=True, chunk_size=_chunk_size)
+            else:
+                result = rag_ingest(path=_target, recursive=True,
+                                    chunk_size=_chunk_size,
+                                    chunk_overlap=_chunk_overlap)
+            print(result)
+
+        elif subcmd == "query":
+            if not sub_args:
+                print("  Usage: /rag query <text> [--top-k N]")
+                return
+            _top_k = 5
+            _query_parts = sub_args.split()
+            _query_end = len(_query_parts)
+            for i, t in enumerate(_query_parts):
+                if t == "--top-k" and i + 1 < len(_query_parts):
+                    try:
+                        _top_k = int(_query_parts[i + 1])
+                    except ValueError:
+                        pass
+                    _query_end = i
+                    break
+            _query = " ".join(_query_parts[:_query_end])
+            result = rag_query(query=_query, top_k=_top_k)
+            print(result)
+
+        elif subcmd == "list":
+            result = rag_list_sources()
+            print(result)
+
+        elif subcmd == "remove":
+            if not sub_args:
+                print("  Usage: /rag remove <path>")
+                return
+            result = rag_remove_source(file_path=sub_args.split()[0])
+            print(result)
+
+        else:
+            print(f"  Unknown /rag subcommand: {subcmd}")
+            print("  Usage: /rag [ingest|query|list|remove] ...")
+
+    def _rag_ingest_url(
+        self,
+        url: str,
+        chunk_size: int = 512,
+        chunk_overlap: int = 64,
+    ) -> str:
+        """Fetch a URL, extract text, and ingest into RAG.
+
+        Handles HTML pages, PDFs, and plain-text URLs. Uses httpx
+        (already a dependency) and stdlib to avoid extra deps.
+        """
+        import json
+        import tempfile
+        from pathlib import Path
+        from html.parser import HTMLParser
+
+        import httpx
+
+        # ── Fetch ──────────────────────────────────────────────────────
+        try:
+            with httpx.Client(follow_redirects=True, timeout=30.0) as client:
+                resp = client.get(url)
+                resp.raise_for_status()
+        except Exception as exc:
+            return json.dumps({
+                "success": False,
+                "error": f"Failed to fetch URL: {exc}",
+            })
+
+        content_type = (resp.headers.get("content-type") or "").lower()
+        url_lower = url.lower()
+
+        # ── Determine format and extract text ──────────────────────────
+        is_pdf = "pdf" in content_type or url_lower.endswith(".pdf")
+        is_html = "html" in content_type or not is_pdf
+        is_plain = any(
+            ct in content_type
+            for ct in ("text/plain", "text/markdown", "application/json", "application/xml", "text/xml")
+        ) or url_lower.endswith((".md", ".txt", ".json", ".xml", ".yaml", ".yml", ".csv"))
+
+        try:
+            if is_pdf:
+                # Download PDF to a temp file and extract via existing helper
+                tmp_pdf = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
+                try:
+                    tmp_pdf.write(resp.content)
+                    tmp_pdf.close()
+                    from tools.rag_tool import _extract_pdf_text
+                    text = _extract_pdf_text(Path(tmp_pdf.name))
+                finally:
+                    Path(tmp_pdf.name).unlink(missing_ok=True)
+
+            elif is_plain:
+                # Raw text — use response body directly
+                text = resp.text
+
+            else:
+                # HTML — strip tags with stdlib HTMLParser
+                class _TextExtractor(HTMLParser):
+                    def __init__(self):
+                        super().__init__()
+                        self.parts: list[str] = []
+                        self._skip = False
+                    def handle_starttag(self, tag, attrs):
+                        if tag in ("script", "style", "noscript"):
+                            self._skip = True
+                        if tag in ("p", "br", "h1", "h2", "h3", "h4", "h5", "h6",
+                                   "li", "tr", "th", "td", "div", "section", "header"):
+                            self.parts.append("\n")
+                    def handle_endtag(self, tag):
+                        if tag in ("script", "style", "noscript"):
+                            self._skip = False
+                    def handle_data(self, data):
+                        if not self._skip:
+                            text = data.strip()
+                            if text:
+                                self.parts.append(text + " ")
+
+                parser = _TextExtractor()
+                parser.feed(resp.text)
+                raw = "".join(parser.parts)
+                import re as _re
+                text = _re.sub(r"\n{3,}", "\n\n", raw).strip()
+
+            if not text or not text.strip():
+                return json.dumps({
+                    "success": False,
+                    "error": "No extractable text found at URL",
+                })
+
+        except Exception as exc:
+            return json.dumps({
+                "success": False,
+                "error": f"Text extraction failed: {exc}",
+            })
+
+        # ── Write to temp file and ingest ──────────────────────────────
+        try:
+            from tools.rag_tool import _get_db_path
+            tmp_dir = _get_db_path().parent / "_tmp"
+            tmp_dir.mkdir(parents=True, exist_ok=True)
+
+            # Derive a filename from the URL
+            import re as _re2
+            safe_name = _re2.sub(r"[^a-zA-Z0-9_\-]", "_", url.split("//", 1)[-1].split("/")[0])
+            if url_lower.endswith(".pdf"):
+                safe_name += ".txt"
+            tmp_file = tmp_dir / f"url_{safe_name}.txt"
+            tmp_file.write_text(text, encoding="utf-8")
+
+            result = rag_ingest(
+                path=str(tmp_file),
+                recursive=False,
+                chunk_size=chunk_size,
+                chunk_overlap=chunk_overlap,
+            )
+
+            # Rename the source to show the URL instead of the temp path
+            from tools.rag_tool import _get_connection, _DB_PATH
+            conn = _get_connection()
+            try:
+                conn.execute(
+                    "UPDATE rag_sources SET file_path = ? WHERE file_path = ?",
+                    (url, str(tmp_file)),
+                )
+                conn.commit()
+            except Exception:
+                conn.rollback()
+            finally:
+                conn.close()
+
+            return result
+
+        except Exception as exc:
+            return json.dumps({
+                "success": False,
+                "error": f"RAG ingestion failed: {exc}",
+            })
+
     def _save_write_approval(self, subsystem: str, enabled: bool):
         """Persist <subsystem>.write_approval to config (for /memory|/skills approval)."""
         from cli import save_config_value

@@ -36,7 +36,6 @@ _DEFAULT_CHUNK_OVERLAP = 64
 _DEFAULT_TOP_K = 5
 _EMBEDDING_MODEL = "BAAI/bge-small-en-v1.5"  # 384-dim, ~5ms on CPU
 
-# Supported file extensions for ingestion
 _SUPPORTED_EXTENSIONS = frozenset({
     ".txt", ".md", ".rst", ".py", ".js", ".ts", ".jsx", ".tsx",
     ".rs", ".go", ".java", ".c", ".cpp", ".h", ".hpp", ".cs",
@@ -44,6 +43,8 @@ _SUPPORTED_EXTENSIONS = frozenset({
     ".yaml", ".yml", ".toml", ".ini", ".cfg", ".conf",
     ".json", ".xml", ".html", ".css", ".scss",
     ".log", ".csv", ".tsv",
+    # Binary document formats (converted to text before ingestion)
+    ".pdf", ".docx", ".doc", ".xlsx", ".xls", ".pptx", ".ppt",
 })
 
 # Directories to skip
@@ -186,6 +187,178 @@ def _chunk_text(text: str, chunk_size: int = _DEFAULT_CHUNK_SIZE,
     _flush()
     return chunks
 
+# ---------------------------------------------------------------------------
+# Document format extraction
+# ---------------------------------------------------------------------------
+
+
+def _extract_text(path: Path) -> str:
+    """Extract text from a file, handling binary document formats.
+
+    For text/code files (utf-8), reads directly. For binary documents
+    (PDF, DOCX, XLSX, PPTX), converts to plain text.
+    """
+    ext = path.suffix.lower()
+
+    # Binary document formats
+    if ext == ".pdf":
+        return _extract_pdf_text(path)
+    if ext in (".docx", ".doc"):
+        return _extract_docx_text(path)
+    if ext in (".xlsx", ".xls"):
+        return _extract_xlsx_text(path)
+    if ext in (".pptx", ".ppt"):
+        return _extract_pptx_text(path)
+
+    # Text formats — read directly
+    return path.read_text(encoding="utf-8", errors="replace")
+
+
+def _extract_pdf_text(path: Path) -> str:
+    """Extract text from a PDF using PyMuPDF, with optional OCR fallback."""
+    try:
+        import fitz  # PyMuPDF
+    except ImportError:
+        raise RuntimeError("PyMuPDF not installed. Run: pip install pymupdf")
+
+    ocr_available = False
+    try:
+        import pytesseract  # noqa: F401
+        ocr_available = True
+    except ImportError:
+        pass
+
+    doc = fitz.open(str(path))
+    pages: list[str] = []
+    try:
+        for page_num in range(len(doc)):
+            page = doc[page_num]
+            text = page.get_text().strip()
+
+            if len(text) < 50 and ocr_available:
+                pix = page.get_pixmap(dpi=300)
+                img_bytes = pix.tobytes("png")
+                import pytesseract
+                ocr_text = pytesseract.image_to_string(img_bytes).strip()
+                if ocr_text:
+                    pages.append(ocr_text)
+                else:
+                    pages.append(f"[Page {page_num + 1} — no text extracted]")
+            elif text:
+                pages.append(text)
+            else:
+                pages.append(f"[Page {page_num + 1} — empty]")
+    finally:
+        doc.close()
+
+    return "\n\n".join(pages)
+
+
+def _extract_docx_text(path: Path) -> str:
+    """Extract text from a Word .docx file."""
+    try:
+        from docx import Document as _Document
+    except ImportError:
+        raise RuntimeError("python-docx not installed. Run: pip install python-docx")
+
+    doc = _Document(str(path))
+    lines: list[str] = []
+
+    for para in doc.paragraphs:
+        text = para.text.strip()
+        if text:
+            lines.append(text)
+
+    for table in doc.tables:
+        rows_text: list[str] = []
+        for row in table.rows:
+            cells = [cell.text.strip() for cell in row.cells]
+            rows_text.append(" | ".join(cells))
+        if any(r.strip(" |") for r in rows_text):
+            lines.append("")
+            lines.extend(rows_text)
+            lines.append("")
+
+    for section in doc.sections:
+        for header in (section.header,):
+            if header and not header.is_linked_to_previous:
+                for para in header.paragraphs:
+                    text = para.text.strip()
+                    if text:
+                        lines.append(f"[Header] {text}")
+        for footer in (section.footer,):
+            if footer and not footer.is_linked_to_previous:
+                for para in footer.paragraphs:
+                    text = para.text.strip()
+                    if text:
+                        lines.append(f"[Footer] {text}")
+
+    return "\n".join(lines)
+
+
+def _extract_xlsx_text(path: Path) -> str:
+    """Extract text from an Excel .xlsx file."""
+    try:
+        import openpyxl
+    except ImportError:
+        raise RuntimeError("openpyxl not installed. Run: pip install openpyxl")
+
+    wb = openpyxl.load_workbook(str(path), read_only=True, data_only=True)
+    out: list[str] = []
+    try:
+        for sheet_name in wb.sheetnames:
+            ws = wb[sheet_name]
+            if ws.sheet_state in {"hidden", "veryHidden"}:
+                continue
+            out.append(f"# ── Sheet: {sheet_name} ──")
+            row_count = 0
+            for row in ws.iter_rows(values_only=True):
+                cleaned = [str(v) if v is not None else "" for v in row]
+                if not any(cell.strip() for cell in cleaned):
+                    continue
+                out.append("\t".join(cleaned))
+                row_count += 1
+            if row_count == 0:
+                out.append("(empty)")
+            out.append("")
+    finally:
+        wb.close()
+
+    return "\n".join(out)
+
+
+def _extract_pptx_text(path: Path) -> str:
+    """Extract text from a PowerPoint .pptx file (optional dependency)."""
+    try:
+        from pptx import Presentation
+    except ImportError:
+        raise RuntimeError(
+            "python-pptx not installed. Run: pip install python-pptx"
+        )
+
+    prs = Presentation(str(path))
+    lines: list[str] = []
+
+    for slide_num, slide in enumerate(prs.slides, 1):
+        slide_text: list[str] = []
+        for shape in slide.shapes:
+            if shape.has_text_frame:
+                for para in shape.text_frame.paragraphs:
+                    text = para.text.strip()
+                    if text:
+                        slide_text.append(text)
+            if shape.has_table:
+                table = shape.table
+                for row in table.rows:
+                    cells = [cell.text.strip() for cell in row.cells]
+                    slide_text.append(" | ".join(cells))
+        if slide_text:
+            lines.append(f"── Slide {slide_num} ──")
+            lines.extend(slide_text)
+            lines.append("")
+
+
+
 
 # ---------------------------------------------------------------------------
 # Core ingestion
@@ -242,7 +415,7 @@ def ingest_file(file_path: Path, chunk_size: int = _DEFAULT_CHUNK_SIZE,
                 "reason": f"unsupported extension: {file_path.suffix}"}
 
     try:
-        text = file_path.read_text(encoding="utf-8", errors="replace")
+        text = _extract_text(file_path)
     except Exception as exc:
         return {"file": str(file_path), "status": "error", "reason": str(exc)}
 
@@ -649,11 +822,13 @@ from tools.registry import registry, tool_error
 RAG_INGEST_SCHEMA = {
     "name": "rag_ingest",
     "description": (
-        "Ingest documents into the local RAG store. Reads files, splits them "
-        "into chunks, generates embeddings (via FastEmbed, local CPU, no API), "
-        "and stores for semantic search. Re-ingests only changed files. "
-        "Supports: .py, .js, .ts, .rs, .md, .txt, .go, .java, .c, .cpp, "
-        "and 30+ other file types."
+        "Ingest documents into the local RAG store. Reads files (text, code, "
+        "or binary documents), splits into chunks, generates embeddings (via "
+        "FastEmbed, local CPU, no API), and stores for semantic search. "
+        "Re-ingests only changed files. "
+        "Supports text/code (.py, .js, .ts, .rs, .md, .txt, .go, .java, "
+        "and 30+ source file types) plus binary documents: PDF (via PyMuPDF "
+        "with OCR fallback), Word (.docx), Excel (.xlsx), PowerPoint (.pptx)."
     ),
     "parameters": {
         "type": "object",

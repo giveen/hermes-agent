@@ -221,6 +221,10 @@ COMMAND_REGISTRY: list[CommandDef] = [
                subcommands=("connect", "disconnect", "status")),
     CommandDef("plugins", "List installed plugins and their status",
                "Tools & Skills", cli_only=True),
+    CommandDef("rag", "Ingest documents or URLs into RAG, or query ingested content",
+               "Tools & Skills",
+               args_hint="[ingest <path|url>|query <text>|list|remove <path>]",
+               subcommands=("ingest", "query", "list", "remove")),
 
     # Info
     CommandDef("commands", "Browse all commands and skills (paginated)", "Info",

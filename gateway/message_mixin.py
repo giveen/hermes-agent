@@ -568,6 +568,20 @@ class GatewayMessageMixin:
             if _cmd_def_inner and _cmd_def_inner.name == "kanban":
                 return await self._handle_kanban_command(event)
 
+            # /rag is safe mid-run for query and list (read-only).
+            # Mid-run ingest/remove are hard to support without file access.
+            if _cmd_def_inner and _cmd_def_inner.name == "rag":
+                _rag_arg = (event.get_command_args() or "").strip().lower()
+                _rag_sub = _rag_arg.split()[0] if _rag_arg else ""
+                if _rag_sub in ("query", "list"):
+                    return await self._handle_rag_command(event)
+                elif _rag_sub in ("ingest", "remove"):
+                    return f"/rag {_rag_sub} requires local file access — use it from the CLI."
+                else:
+                    return ("Agent is running — /rag query and /rag list are safe mid-turn. "
+                            "Use /rag ingest from the CLI.")
+
+
             # /goal is safe mid-run for status/pause/clear/wait (inspection
             # and control-plane only — doesn't interrupt the running turn).
             # Setting a new goal text mid-run is rejected with the same
@@ -894,6 +908,9 @@ class GatewayMessageMixin:
 
         if canonical == "memory":
             return await self._handle_memory_command(event)
+
+        if canonical == "rag":
+            return await self._handle_rag_command(event)
 
         if canonical == "skills":
             return await self._handle_skills_command(event)
