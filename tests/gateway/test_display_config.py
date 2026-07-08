@@ -87,11 +87,11 @@ class TestResolveDisplaySetting:
             "display": {
                 "tool_progress": "all",
                 "platforms": {
-                    "slack": {"tool_progress": "off"},
+                    "telegram": {"tool_progress": "off"},
                 },
             }
         }
-        assert resolve_display_setting(config, "slack", "tool_progress") == "off"
+        assert resolve_display_setting(config, "telegram", "tool_progress") == "off"
         assert resolve_display_setting(config, "telegram", "tool_progress") == "all"
 
 
@@ -212,15 +212,15 @@ class TestYAMLNormalisation:
         """String numbers are normalised to int."""
         from gateway.display_config import resolve_display_setting
 
-        config = {"display": {"platforms": {"slack": {"tool_preview_length": "80"}}}}
-        assert resolve_display_setting(config, "slack", "tool_preview_length") == 80
+        config = {"display": {"platforms": {"telegram": {"tool_preview_length": "80"}}}}
+        assert resolve_display_setting(config, "telegram", "tool_preview_length") == 80
 
     def test_platform_override_false_tool_progress(self):
         """Per-platform bare off → normalised."""
         from gateway.display_config import resolve_display_setting
 
-        config = {"display": {"platforms": {"slack": {"tool_progress": False}}}}
-        assert resolve_display_setting(config, "slack", "tool_progress") == "off"
+        config = {"display": {"platforms": {"telegram": {"tool_progress": False}}}}
+        assert resolve_display_setting(config, "telegram", "tool_progress") == "off"
 
 
 # ---------------------------------------------------------------------------
@@ -246,11 +246,11 @@ class TestPlatformDefaults:
         for plat in ("mattermost", "matrix", "feishu", "whatsapp"):
             assert resolve_display_setting({}, plat, "tool_progress") == "new", plat
 
-    def test_slack_defaults_tool_progress_off(self):
-        """Slack defaults to quiet tool progress (permanent chat noise otherwise)."""
+    def test_telegram_defaults_tool_progress_off(self):
+        """Telegram defaults to quiet tool progress (permanent chat noise otherwise)."""
         from gateway.display_config import resolve_display_setting
 
-        assert resolve_display_setting({}, "slack", "tool_progress") == "off"
+        assert resolve_display_setting({}, "telegram", "tool_progress") == "off"
 
     def test_low_tier_platforms(self):
         """Signal, BlueBubbles, etc. default to 'off' tool progress."""
@@ -454,7 +454,7 @@ class TestCleanupProgress:
         """No config set → cleanup_progress resolves to False everywhere."""
         from gateway.display_config import resolve_display_setting
 
-        for plat in ("telegram", "discord", "slack", "email"):
+        for plat in ("telegram", "discord", "telegram", "email"):
             assert resolve_display_setting({}, plat, "cleanup_progress") is False
 
     def test_global_true_applies_to_all_platforms(self):
@@ -575,7 +575,7 @@ class TestReasoningStyle:
     def test_other_platforms_default_to_code(self):
         from gateway.display_config import resolve_display_setting
 
-        for plat in ("telegram", "slack", "matrix", "api_server"):
+        for plat in ("telegram", "telegram", "matrix", "api_server"):
             assert (
                 resolve_display_setting({}, plat, "reasoning_style") == "code"
             ), plat

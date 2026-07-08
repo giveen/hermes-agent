@@ -273,7 +273,6 @@ from hermes_cli.subcommands.model import build_model_parser
 from hermes_cli.subcommands.setup import build_setup_parser
 from hermes_cli.subcommands.postinstall import build_postinstall_parser
 from hermes_cli.subcommands.whatsapp import build_whatsapp_parser
-from hermes_cli.subcommands.slack import build_slack_parser
 from hermes_cli.subcommands.login import build_login_parser
 from hermes_cli.subcommands.logout import build_logout_parser
 from hermes_cli.subcommands.auth import build_auth_parser
@@ -4216,35 +4215,6 @@ def cmd_webhook(args):
     webhook_command(args)
 
 
-def cmd_slack(args):
-    """Slack integration helpers.
-
-    Dispatches ``hermes slack <subcommand>``. Currently supports:
-      manifest — print or write a Slack app manifest with every gateway
-                 command registered as a first-class slash.
-    """
-    sub = getattr(args, "slack_command", None)
-    if sub in {None, ""}:
-        # No subcommand — print usage hint.
-        print(
-            "usage: hermes slack <subcommand>\n"
-            "\n"
-            "subcommands:\n"
-            "  manifest   Generate a Slack app manifest with every gateway\n"
-            "             command registered as a native slash\n"
-            "\n"
-            "Run `hermes slack manifest -h` for details.",
-            file=sys.stderr,
-        )
-        return 1
-
-    if sub == "manifest":
-        from hermes_cli.slack_cli import slack_manifest_command
-
-        return slack_manifest_command(args)
-
-    print(f"Unknown slack subcommand: {sub}", file=sys.stderr)
-    return 1
 
 
 def cmd_kanban(args):
@@ -12213,7 +12183,7 @@ _BUILTIN_SUBCOMMANDS = frozenset(
         "project", "proxy",
         "prompt-size",
         "send", "sessions", "setup",
-        "skills", "slack", "status", "tools", "uninstall", "update",
+        "skills", "status", "tools", "uninstall", "update",
         "version", "webhook", "whatsapp", "whatsapp-cloud", "chat", "secrets", "security",
         # Help-ish invocations — plugin commands not being listed in
         # top-level --help is an acceptable trade-off for skipping an
@@ -12930,10 +12900,6 @@ def main():
     )
     whatsapp_cloud_parser.set_defaults(func=cmd_whatsapp_cloud)
 
-    # =========================================================================
-    # slack command  (parser built in hermes_cli/subcommands/slack.py)
-    # =========================================================================
-    build_slack_parser(subparsers, cmd_slack=cmd_slack)
 
     # =========================================================================
     # send command — pipe shell-script output to any configured platform
@@ -13937,7 +13903,7 @@ def main():
             msgs = db.message_count()
             print(f"Total sessions: {total}")
             print(f"Total messages: {msgs}")
-            for src in ["cli", "telegram", "discord", "whatsapp", "slack"]:
+            for src in ["cli", "telegram", "discord", "whatsapp"]:
                 c = db.session_count(source=src)
                 if c > 0:
                     print(f"  {src}: {c} sessions")

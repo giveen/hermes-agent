@@ -31,7 +31,7 @@ class TestResolvePlatformHint:
         assert _resolve_platform_hint(a, "whatsapp", DEFAULT) == DEFAULT
 
     def test_platform_not_in_overrides_returns_default(self):
-        a = _agent({"slack": {"append": "x"}})
+        a = _agent({"telegram": {"append": "x"}})
         assert _resolve_platform_hint(a, "whatsapp", DEFAULT) == DEFAULT
 
     def test_append_dict(self):

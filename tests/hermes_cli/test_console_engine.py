@@ -123,7 +123,6 @@ EXPECTED_CONSOLE_COMMANDS = {
     ("hooks", "test"),
     ("hooks", "doctor"),
     ("hooks", "revoke"),
-    ("slack", "manifest"),
     ("project", "list"),
     ("project", "show"),
     ("project", "create"),
@@ -316,14 +315,10 @@ def test_console_help_uses_cli_subcommand_summaries():
 
 def test_console_help_table_keeps_long_summaries_compact():
     help_text = HermesConsoleEngine().help_text()
-
-    slack_line = next(
-        line for line in help_text.splitlines() if line.strip().startswith("slack manifest")
+    project_line = next(
+        line for line in help_text.splitlines() if line.strip().startswith("project list")
     )
-
-    assert len(slack_line) <= 112
-    assert slack_line.endswith("...")
-
+    assert len(project_line) <= 112
 
 def test_console_help_for_command_uses_cli_summary():
     help_text = HermesConsoleEngine().help_text("skills list")

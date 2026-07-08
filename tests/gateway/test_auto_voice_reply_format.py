@@ -46,9 +46,9 @@ class TestAutoVoiceReplyFormat:
     async def test_non_telegram_auto_voice_reply_keeps_mp3_default(self):
         """Non-Telegram platforms should keep the current MP3 default."""
         runner = _make_runner()
-        adapter = _make_adapter(Platform.SLACK)
-        runner.adapters[Platform.SLACK] = adapter
-        event = _make_event(Platform.SLACK)
+        adapter = _make_adapter(Platform.TELEGRAM)
+        runner.adapters[Platform.TELEGRAM] = adapter
+        event = _make_event(Platform.TELEGRAM)
         requested_paths = []
 
         def fake_tts(*, text, output_path):

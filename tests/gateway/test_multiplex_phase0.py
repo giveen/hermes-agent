@@ -97,7 +97,7 @@ class TestSessionKeyNamespacedWhenOn:
 
     def test_default_namespace_layout_matches_named(self):
         """Default and named keys differ ONLY in parts[1]."""
-        s = _src(platform=Platform.SLACK, chat_id="c1", chat_type="channel", user_id="u1")
+        s = _src(platform=Platform.TELEGRAM, chat_id="c1", chat_type="channel", user_id="u1")
         d = build_session_key(s, profile="default").split(":")
         n = build_session_key(s, profile="coder").split(":")
         assert d[0] == n[0] == "agent"

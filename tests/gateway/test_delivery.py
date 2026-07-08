@@ -71,17 +71,17 @@ class TestTargetToStringRoundtrip:
 class TestCaseSensitiveChatIdParsing:
     """Test that chat IDs preserve their original case (issue #11768)."""
     
-    def test_slack_uppercase_chat_id_preserved(self):
-        """Slack channel IDs like C123ABC should preserve case."""
-        target = DeliveryTarget.parse("slack:C123ABC")
-        assert target.platform == Platform.SLACK
+    def test_telegram_uppercase_chat_id_preserved(self):
+        """Telegram chat IDs like C123ABC should preserve case."""
+        target = DeliveryTarget.parse("telegram:C123ABC")
+        assert target.platform == Platform.TELEGRAM
         assert target.chat_id == "C123ABC"  # Should NOT be lowercased to c123abc
         assert target.is_explicit is True
     
-    def test_slack_chat_id_with_thread_preserved(self):
-        """Slack channel:thread IDs should preserve case."""
-        target = DeliveryTarget.parse("slack:C123ABC:thread123")
-        assert target.platform == Platform.SLACK
+    def test_telegram_chat_id_with_thread_preserved(self):
+        """Telegram chat:thread IDs should preserve case."""
+        target = DeliveryTarget.parse("telegram:C123ABC:thread123")
+        assert target.platform == Platform.TELEGRAM
         assert target.chat_id == "C123ABC"
         assert target.thread_id == "thread123"
     

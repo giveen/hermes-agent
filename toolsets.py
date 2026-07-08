@@ -270,11 +270,6 @@ TOOLSETS = {
     # "honcho" toolset removed — Honcho is now a memory provider plugin.
     # Tools are injected via MemoryManager, not the toolset system.
 
-    "homeassistant": {
-        "description": "Home Assistant smart home control and monitoring",
-        "tools": ["ha_list_entities", "ha_get_state", "ha_list_services", "ha_call_service"],
-        "includes": []
-    },
 
     "kanban": {
         "description": (
@@ -319,20 +314,7 @@ TOOLSETS = {
         "includes": []
     },
 
-    "feishu_doc": {
-        "description": "Read Feishu/Lark document content",
-        "tools": ["feishu_doc_read"],
-        "includes": []
-    },
 
-    "feishu_drive": {
-        "description": "Feishu/Lark document comment operations (list, reply, add)",
-        "tools": [
-            "feishu_drive_list_comments", "feishu_drive_list_comment_replies",
-            "feishu_drive_reply_comment", "feishu_drive_add_comment",
-        ],
-        "includes": []
-    },
 
     "spotify": {
         "description": "Native Spotify playback, search, playlist, album, and library tools",
@@ -463,11 +445,6 @@ TOOLSETS = {
         "includes": []
     },
 
-    "hermes-telegram": {
-        "description": "Telegram bot toolset - full access for personal use (terminal has safety checks)",
-        "tools": _HERMES_CORE_TOOLS,
-        "includes": []
-    },
     
     "hermes-discord": {
         "description": "Discord bot toolset - full access (terminal has safety checks via dangerous command approval)",
@@ -478,17 +455,6 @@ TOOLSETS = {
         "includes": []
     },
     
-    "hermes-whatsapp": {
-        "description": "WhatsApp bot toolset - similar to Telegram (personal messaging, more trusted)",
-        "tools": _HERMES_CORE_TOOLS,
-        "includes": []
-    },
-    
-    "hermes-slack": {
-        "description": "Slack bot toolset - full access for workspace use (terminal has safety checks)",
-        "tools": _HERMES_CORE_TOOLS,
-        "includes": []
-    },
     
     "hermes-signal": {
         "description": "Signal bot toolset - encrypted messaging platform (full access)",
@@ -502,11 +468,6 @@ TOOLSETS = {
         "includes": []
     },
 
-    "hermes-homeassistant": {
-        "description": "Home Assistant bot toolset - smart home event monitoring and control",
-        "tools": _HERMES_CORE_TOOLS,
-        "includes": []
-    },
 
     "hermes-email": {
         "description": "Email bot toolset - interact with Hermes via email (IMAP/SMTP)",
@@ -514,23 +475,8 @@ TOOLSETS = {
         "includes": []
     },
 
-    "hermes-mattermost": {
-        "description": "Mattermost bot toolset - self-hosted team messaging (full access)",
-        "tools": _HERMES_CORE_TOOLS,
-        "includes": []
-    },
 
-    "hermes-matrix": {
-        "description": "Matrix bot toolset - decentralized encrypted messaging (full access)",
-        "tools": _HERMES_CORE_TOOLS,
-        "includes": []
-    },
 
-    "hermes-dingtalk": {
-        "description": "DingTalk bot toolset - enterprise messaging platform (full access)",
-        "tools": _HERMES_CORE_TOOLS,
-        "includes": []
-    },
 
     "hermes-feishu": {
         "description": "Feishu/Lark bot toolset - enterprise messaging via Feishu/Lark (full access)",
@@ -556,17 +502,7 @@ TOOLSETS = {
         "includes": []
     },
 
-    "hermes-wecom": {
-        "description": "WeCom bot toolset - enterprise WeChat messaging (full access)",
-        "tools": _HERMES_CORE_TOOLS,
-        "includes": []
-    },
 
-    "hermes-wecom-callback": {
-        "description": "WeCom callback toolset - enterprise self-built app messaging (full access)",
-        "tools": _HERMES_CORE_TOOLS,
-        "includes": []
-    },
 
     "hermes-yuanbao": {
         "description": "Yuanbao Bot 元宝消息平台工具集 - 群信息、成员查询、私聊、贴纸表情",
@@ -581,11 +517,6 @@ TOOLSETS = {
         "includes": []
     },
 
-    "hermes-sms": {
-        "description": "SMS bot toolset - interact with Hermes via SMS (Twilio)",
-        "tools": _HERMES_CORE_TOOLS,
-        "includes": []
-    },
 
     "hermes-webhook": {
         "description": "Webhook toolset - receive and process external webhook events",
@@ -596,7 +527,7 @@ TOOLSETS = {
     "hermes-gateway": {
         "description": "Gateway toolset - union of all messaging platform tools",
         "tools": [],
-        "includes": ["hermes-telegram", "hermes-discord", "hermes-whatsapp", "hermes-slack", "hermes-signal", "hermes-bluebubbles", "hermes-homeassistant", "hermes-email", "hermes-sms", "hermes-mattermost", "hermes-matrix", "hermes-dingtalk", "hermes-feishu", "hermes-wecom", "hermes-wecom-callback", "hermes-weixin", "hermes-qqbot", "hermes-webhook", "hermes-yuanbao"]
+        "includes": ["hermes-discord", "hermes-signal", "hermes-bluebubbles", "hermes-email", "hermes-weixin", "hermes-qqbot", "hermes-webhook", "hermes-yuanbao"]
     }
 }
 

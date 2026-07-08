@@ -1305,7 +1305,7 @@ def test_discord_toolsets_not_available_on_other_platforms():
     """Platform-scoping: discord / discord_admin should not appear on CLI,
     Telegram, etc. — not even as an opt-in."""
     from hermes_cli.tools_config import _toolset_allowed_for_platform
-    for plat in ["cli", "telegram", "slack", "whatsapp", "signal"]:
+    for plat in ["cli", "telegram", "whatsapp", "signal"]:
         assert not _toolset_allowed_for_platform("discord", plat), (
             f"`discord` toolset leaked onto {plat}"
         )

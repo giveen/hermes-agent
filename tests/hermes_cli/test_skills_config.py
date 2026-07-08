@@ -236,17 +236,15 @@ class TestGetDisabledSkillNames:
             "skills:\n"
             "  platform_disabled:\n"
             "    telegram:\n"
-            "      - tg-skill\n"
-            "    slack:\n"
-            "      - slack-skill\n"
+            "      - telegram-skill\n"
         )
         monkeypatch.setenv("HERMES_HOME", str(tmp_path))
         monkeypatch.setenv("HERMES_PLATFORM", "telegram")
         monkeypatch.setenv("HERMES_SESSION_PLATFORM", "telegram")
 
         from agent.skill_utils import get_disabled_skill_names
-        result = get_disabled_skill_names(platform="slack")
-        assert result == {"slack-skill"}
+        result = get_disabled_skill_names(platform="telegram")
+        assert result == {"telegram-skill"}
 
     def test_no_platform_returns_global(self, tmp_path, monkeypatch):
         """No platform env vars or param should return global list."""

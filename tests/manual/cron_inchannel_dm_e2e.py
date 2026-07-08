@@ -77,7 +77,7 @@ async def _inbound_dm_reply_key(dm_threads_as_sessions: bool):
 def _seed_key() -> str:
     """The session key the cron in_channel DM seed creates (is_dm=True, flat)."""
     seed_source = SessionSource(
-        platform=Platform.SLACK, chat_id=DM_CHAT, chat_type="dm",
+        platform=Platform.TELEGRAM, chat_id=DM_CHAT, chat_type="dm",
         user_id=USER, thread_id=None,
     )
     return build_session_key(seed_source)

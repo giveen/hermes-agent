@@ -178,15 +178,15 @@ class TestVerboseCommand:
         )
         # Cycle on Slack
         await runner._handle_verbose_command(
-            _make_event(platform=Platform.SLACK)
+        _make_event(platform=Platform.TELEGRAM)
         )
 
         saved = yaml.safe_load(config_path.read_text(encoding="utf-8"))
         platforms = saved["display"]["platforms"]
         # Telegram: off -> new (platform default = off, tier-1 inbox override)
         assert platforms["telegram"]["tool_progress"] == "new"
-        # Slack: off -> new (first /verbose cycle from quiet default)
-        assert platforms["slack"]["tool_progress"] == "new"
+        # Telegram: off -> new (first /verbose cycle from quiet default)
+        assert platforms["telegram"]["tool_progress"] == "new"
 
     @pytest.mark.asyncio
     async def test_no_config_file_returns_disabled(self, tmp_path, monkeypatch):

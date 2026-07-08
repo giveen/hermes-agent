@@ -93,7 +93,7 @@ class TestHandoffStateDB:
         db.request_handoff(b, "discord")
         db.request_handoff(c, "telegram")
         db.claim_handoff(c)  # c is now running, not pending
-        db.request_handoff(d, "slack")
+        db.request_handoff(d, "telegram")
         db.claim_handoff(d)
         db.complete_handoff(d)  # d is terminal
 

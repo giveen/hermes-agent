@@ -53,7 +53,7 @@ class TestMatrixHiddenOnWindows:
         keys = {p["key"] for p in platforms}
         # A representative sample of platforms that have no Windows
         # blockers — picker should still surface them.
-        for must_have in ("telegram", "discord", "slack", "mattermost"):
+        for must_have in ("telegram", "discord", "mattermost"):
             assert must_have in keys, (
                 f"{must_have} disappeared from Windows picker — gate is "
                 "over-filtering"

@@ -93,7 +93,7 @@ def sample_sessions():
         "agent:main:slack:group:C1234:U5678": {
             "session_key": "agent:main:slack:group:C1234:U5678",
             "session_id": "20260328_090000_ghi789",
-            "platform": "slack",
+            "platform": "telegram",
             "chat_type": "group",
             "display_name": "Carol",
             "created_at": "2026-03-28T09:00:00",
@@ -102,7 +102,7 @@ def sample_sessions():
             "output_tokens": 500,
             "total_tokens": 10500,
             "origin": {
-                "platform": "slack",
+                "platform": "telegram",
                 "chat_id": "C1234",
                 "chat_name": "#engineering",
                 "chat_type": "group",
@@ -532,7 +532,7 @@ class TestE2EConversationsList:
         result = _run_tool(server, "conversations_list")
         assert result["count"] == 3
         platforms = {c["platform"] for c in result["conversations"]}
-        assert platforms == {"telegram", "discord", "slack"}
+        assert platforms == {"telegram", "discord"}
 
     def test_list_sorted_by_updated(self, mcp_server_e2e, _event_loop):
         server, _ = mcp_server_e2e
@@ -822,9 +822,9 @@ class TestE2EChannelsList:
 
     def test_channels_platform_filter(self, mcp_server_e2e, _event_loop):
         server, _ = mcp_server_e2e
-        result = _run_tool(server, "channels_list", {"platform": "slack"})
+        result = _run_tool(server, "channels_list", {"platform": "telegram"})
         assert result["count"] == 1
-        assert result["channels"][0]["target"] == "slack:C1234"
+        assert result["channels"][0]["target"] == "telegram:C1234"
 
     def test_channels_with_directory(self, mcp_server_e2e, _event_loop, monkeypatch):
         """Populated channel_directory.json should be unwrapped via the 'platforms' key.

@@ -96,7 +96,7 @@ def test_verify_on_stop_auto_off_on_gateway_messaging_platform(clear_verify_env)
 
 @pytest.mark.parametrize(
     "platform",
-    ["discord", "whatsapp_cloud", "signal", "slack", "matrix", "email", "sms"],
+    ["discord", "whatsapp_cloud", "signal", "telegram", "matrix", "email", "sms"],
 )
 def test_verify_on_stop_auto_off_for_each_messaging_platform(clear_verify_env, platform):
     clear_verify_env.setenv("HERMES_SESSION_PLATFORM", platform)

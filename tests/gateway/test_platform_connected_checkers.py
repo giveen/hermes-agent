@@ -24,7 +24,7 @@ def test_all_builtins_have_checker_or_generic_token_path():
     generic_token_values = {p.value for p in {
         Platform.TELEGRAM,
         Platform.DISCORD,
-        Platform.SLACK,
+        Platform.TELEGRAM,
         Platform.MATRIX,
         Platform.MATTERMOST,
         Platform.HOMEASSISTANT,

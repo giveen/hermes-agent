@@ -934,22 +934,18 @@ def ensure_and_bind(
 
     Example usage in a platform adapter::
 
-        def check_slack_requirements() -> bool:
-            if SLACK_AVAILABLE:
+        def check_telegram_requirements() -> bool:
+            if TELEGRAM_AVAILABLE:
                 return True
             def _import():
-                from slack_bolt.async_app import AsyncApp
-                from slack_bolt.adapter.socket_mode.async_handler import AsyncSocketModeHandler
-                from slack_sdk.web.async_client import AsyncWebClient
-                import aiohttp
+                from telegram import Bot
+                from telegram.ext import Application
                 return {
-                    "AsyncApp": AsyncApp,
-                    "AsyncSocketModeHandler": AsyncSocketModeHandler,
-                    "AsyncWebClient": AsyncWebClient,
-                    "aiohttp": aiohttp,
-                    "SLACK_AVAILABLE": True,
+                    "Bot": Bot,
+                    "Application": Application,
+                    "TELEGRAM_AVAILABLE": True,
                 }
-            return ensure_and_bind("platform.slack", _import, globals(), prompt=False)
+            return ensure_and_bind("platform.telegram", _import, globals(), prompt=False)
     """
     try:
         ensure(feature, prompt=prompt)

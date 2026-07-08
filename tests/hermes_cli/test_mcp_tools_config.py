@@ -23,7 +23,7 @@ def test_all_servers_disabled_prints_info(capsys):
     config = {
         "mcp_servers": {
             "github": {"command": "npx", "enabled": False},
-            "slack": {"command": "npx", "enabled": "false"},
+            "telegram": {"command": "npx", "enabled": "false"},
         }
     }
     _configure_mcp_tools_interactive(config)
@@ -179,7 +179,7 @@ def test_multiple_servers_each_get_checklist(capsys):
     config = {
         "mcp_servers": {
             "github": {"command": "npx"},
-            "slack": {"url": "https://mcp.example.com"},
+            "telegram": {"url": "https://mcp.example.com"},
         }
     }
     checklist_calls = []
@@ -192,7 +192,7 @@ def test_multiple_servers_each_get_checklist(capsys):
         _PROBE,
         return_value={
             "github": [("create_issue", "Create")],
-            "slack": [("send_message", "Send")],
+            "telegram": [("send_message", "Send")],
         },
     ), patch(_CHECKLIST, side_effect=fake_checklist), \
          patch(_SAVE):
@@ -200,7 +200,7 @@ def test_multiple_servers_each_get_checklist(capsys):
 
     assert len(checklist_calls) == 2
     assert any("github" in t for t in checklist_calls)
-    assert any("slack" in t for t in checklist_calls)
+    assert any("telegram" in t for t in checklist_calls)
 
 
 def test_failed_server_shows_warning(capsys):

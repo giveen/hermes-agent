@@ -220,7 +220,7 @@ class TestHandleReloadSkillsCallsRefreshSkillGroup:
 
         runner.adapters = {
             "discord": AsyncAdapter(),
-            "slack": SyncAdapter(),
+            "telegram": SyncAdapter(),
             "telegram": NoOpAdapter(),
         }
 

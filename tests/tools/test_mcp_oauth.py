@@ -188,13 +188,13 @@ class TestBuildOAuthAuth:
 
         monkeypatch.setenv("HERMES_HOME", str(tmp_path))
         _set_interactive_stdin(monkeypatch)
-        build_oauth_auth("slack", "https://slack.example.com/mcp", {
+        build_oauth_auth("telegram", "https://slack.example.com/mcp", {
             "client_id": "my-app-id",
             "client_secret": "my-secret",
             "scope": "channels:read",
         })
 
-        client_path = tmp_path / "mcp-tokens" / "slack.client.json"
+        client_path = tmp_path / "mcp-tokens" / "telegram.client.json"
         assert client_path.exists()
         data = json.loads(client_path.read_text())
         assert data["client_id"] == "my-app-id"

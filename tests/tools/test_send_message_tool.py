@@ -165,67 +165,6 @@ class _patch_discord_sender:
         return False
 
 
-def _slack_entry():
-    """Return the live Slack PlatformEntry, importing lazily so plugin
-    discovery is forced exactly once and patches survive across tests."""
-    from hermes_cli.plugins import discover_plugins
-    from gateway.platform_registry import platform_registry
-    discover_plugins()
-    return platform_registry.get("slack")
-
-
-def _make_recording_slack_sender():
-    """Return a plain AsyncMock used to record the formatted Slack text.
-
-    Paired with ``_patch_slack_standalone_sender``, which wraps it so the
-    production ``(pconfig, chat_id, raw_text, thread_id=...)`` call is
-    translated into the pre-migration ``(token, chat_id, formatted_text,
-    thread_ts=...)`` shape — applying ``SlackAdapter.format_message`` exactly
-    as the real plugin ``_standalone_send`` does. Tests can then assert on
-    ``send.await_args.args[2]`` (the formatted mrkdwn) as before.
-    """
-    return AsyncMock(return_value={"success": True, "platform": "slack", "message_id": "1"})
-
-
-class _patch_slack_standalone_sender:
-    """Patch the Slack registry entry's ``standalone_sender_fn`` with a wrapper
-    that replicates the plugin's mrkdwn formatting then delegates to the given
-    mock in the pre-migration call shape. Mirrors ``_patch_discord_sender``.
-
-    Slack mrkdwn formatting moved INTO the plugin's ``_standalone_send`` when
-    the adapter migrated (#41112) — previously ``_send_to_platform`` formatted
-    the message before calling the old ``_send_slack`` helper. This wrapper
-    keeps the "markdown → Slack mrkdwn reaches the wire" behavior tests valid.
-    """
-
-    def __init__(self, mock):
-        self._mock = mock
-        self._entry = None
-        self._original = None
-
-    async def _adapter(self, pconfig, chat_id, message, *, thread_id=None, **_kw):
-        from plugins.platforms.slack.adapter import SlackAdapter
-        formatted = message
-        if message:
-            try:
-                formatted = SlackAdapter.__new__(SlackAdapter).format_message(message)
-            except Exception:
-                pass
-        token = getattr(pconfig, "token", None)
-        return await self._mock(token, chat_id, formatted, thread_ts=thread_id)
-
-    def __enter__(self):
-        self._entry = _slack_entry()
-        self._original = self._entry.standalone_sender_fn
-        self._entry.standalone_sender_fn = self._adapter
-        return self._mock
-
-    def __exit__(self, exc_type, exc, tb):
-        if self._entry is not None:
-            self._entry.standalone_sender_fn = self._original
-        return False
-
-
 def _run_async_immediately(coro):
     return asyncio.run(coro)
 
@@ -247,30 +186,6 @@ def _install_telegram_mock(monkeypatch, bot):
     telegram_mod = SimpleNamespace(Bot=lambda token: bot, MessageEntity=_MessageEntity, constants=constants_mod)
     monkeypatch.setitem(sys.modules, "telegram", telegram_mod)
     monkeypatch.setitem(sys.modules, "telegram.constants", constants_mod)
-
-
-def _ensure_slack_mock(monkeypatch):
-    if "slack_bolt" in sys.modules and hasattr(sys.modules["slack_bolt"], "__file__"):
-        return
-
-    slack_bolt = MagicMock()
-    slack_bolt.async_app.AsyncApp = MagicMock
-    slack_bolt.adapter.socket_mode.async_handler.AsyncSocketModeHandler = MagicMock
-
-    slack_sdk = MagicMock()
-    slack_sdk.web.async_client.AsyncWebClient = MagicMock
-
-    for name, mod in [
-        ("slack_bolt", slack_bolt),
-        ("slack_bolt.async_app", slack_bolt.async_app),
-        ("slack_bolt.adapter", slack_bolt.adapter),
-        ("slack_bolt.adapter.socket_mode", slack_bolt.adapter.socket_mode),
-        ("slack_bolt.adapter.socket_mode.async_handler", slack_bolt.adapter.socket_mode.async_handler),
-        ("slack_sdk", slack_sdk),
-        ("slack_sdk.web", slack_sdk.web),
-        ("slack_sdk.web.async_client", slack_sdk.web.async_client),
-    ]:
-        monkeypatch.setitem(sys.modules, name, mod)
 
 
 class TestSendMessageTool:
@@ -420,39 +335,6 @@ class TestSendMessageTool:
             force_document=False,
         )
 
-    def test_resolved_slack_thread_name_preserves_thread_id(self):
-        slack_cfg = SimpleNamespace(enabled=True, token="xoxb-test", extra={})
-        config = SimpleNamespace(
-            platforms={Platform.SLACK: slack_cfg},
-            get_home_channel=lambda _platform: None,
-        )
-
-        with patch("gateway.config.load_gateway_config", return_value=config), \
-             patch("tools.interrupt.is_interrupted", return_value=False), \
-             patch("gateway.channel_directory.resolve_channel_name", return_value="C123ABCDEF:171.000001"), \
-             patch("model_tools._run_async", side_effect=_run_async_immediately), \
-             patch("tools.send_message_tool._send_to_platform", new=AsyncMock(return_value={"success": True})) as send_mock, \
-             patch("gateway.mirror.mirror_to_session", return_value=True):
-            result = json.loads(
-                send_message_tool(
-                    {
-                        "action": "send",
-                        "target": "slack:ops / topic 171.000001",
-                        "message": "hello",
-                    }
-                )
-            )
-
-        assert result["success"] is True
-        send_mock.assert_awaited_once_with(
-            Platform.SLACK,
-            slack_cfg,
-            "C123ABCDEF",
-            "hello",
-            thread_id="171.000001",
-            media_files=[],
-            force_document=False,
-        )
 
     def test_resolved_matrix_thread_name_preserves_thread_id(self):
         matrix_cfg = SimpleNamespace(
@@ -725,113 +607,6 @@ class TestSendToPlatformChunking:
         for call in send.await_args_list:
             assert len(call.args[2]) <= 2020  # each chunk fits the limit
 
-    def test_slack_messages_are_formatted_before_send(self, monkeypatch):
-        _ensure_slack_mock(monkeypatch)
-
-        import plugins.platforms.slack.adapter as slack_mod
-
-        monkeypatch.setattr(slack_mod, "SLACK_AVAILABLE", True)
-        send = _make_recording_slack_sender()
-
-        with _patch_slack_standalone_sender(send):
-            result = asyncio.run(
-                _send_to_platform(
-                    Platform.SLACK,
-                    SimpleNamespace(enabled=True, token="***", extra={}),
-                    "C123",
-                    "**hello** from [Hermes](<https://example.com>)",
-                )
-            )
-
-        assert result["success"] is True
-        send.assert_awaited_once_with(
-            "***",
-            "C123",
-            "*hello* from <https://example.com|Hermes>",
-            thread_ts=None,
-        )
-
-    def test_slack_bold_italic_formatted_before_send(self, monkeypatch):
-        """Bold+italic ***text*** survives tool-layer formatting."""
-        _ensure_slack_mock(monkeypatch)
-        import plugins.platforms.slack.adapter as slack_mod
-
-        monkeypatch.setattr(slack_mod, "SLACK_AVAILABLE", True)
-        send = _make_recording_slack_sender()
-        with _patch_slack_standalone_sender(send):
-            result = asyncio.run(
-                _send_to_platform(
-                    Platform.SLACK,
-                    SimpleNamespace(enabled=True, token="***", extra={}),
-                    "C123",
-                    "***important*** update",
-                )
-            )
-        assert result["success"] is True
-        sent_text = send.await_args.args[2]
-        assert "*_important_*" in sent_text
-
-    def test_slack_blockquote_formatted_before_send(self, monkeypatch):
-        """Blockquote '>' markers must survive formatting (not escaped to '&gt;')."""
-        _ensure_slack_mock(monkeypatch)
-        import plugins.platforms.slack.adapter as slack_mod
-
-        monkeypatch.setattr(slack_mod, "SLACK_AVAILABLE", True)
-        send = _make_recording_slack_sender()
-        with _patch_slack_standalone_sender(send):
-            result = asyncio.run(
-                _send_to_platform(
-                    Platform.SLACK,
-                    SimpleNamespace(enabled=True, token="***", extra={}),
-                    "C123",
-                    "> important quote\n\nnormal text & stuff",
-                )
-            )
-        assert result["success"] is True
-        sent_text = send.await_args.args[2]
-        assert sent_text.startswith("> important quote")
-        assert "&amp;" in sent_text  # & is escaped
-        assert "&gt;" not in sent_text.split("\n")[0]  # > in blockquote is NOT escaped
-
-    def test_slack_pre_escaped_entities_not_double_escaped(self, monkeypatch):
-        """Pre-escaped HTML entities survive tool-layer formatting without double-escaping."""
-        _ensure_slack_mock(monkeypatch)
-        import plugins.platforms.slack.adapter as slack_mod
-        monkeypatch.setattr(slack_mod, "SLACK_AVAILABLE", True)
-        send = _make_recording_slack_sender()
-        with _patch_slack_standalone_sender(send):
-            result = asyncio.run(
-                _send_to_platform(
-                    Platform.SLACK,
-                    SimpleNamespace(enabled=True, token="***", extra={}),
-                    "C123",
-                    "AT&amp;T &lt;tag&gt; test",
-                )
-            )
-        assert result["success"] is True
-        sent_text = send.await_args.args[2]
-        assert "&amp;amp;" not in sent_text
-        assert "&amp;lt;" not in sent_text
-        assert "AT&amp;T" in sent_text
-
-    def test_slack_url_with_parens_formatted_before_send(self, monkeypatch):
-        """Wikipedia-style URL with parens survives tool-layer formatting."""
-        _ensure_slack_mock(monkeypatch)
-        import plugins.platforms.slack.adapter as slack_mod
-        monkeypatch.setattr(slack_mod, "SLACK_AVAILABLE", True)
-        send = _make_recording_slack_sender()
-        with _patch_slack_standalone_sender(send):
-            result = asyncio.run(
-                _send_to_platform(
-                    Platform.SLACK,
-                    SimpleNamespace(enabled=True, token="***", extra={}),
-                    "C123",
-                    "See [Foo](https://en.wikipedia.org/wiki/Foo_(bar))",
-                )
-            )
-        assert result["success"] is True
-        sent_text = send.await_args.args[2]
-        assert "<https://en.wikipedia.org/wiki/Foo_(bar)|Foo>" in sent_text
 
     def test_telegram_markdown_expansion_is_chunked_before_send(self, monkeypatch):
         """Telegram chunking must account for MarkdownV2 escaping expansion.
@@ -1615,50 +1390,6 @@ class TestParseTargetRefWhatsAppJID:
         assert _parse_target_ref("whatsapp", "general")[2] is False
 
 
-class TestParseTargetRefSlack:
-    """_parse_target_ref recognizes Slack channel/user IDs as explicit."""
-
-    def test_thread_target_is_explicit(self):
-        chat_id, thread_id, is_explicit = _parse_target_ref("slack", "C0B0QV5434G:171.000001")
-        assert chat_id == "C0B0QV5434G"
-        assert thread_id == "171.000001"
-        assert is_explicit is True
-
-    def test_public_channel_id_is_explicit(self):
-        chat_id, thread_id, is_explicit = _parse_target_ref("slack", "C0B0QV5434G")
-        assert chat_id == "C0B0QV5434G"
-        assert thread_id is None
-        assert is_explicit is True
-
-    def test_private_channel_id_is_explicit(self):
-        assert _parse_target_ref("slack", "G123ABCDEF")[2] is True
-
-    def test_dm_id_is_explicit(self):
-        assert _parse_target_ref("slack", "D123ABCDEF")[2] is True
-
-    def test_user_id_is_not_explicit(self):
-        """Slack user IDs (U...) and workspace IDs (W...) are NOT explicit send
-        targets. chat.postMessage rejects them — a DM must be opened first via
-        conversations.open to obtain a D... conversation ID.
-        """
-        assert _parse_target_ref("slack", "U123ABCDEF")[2] is False
-        assert _parse_target_ref("slack", "W123ABCDEF")[2] is False
-
-    def test_whitespace_is_stripped(self):
-        chat_id, _, is_explicit = _parse_target_ref("slack", "  C0B0QV5434G  ")
-        assert chat_id == "C0B0QV5434G"
-        assert is_explicit is True
-
-    def test_lowercase_or_short_id_is_not_explicit(self):
-        assert _parse_target_ref("slack", "c0b0qv5434g")[2] is False
-        assert _parse_target_ref("slack", "C123")[2] is False
-        assert _parse_target_ref("slack", "X0B0QV5434G")[2] is False
-
-    def test_slack_id_not_explicit_for_other_platforms(self):
-        assert _parse_target_ref("discord", "C0B0QV5434G")[2] is False
-        assert _parse_target_ref("telegram", "C0B0QV5434G")[2] is False
-
-
 class TestParseTargetRefEmail:
     """_parse_target_ref recognizes email addresses as explicit for the email platform."""
 
@@ -1692,7 +1423,7 @@ class TestParseTargetRefEmail:
     def test_email_not_explicit_for_other_platforms(self):
         assert _parse_target_ref("telegram", "user@example.com")[2] is False
         assert _parse_target_ref("discord", "user@example.com")[2] is False
-        assert _parse_target_ref("slack", "user@example.com")[2] is False
+        assert _parse_target_ref("telegram", "user@example.com")[2] is False
 
 
 class TestEmailHomeChannelErrorHint:

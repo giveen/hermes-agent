@@ -525,9 +525,9 @@ def test_slack_settings_migrated(tmp_path: Path):
     (source / "openclaw.json").write_text(
         json.dumps({
             "channels": {
-                "slack": {
-                    "botToken": "xoxb-slack-bot",
-                    "appToken": "xapp-slack-app",
+                "telegram": {
+                    "botToken": "xoxb-telegram-bot",
+                    "appToken": "xapp-telegram-app",
                     "allowFrom": ["U111", "U222"],
                 }
             }

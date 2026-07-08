@@ -5209,8 +5209,8 @@ def test_list_gateway_sessions_filters_and_dedupes(db):
     db.create_session("cli-session", "cli")
     # Ended gateway session excluded when active_only.
     db.create_session(
-        "gw-ended", "slack",
-        session_key="agent:main:slack:dm:s1", chat_id="s1", chat_type="dm",
+        "gw-ended", "telegram",
+        session_key="agent:main:telegram:dm:s1", chat_id="s1", chat_type="dm",
     )
     db.end_session("gw-ended", "session_reset")
 

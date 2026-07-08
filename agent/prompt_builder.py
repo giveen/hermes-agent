@@ -618,75 +618,12 @@ STEER_CHANNEL_NOTE = (
 DEVELOPER_ROLE_MODELS = ("gpt-5", "codex")
 
 PLATFORM_HINTS = {
-    "whatsapp": (
-        "You are on a text messaging communication platform, WhatsApp. "
-        "Standard markdown (**bold**, *italic*, ~~strike~~, # headers, "
-        "`code`, ```code blocks```, [links](url)) is auto-converted to "
-        "WhatsApp's native syntax (*bold*, _italic_, ~strike~, monospace) — "
-        "feel free to write in markdown, and use bullet lists ('- item') "
-        "freely. Tables are NOT supported — prefer bullet lists or labeled "
-        "key:value pairs. "
-        "You can send media files natively: to deliver a file to the user, "
-        "include MEDIA:/absolute/path/to/file in your response. The file "
-        "will be sent as a native WhatsApp attachment — images (.jpg, .png, "
-        ".webp) appear as photos, videos (.mp4, .mov) play inline, and other "
-        "files arrive as downloadable documents. You can also include image "
-        "URLs in markdown format ![alt](url) and they will be sent as photos."
-    ),
-    "whatsapp_cloud": (
-        "You are on a text messaging communication platform, WhatsApp "
-        "(via Meta's official Business Cloud API). Standard markdown "
-        "(**bold**, ~~strike~~, # headers, [links](url)) is auto-converted "
-        "to WhatsApp's native syntax (*bold*, ~strike~, etc.) — feel free "
-        "to write in markdown. Tables are NOT supported — prefer bullet "
-        "lists or labeled key:value pairs. "
-        "You can send media files natively: include MEDIA:/absolute/path/to/file "
-        "in your response. Images (.jpg, .png) become photo attachments, "
-        "videos (.mp4) play inline, audio (.mp3, .ogg) sends as voice/audio "
-        "messages, other files arrive as documents. Image URLs in markdown "
-        "format ![alt](url) also work. "
-        "IMPORTANT: this platform has a 24-hour conversation window — if the "
-        "user hasn't messaged in 24h, free-form replies are refused by Meta "
-        "(error 131047). This rarely matters for live chat, but is worth "
-        "knowing if you're scheduling a delayed message."
-    ),
-    "telegram": (
-        "You are on a text messaging communication platform, Telegram. "
-        "Standard Markdown is automatically converted to Telegram formatting. "
-        "Supported: **bold**, *italic*, ~~strikethrough~~, ||spoiler||, "
-        "`inline code`, ```code blocks```, [links](url), and ## headers. "
-        "Telegram now supports rich Markdown, so lean into it: whenever it "
-        "makes the answer clearer or easier to scan, actively reach for real "
-        "Markdown tables (pipe `| col | col |` syntax), bullet and numbered "
-        "lists, task lists (`- [ ]` / `- [x]`), headings, nested blockquotes, "
-        "collapsible details, footnotes/references, math/formulas (`$...$`, "
-        "`$$...$$`), underline, subscript/superscript, marked (highlighted) "
-        "text, and anchors. Default to structured formatting over dense "
-        "paragraphs for any comparison, set of steps, key/value summary, or "
-        "tabular data. Prefer real Markdown tables and task lists over "
-        "hand-built bullet substitutes when presenting structured data; these "
-        "degrade gracefully (tables become readable bullet groups) when rich "
-        "rendering is unavailable, but advanced constructs like math and "
-        "collapsible details may render as plain source text in that case. "
-        "You can send media files natively: to deliver a file to the user, "
-        "include MEDIA:/absolute/path/to/file in your response. Images "
-        "(.png, .jpg, .webp) appear as photos, audio (.ogg) sends as voice "
-        "bubbles, and videos (.mp4) play inline. You can also include image "
-        "URLs in markdown format ![alt](url) and they will be sent as native photos."
-    ),
     "discord": (
         "You are in a Discord server or group chat communicating with your user. "
         "You can send media files natively: include MEDIA:/absolute/path/to/file "
         "in your response. Images (.png, .jpg, .webp) are sent as photo "
         "attachments, audio as file attachments. You can also include image URLs "
         "in markdown format ![alt](url) and they will be sent as attachments."
-    ),
-    "slack": (
-        "You are in a Slack workspace communicating with your user. "
-        "You can send media files natively: include MEDIA:/absolute/path/to/file "
-        "in your response. Images (.png, .jpg, .webp) are uploaded as photo "
-        "attachments, audio as file attachments. You can also include image URLs "
-        "in markdown format ![alt](url) and they will be uploaded as attachments."
     ),
     "signal": (
         "You are on a text messaging communication platform, Signal. "
@@ -743,43 +680,12 @@ PLATFORM_HINTS = {
         "or 'all'). Do not promise the user that a deliver='origin' or "
         "default-deliver cron job will message them in this session."
     ),
-    "sms": (
-        "You are communicating via SMS. Keep responses concise and use plain text "
-        "only — no markdown, no formatting. SMS messages are limited to ~1600 "
-        "characters, so be brief and direct."
-    ),
     "bluebubbles": (
         "You are chatting via iMessage (BlueBubbles). iMessage does not render "
         "markdown formatting — use plain text. Keep responses concise as they "
         "appear as text messages. You can send media files natively: include "
         "MEDIA:/absolute/path/to/file in your response. Images (.jpg, .png, "
         ".heic) appear as photos and other files arrive as attachments."
-    ),
-    "mattermost": (
-        "You are in a Mattermost workspace communicating with your user. "
-        "Mattermost renders standard Markdown — headings, bold, italic, code "
-        "blocks, and tables all work. "
-        "You can send media files natively: include MEDIA:/absolute/path/to/file "
-        "in your response. Images (.jpg, .png, .webp) are uploaded as photo "
-        "attachments, audio and video as file attachments. "
-        "Image URLs in markdown format ![alt](url) are rendered as inline previews automatically."
-    ),
-    "matrix": (
-        "You are in a Matrix room communicating with your user. "
-        "Matrix renders Markdown — bold, italic, code blocks, and links work; "
-        "the adapter converts your Markdown to HTML for rich display. "
-        "You can send media files natively: include MEDIA:/absolute/path/to/file "
-        "in your response. Images (.jpg, .png, .webp) are sent as inline photos, "
-        "audio (.ogg, .mp3) as voice/audio messages, video (.mp4) inline, "
-        "and other files as downloadable attachments."
-    ),
-    "feishu": (
-        "You are in a Feishu (Lark) workspace communicating with your user. "
-        "Feishu renders Markdown in messages — bold, italic, code blocks, and "
-        "links are supported. "
-        "You can send media files natively: include MEDIA:/absolute/path/to/file "
-        "in your response. Images (.jpg, .png, .webp) are uploaded and displayed "
-        "inline, audio files as voice messages, and other files as attachments."
     ),
     "weixin": (
         "You are on Weixin/WeChat. Markdown formatting is supported, so you may use it when "
@@ -788,18 +694,6 @@ PLATFORM_HINTS = {
         "photos, videos play inline when supported, and other files arrive as downloadable "
         "documents. You can also include image URLs in markdown format ![alt](url) and they "
         "will be downloaded and sent as native media when possible."
-    ),
-    "wecom": (
-        "You are on WeCom (企业微信 / Enterprise WeChat). Markdown formatting is supported. "
-        "You CAN send media files natively — to deliver a file to the user, include "
-        "MEDIA:/absolute/path/to/file in your response. The file will be sent as a native "
-        "WeCom attachment: images (.jpg, .png, .webp) are sent as photos (up to 10 MB), "
-        "other files (.pdf, .docx, .xlsx, .md, .txt, etc.) arrive as downloadable documents "
-        "(up to 20 MB), and videos (.mp4) play inline. Voice messages are supported but "
-        "must be in AMR format — other audio formats are automatically sent as file attachments. "
-        "You can also include image URLs in markdown format ![alt](url) and they will be "
-        "downloaded and sent as native photos. Do NOT tell the user you lack file-sending "
-        "capability — use MEDIA: syntax whenever a file delivery is appropriate."
     ),
     "qqbot": (
         "You are on QQ, a popular Chinese messaging platform. QQ supports markdown formatting "

@@ -406,9 +406,6 @@ _ALWAYS_STRIP_KEYS: frozenset[str] = frozenset({
     # Gateway / messaging bot tokens and access control
     "TELEGRAM_BOT_TOKEN",
     "DISCORD_BOT_TOKEN",
-    "SLACK_BOT_TOKEN",
-    "SLACK_APP_TOKEN",
-    "SLACK_SIGNING_SECRET",
     "GATEWAY_ALLOWED_USERS",
     "GATEWAY_ALLOW_ALL_USERS",
     # Gateway relay auth — the ID/secret/delivery-key triplet the gateway

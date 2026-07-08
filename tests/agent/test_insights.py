@@ -418,7 +418,7 @@ class TestInsightsPopulated:
 
     def test_source_filter_nonexistent(self, populated_db):
         engine = InsightsEngine(populated_db)
-        report = engine.generate(days=30, source="slack")
+        report = engine.generate(days=30, source="telegram")
 
         assert report["empty"] is True
 

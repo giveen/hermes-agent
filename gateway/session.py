@@ -90,7 +90,6 @@ from .config import (
     HomeChannel,
 )
 from .whatsapp_identity import (
-    canonical_whatsapp_identifier,
     normalize_whatsapp_identifier,  # noqa: F401 - re-exported for gateway.session callers
 )
 from utils import atomic_replace
@@ -330,9 +329,7 @@ class SessionContext:
 
 
 _PII_SAFE_PLATFORMS = frozenset({
-    Platform.WHATSAPP,
     Platform.SIGNAL,
-    Platform.TELEGRAM,
     Platform.BLUEBUBBLES,
 })
 """Platforms where user IDs can be safely redacted (no in-message mention system
@@ -452,21 +449,6 @@ def build_session_context_prompt(
             f"**Channel Topic:** {_format_untrusted_prompt_value(context.source.chat_topic)}"
         )
 
-    if context.source.platform == Platform.MATRIX:
-        src = context.source
-        room_name = src.chat_name or src.chat_id
-        room_id = _hash_chat_id(src.chat_id) if redact_pii else src.chat_id
-        lines.append("")
-        lines.append(f"**Matrix Room:** {_format_untrusted_prompt_value(room_name)}")
-        lines.append(f"**Matrix Room ID:** {room_id}")
-        if src.thread_id:
-            thread_id = _hash_chat_id(src.thread_id) if redact_pii else src.thread_id
-            lines.append(f"**Matrix Thread:** {thread_id}")
-        lines.append(
-            "**Matrix room boundary:** Treat this turn as scoped to the current "
-            "Matrix room/thread only. Do not assume unresolved references are "
-            "about other Matrix rooms or projects unless the user explicitly says so."
-        )
 
     # User identity.
     # In shared multi-user sessions (shared threads OR shared non-thread groups
@@ -492,17 +474,7 @@ def build_session_context_prompt(
         lines.append(f"**User ID:** {_format_untrusted_prompt_value(uid)}")
 
     # Platform-specific behavioral notes
-    if context.source.platform == Platform.SLACK:
-        lines.append("")
-        lines.append(
-            "**Platform notes:** You are running inside Slack. "
-            "You do NOT have access to Slack-specific APIs — you cannot search "
-            "channel history, pin/unpin messages, manage channels, or list users. "
-            "Do not promise to perform these actions. The gateway may inline the "
-            "current message's Slack block/attachment payload when available, but "
-            "you still cannot call Slack APIs yourself."
-        )
-    elif context.source.platform == Platform.DISCORD:
+    if context.source.platform == Platform.DISCORD:
         # Inject the Discord IDs block only when the agent actually has
         # Discord tools loaded this session — i.e. the user opted into
         # `discord` / `discord_admin` via `hermes tools` AND the bot
@@ -905,8 +877,6 @@ def build_session_key(
     platform = source.platform.value
     if source.chat_type == "dm":
         dm_chat_id = source.chat_id
-        if source.platform == Platform.WHATSAPP:
-            dm_chat_id = canonical_whatsapp_identifier(source.chat_id)
 
         if dm_chat_id:
             if source.thread_id:
@@ -919,11 +889,6 @@ def build_session_key(
         # single cached agent ends up serving multiple people's conversations —
         # cross-user history bleed.  participant_id keeps DMs isolated per user.
         dm_participant_id = source.user_id_alt or source.user_id
-        if dm_participant_id and source.platform == Platform.WHATSAPP:
-            dm_participant_id = (
-                canonical_whatsapp_identifier(str(dm_participant_id))
-                or dm_participant_id
-            )
         if dm_participant_id:
             if source.thread_id:
                 return f"{ns}:{platform}:dm:{dm_participant_id}:{source.thread_id}"
@@ -933,11 +898,6 @@ def build_session_key(
         return f"{ns}:{platform}:dm"
 
     participant_id = source.user_id_alt or source.user_id
-    if participant_id and source.platform == Platform.WHATSAPP:
-        # Same JID/LID-flip bug as the DM case: without canonicalisation, a
-        # single group member gets two isolated per-user sessions when the
-        # bridge reshuffles alias forms.
-        participant_id = canonical_whatsapp_identifier(str(participant_id)) or participant_id
     key_parts = [ns, platform, source.chat_type]
 
     if source.chat_id:

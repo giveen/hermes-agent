@@ -2184,7 +2184,7 @@ def test_create_partial_session_context_no_subscribe(monkeypatch, worker_env):
     Either both are set (gateway) or neither (TUI / CLI); partial is
     ambiguous and the safe default is to skip."""
     from tools import kanban_tools as kt
-    monkeypatch.setenv("HERMES_SESSION_PLATFORM", "slack")
+    monkeypatch.setenv("HERMES_SESSION_PLATFORM", "telegram")
     monkeypatch.delenv("HERMES_SESSION_CHAT_ID", raising=False)
     monkeypatch.delenv("HERMES_SESSION_KEY", raising=False)
     monkeypatch.delenv("HERMES_SESSION_ID", raising=False)

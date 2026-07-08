@@ -1682,7 +1682,7 @@ def test_home_subscribe_unknown_platform_returns_404(client, with_home_channels)
     t = client.post("/api/plugins/kanban/tasks", json={"title": "x"}).json()["task"]
     r = client.post(f"/api/plugins/kanban/tasks/{t['id']}/home-subscribe/slack")
     assert r.status_code == 404
-    assert "slack" in r.json()["detail"]
+    assert "telegram" in r.json()["detail"]
 
 
 def test_home_subscribe_unknown_task_returns_404(client, with_home_channels):

@@ -398,15 +398,14 @@ async def test_run_agent_progress_does_not_use_event_message_id_for_telegram_dm(
 
 
 @pytest.mark.asyncio
-async def test_run_agent_progress_uses_event_message_id_for_slack_dm(monkeypatch, tmp_path):
-    """Slack DM progress should keep event ts fallback threading."""
+async def test_run_agent_progress_uses_event_message_id_for_telegram_dm(monkeypatch, tmp_path):
+    """Telegram DM progress should keep event ts fallback threading."""
     monkeypatch.setenv("HERMES_TOOL_PROGRESS_MODE", "all")
-    # Since PR #8006, Slack's built-in display tier sets tool_progress="off"
-    # by default. Override via config so this test still exercises the
-    # progress-callback path the Slack DM event_message_id threading depends on.
+# Since PR #8006, Telegram's built-in display tier sets tool_progress="off"
+    # progress-callback path the Telegram DM event_message_id threading depends on.
     import yaml
     (tmp_path / "config.yaml").write_text(
-        yaml.dump({"display": {"platforms": {"slack": {"tool_progress": "all"}}}}),
+        yaml.dump({"display": {"platforms": {"telegram": {"tool_progress": "all"}}}}),
         encoding="utf-8",
     )
 
@@ -418,14 +417,14 @@ async def test_run_agent_progress_uses_event_message_id_for_slack_dm(monkeypatch
     fake_run_agent.AIAgent = FakeAgent
     monkeypatch.setitem(sys.modules, "run_agent", fake_run_agent)
 
-    adapter = ProgressCaptureAdapter(platform=Platform.SLACK)
+    adapter = ProgressCaptureAdapter(platform=Platform.TELEGRAM)
     runner = _make_runner(adapter)
     gateway_run = importlib.import_module("gateway.run")
     monkeypatch.setattr(gateway_run, "_hermes_home", tmp_path)
     monkeypatch.setattr(gateway_run, "_resolve_runtime_agent_kwargs", lambda: {"api_key": "***"})
 
     source = SessionSource(
-        platform=Platform.SLACK,
+        platform=Platform.TELEGRAM,
         chat_id="D123",
         chat_type="dm",
         thread_id=None,
@@ -437,7 +436,7 @@ async def test_run_agent_progress_uses_event_message_id_for_slack_dm(monkeypatch
         history=[],
         source=source,
         session_id="sess-3",
-        session_key="agent:main:slack:dm:D123",
+        session_key="agent:main:telegram:dm:D123",
         event_message_id="1234567890.000001",
     )
 

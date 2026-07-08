@@ -168,14 +168,14 @@ def test_resolve_platform_override_wins():
         "display": {
             "runtime_footer": {"enabled": True, "fields": ["model"]},
             "platforms": {
-                "slack": {"runtime_footer": {"enabled": False}},
+                "telegram": {"runtime_footer": {"enabled": False}},
             },
         },
     }
     # Telegram picks up the global enable
     assert resolve_footer_config(user, "telegram")["enabled"] is True
-    # Slack overrides to off
-    assert resolve_footer_config(user, "slack")["enabled"] is False
+# Telegram overrides to off
+    assert resolve_footer_config(user, "telegram")["enabled"] is False
 
 
 def test_resolve_platform_can_add_fields_only():
@@ -235,12 +235,12 @@ def test_build_footer_per_platform_off_suppresses():
     user = {
         "display": {
             "runtime_footer": {"enabled": True},
-            "platforms": {"slack": {"runtime_footer": {"enabled": False}}},
+            "platforms": {"telegram": {"runtime_footer": {"enabled": False}}},
         },
     }
     out = build_footer_line(
         user_config=user,
-        platform_key="slack",
+        platform_key="telegram",
         model="openai/gpt-5.4",
         context_tokens=10, context_length=100,
         cwd="/tmp",

@@ -31,7 +31,7 @@ from hermes_cli.subcommands.postinstall import build_postinstall_parser
 from hermes_cli.subcommands.prompt_size import build_prompt_size_parser
 from hermes_cli.subcommands.security import build_security_parser
 from hermes_cli.subcommands.setup import build_setup_parser
-from hermes_cli.subcommands.slack import build_slack_parser
+from hermes_cli.subcommands.telegram import build_telegram_parser
 from hermes_cli.subcommands.status import build_status_parser
 from hermes_cli.subcommands.uninstall import build_uninstall_parser
 from hermes_cli.subcommands.update import build_update_parser
@@ -53,7 +53,7 @@ SINGLE_HANDLER_CASES = [
     ("setup", build_setup_parser, "cmd_setup", ["setup"]),
     ("postinstall", build_postinstall_parser, "cmd_postinstall", ["postinstall"]),
     ("whatsapp", build_whatsapp_parser, "cmd_whatsapp", ["whatsapp"]),
-    ("slack", build_slack_parser, "cmd_slack", ["slack"]),
+    ("telegram", build_telegram_parser, "cmd_telegram", ["telegram"]),
     ("login", build_login_parser, "cmd_login", ["login"]),
     ("logout", build_logout_parser, "cmd_logout", ["logout"]),
     ("auth", build_auth_parser, "cmd_auth", ["auth"]),

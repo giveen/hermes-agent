@@ -110,34 +110,15 @@ _TIER_MINIMAL = {
 
 _PLATFORM_DEFAULTS: dict[str, dict[str, Any]] = {
     # Tier 1 — full edit support, personal/team use
-    # Telegram is usually a mobile inbox: keep tool_progress quiet and skip
-    # the verbose busy-ack iteration counter, but DO surface real mid-turn
-    # assistant commentary (interim_assistant_messages) and DO send periodic
-    # heartbeats (long_running_notifications) so the user has signal between
-    # turn start and final answer. Otherwise it looks like "typing..." for
-    # 30 minutes with nothing happening. Opt in to verbose iteration detail
-    # via display.platforms.telegram.busy_ack_detail / tool_progress.
-    "telegram":    {
-        **_TIER_HIGH,
-        "tool_progress": "off",
-        "busy_ack_detail": False,
-    },
     # Discord has a native "subtext" primitive (-# small grey text) that reads
     # as metadata rather than content, so reasoning summaries default to it
     # here instead of the fenced code block used elsewhere.
     "discord":     {**_TIER_HIGH, "reasoning_style": "subtext"},
 
     # Tier 2 — edit support, often customer/workspace channels
-    # Slack: tool_progress off by default — Bolt posts cannot be edited like CLI;
-    # "new"/"all" spam permanent lines in channels (hermes-agent#14663).
-    "slack":           {**_TIER_MEDIUM, "tool_progress": "off"},
-    "mattermost":      _TIER_MEDIUM,
-    "matrix":          _TIER_MEDIUM,
-    "feishu":          _TIER_MEDIUM,
 
     # Tier 3 — no edit support, progress messages are permanent
     "signal":          _TIER_LOW,
-    "whatsapp":        _TIER_MEDIUM,  # Baileys bridge supports /edit
     # WhatsApp Cloud API: Meta added message editing in 2023 but the
     # Hermes Cloud adapter doesn't implement edit_message yet, so we
     # stay on TIER_LOW (tool_progress off) to avoid spamming each
@@ -146,15 +127,11 @@ _PLATFORM_DEFAULTS: dict[str, dict[str, Any]] = {
     "whatsapp_cloud":  _TIER_LOW,
     "bluebubbles":     _TIER_LOW,
     "weixin":          _TIER_LOW,
-    "wecom":           _TIER_LOW,
     "wecom_callback":  _TIER_LOW,
-    "dingtalk":        _TIER_LOW,
 
     # Tier 4 — batch or non-interactive delivery
     "email":           _TIER_MINIMAL,
-    "sms":             _TIER_MINIMAL,
     "webhook":         _TIER_MINIMAL,
-    "homeassistant":   _TIER_MINIMAL,
     "api_server":      {**_TIER_HIGH, "tool_preview_length": 0},
 }
 
@@ -175,7 +152,7 @@ def resolve_display_setting(
     user_config : dict
         The full parsed config.yaml dict.
     platform_key : str
-        Platform config key (e.g. ``"telegram"``, ``"slack"``).  Use
+        Platform config key (e.g. ``"discord"``, ``"slack"``).  Use
         ``_platform_config_key(source.platform)`` from gateway/run.py.
     setting : str
         Display setting name (e.g. ``"tool_progress"``, ``"show_reasoning"``).

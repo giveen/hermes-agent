@@ -1655,166 +1655,6 @@ def setup_agent_settings(config: dict):
 # =============================================================================
 
 
-_TELEGRAM_BOT_TOKEN_RE = re.compile(r"^\d+:[A-Za-z0-9_-]{30,}$")
-
-
-def _is_valid_telegram_bot_token(token: str) -> bool:
-    return bool(_TELEGRAM_BOT_TOKEN_RE.match(token))
-
-
-def _setup_telegram_auto_result():
-    """Attempt automatic Telegram bot creation via managed QR onboarding."""
-    try:
-        from hermes_cli.telegram_managed_bot import auto_setup_telegram_bot_result
-    except ImportError:
-        return None
-
-    profile_name: str | None = None
-    try:
-        profile_name = _profile_name_from_hermes_home(Path(get_hermes_home()))
-    except Exception:
-        pass
-
-    return auto_setup_telegram_bot_result(profile_name=profile_name)
-
-
-def _profile_name_from_hermes_home(hermes_home) -> str | None:
-    """Return the active profile name when HERMES_HOME is a profile dir."""
-    if hermes_home.parent.name == "profiles":
-        return hermes_home.name
-    return None
-
-
-def _setup_telegram_auto() -> str | None:
-    """Attempt automatic Telegram bot creation and return only the token."""
-    result = _setup_telegram_auto_result()
-    return result.token if result else None
-
-
-def _prompt_telegram_bot_token() -> str | None:
-    print_info("Create a bot via @BotFather on Telegram")
-    while True:
-        token = prompt("Telegram bot token", password=True)
-        if not token:
-            return None
-        if not _is_valid_telegram_bot_token(token):
-            print_error(
-                "Invalid token format. Expected: <numeric_id>:<alphanumeric_hash> "
-                "(e.g., 123456789:ABCdefGHI-jklMNOpqrSTUvwxYZ)"
-            )
-            continue
-        return token
-
-
-def _setup_telegram():
-    """Configure Telegram bot credentials and allowlist."""
-    print_header("Telegram")
-    existing = get_env_value("TELEGRAM_BOT_TOKEN")
-    if existing:
-        print_info("Telegram: already configured")
-        if not prompt_yes_no("Reconfigure Telegram?", False):
-            # Check missing allowlist on existing config
-            if not get_env_value("TELEGRAM_ALLOWED_USERS"):
-                print_info("⚠️  Telegram has no user allowlist - anyone can use your bot!")
-                if prompt_yes_no("Add allowed users now?", True):
-                    print_info("   To find your Telegram user ID: message @userinfobot")
-                    allowed_users = prompt("Allowed user IDs (comma-separated)")
-                    if allowed_users:
-                        save_env_value("TELEGRAM_ALLOWED_USERS", allowed_users.replace(" ", ""))
-                        print_success("Telegram allowlist configured")
-            return
-
-    print_info("How would you like to create your Telegram bot?")
-    print()
-    print_info("  [1] Automatic (recommended)")
-    print_info("      Scan a QR code → confirm in Telegram → done.")
-    print_info("      No token copy-paste needed.")
-    print()
-    print_info("  [2] Manual")
-    print_info("      Create a bot via @BotFather yourself and paste the token.")
-    print()
-
-    choice = prompt("Choice [1/2]", default="1")
-    token = None
-    setup_result = None
-
-    if choice.strip() == "1":
-        setup_result = _setup_telegram_auto_result()
-        if setup_result:
-            token = setup_result.token
-            if not _is_valid_telegram_bot_token(token):
-                print_error("Automatic setup returned an invalid Telegram bot token.")
-                token = None
-                setup_result = None
-        else:
-            token = None
-        if not token:
-            print()
-            print_info("Falling back to manual setup...")
-            print()
-
-    if not token:
-        token = _prompt_telegram_bot_token()
-    if not token:
-        return
-
-    save_env_value("TELEGRAM_BOT_TOKEN", token)
-    print_success("Telegram token saved")
-
-    print()
-    print_info("🔒 Security: Restrict who can use your bot")
-    print_info("   To find your Telegram user ID:")
-    print_info("   1. Message @userinfobot on Telegram")
-    print_info("   2. It will reply with your numeric ID (e.g., 123456789)")
-    print()
-
-    detected_user_id = getattr(setup_result, "owner_user_id", None)
-    if detected_user_id:
-        detected_id = str(detected_user_id)
-        print_success(f"Detected your Telegram user ID: {detected_id}")
-        if prompt_yes_no("Allow this Telegram account to use the bot?", True):
-            extra = prompt("Additional allowed user IDs (comma-separated, optional)")
-            ids = [detected_id]
-            for uid in extra.replace(" ", "").split(","):
-                if uid and uid not in ids:
-                    ids.append(uid)
-            allowed_users = ",".join(ids)
-        else:
-            allowed_users = prompt(
-                "Allowed user IDs (comma-separated, leave empty for open access)"
-            )
-    else:
-        allowed_users = prompt(
-            "Allowed user IDs (comma-separated, leave empty for open access)"
-        )
-
-    if allowed_users:
-        allowed_users = allowed_users.replace(" ", "")
-        save_env_value("TELEGRAM_ALLOWED_USERS", allowed_users)
-        print_success("Telegram allowlist configured - only listed users can use the bot")
-    else:
-        print_info("⚠️  No allowlist set - anyone who finds your bot can use it!")
-
-    print()
-    print_info("📬 Home Channel: where Hermes delivers cron job results,")
-    print_info("   cross-platform messages, and notifications.")
-    print_info("   For Telegram DMs, this is your user ID (same as above).")
-
-    first_user_id = allowed_users.split(",")[0].strip() if allowed_users else ""
-    if first_user_id:
-        if prompt_yes_no(f"Use your user ID ({first_user_id}) as the home channel?", True):
-            save_env_value("TELEGRAM_HOME_CHANNEL", first_user_id)
-            print_success(f"Telegram home channel set to {first_user_id}")
-        else:
-            home_channel = prompt("Home channel ID (or leave empty to set later with /set-home in Telegram)")
-            if home_channel:
-                save_env_value("TELEGRAM_HOME_CHANNEL", home_channel)
-    else:
-        print_info("   You can also set this later by typing /set-home in your Telegram chat.")
-        home_channel = prompt("Home channel ID (leave empty to set later)")
-        if home_channel:
-            save_env_value("TELEGRAM_HOME_CHANNEL", home_channel)
-
 
 # _setup_slack and _write_slack_manifest_and_instruct moved to the slack
 # plugin: plugins/platforms/slack/adapter.py::interactive_setup (registered
@@ -2002,8 +1842,6 @@ def setup_gateway(config: dict):
             "DISCORD_HOME_CHANNEL"
         ):
             missing_home.append("Discord")
-        if get_env_value("SLACK_BOT_TOKEN") and not get_env_value("SLACK_HOME_CHANNEL"):
-            missing_home.append("Slack")
         if get_env_value("BLUEBUBBLES_SERVER_URL") and not get_env_value("BLUEBUBBLES_HOME_CHANNEL"):
             missing_home.append("BlueBubbles")
         if get_env_value("QQ_APP_ID") and not (
@@ -2398,10 +2236,7 @@ def _load_openclaw_migration_module():
 # Instruction/context files (.md) can contain incompatible setup procedures.
 _HIGH_IMPACT_KIND_KEYWORDS = {
     "gateway": "⚠ Gateway/messaging — this will configure Hermes to use your OpenClaw messaging channels",
-    "telegram": "⚠ Telegram — this will point Hermes at your OpenClaw Telegram bot",
-    "slack": "⚠ Slack — this will point Hermes at your OpenClaw Slack workspace",
     "discord": "⚠ Discord — this will point Hermes at your OpenClaw Discord bot",
-    "whatsapp": "⚠ WhatsApp — this will point Hermes at your OpenClaw WhatsApp connection",
     "config": "⚠ Config values — OpenClaw settings may not map 1:1 to Hermes equivalents",
     "soul": "⚠ Instruction file — may contain OpenClaw-specific setup/restart procedures",
     "memory": "⚠ Memory/context file — may reference OpenClaw-specific infrastructure",

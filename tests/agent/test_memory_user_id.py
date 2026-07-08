@@ -139,14 +139,14 @@ class TestMemoryManagerUserIdThreading:
 
         mgr.initialize_all(
             session_id="sess-multi",
-            platform="slack",
-            user_id="slack_U12345",
+            platform="telegram",
+            user_id="telegram_U12345",
         )
 
-        assert p1._init_kwargs.get("user_id") == "slack_U12345"
-        assert p1._init_kwargs.get("platform") == "slack"
-        assert p2._init_kwargs.get("user_id") == "slack_U12345"
-        assert p2._init_kwargs.get("platform") == "slack"
+        assert p1._init_kwargs.get("user_id") == "telegram_U12345"
+        assert p1._init_kwargs.get("platform") == "telegram"
+        assert p2._init_kwargs.get("user_id") == "telegram_U12345"
+        assert p2._init_kwargs.get("platform") == "telegram"
 
 
 # ---------------------------------------------------------------------------

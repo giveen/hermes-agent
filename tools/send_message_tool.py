@@ -20,15 +20,6 @@ logger = logging.getLogger(__name__)
 
 _TELEGRAM_TOPIC_TARGET_RE = re.compile(r"^\s*(-?\d+)(?::(\d+))?\s*$")
 _FEISHU_TARGET_RE = re.compile(r"^\s*((?:oc|ou|on|chat|open)_[-A-Za-z0-9]+)(?::([-A-Za-z0-9_]+))?\s*$")
-# Slack conversation IDs: C (public channel), G (private/group channel), D (DM).
-# Must be uppercase alphanumeric, 9+ chars. User IDs (U...) and workspace IDs
-# (W...) are NOT valid chat.postMessage channel values — posting to them fails
-# because the API requires a conversation ID. To DM a user you must first call
-# conversations.open to obtain a D... ID. Without this gate, Slack IDs fall
-# through to channel-name resolution, which only matches by name and fails.
-_SLACK_TARGET_RE = re.compile(r"^\s*([CGDU][A-Z0-9]{8,})\s*$")
-# Session-derived Slack thread targets use "<conversation_id>:<thread_ts>".
-_SLACK_THREAD_TARGET_RE = re.compile(r"^\s*([CGD][A-Z0-9]{8,}):([^\s:]+)\s*$")
 _WEIXIN_TARGET_RE = re.compile(r"^\s*((?:wxid|gh|v\d+|wm|wb)_[A-Za-z0-9_-]+|[A-Za-z0-9._-]+@chatroom|filehelper)\s*$")
 _YUANBAO_TARGET_RE = re.compile(r"^\s*((?:group|direct):[^:]+)\s*$")
 # Discord snowflake IDs are numeric, same regex pattern as Telegram topic targets.
@@ -408,27 +399,6 @@ def _handle_send(args):
     if duplicate_skip:
         return json.dumps(duplicate_skip)
 
-    # Slack: resolve user IDs (U...) to DM channel IDs via conversations.open
-    if platform_name == "slack" and chat_id and chat_id.startswith("U"):
-        try:
-            import aiohttp
-            async def _open_slack_dm(token, user_id):
-                url = "https://slack.com/api/conversations.open"
-                headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-                async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10)) as session:
-                    async with session.post(url, headers=headers, json={"users": [user_id]}) as resp:
-                        data = await resp.json()
-                        if data.get("ok"):
-                            return data["channel"]["id"]
-                        return None
-            from model_tools import _run_async
-            dm_channel = _run_async(_open_slack_dm(pconfig.token, chat_id))
-            if dm_channel:
-                chat_id = dm_channel
-            else:
-                return json.dumps({"error": f"Could not open DM with Slack user {chat_id}. Check bot permissions (im:write)."})
-        except Exception as e:
-            return json.dumps({"error": f"Failed to open Slack DM: {e}"})
 
     try:
         from model_tools import _run_async
@@ -493,20 +463,6 @@ def _parse_target_ref(platform_name: str, target_ref: str):
         match = _NUMERIC_TOPIC_RE.fullmatch(target_ref)
         if match:
             return match.group(1), match.group(2), True
-    if platform_name == "slack":
-        match = _SLACK_THREAD_TARGET_RE.fullmatch(target_ref)
-        if match:
-            return match.group(1), match.group(2), True
-        match = _SLACK_TARGET_RE.fullmatch(target_ref)
-        if match:
-            chat_id = match.group(1)
-            # Slack user IDs (U...) and workspace IDs (W...) are NOT valid
-            # explicit send targets — chat.postMessage rejects them. A DM
-            # must be opened first via conversations.open to get a D...
-            # conversation ID. Caller still gets the chat_id so the U→D
-            # resolution path in send_message() can run.
-            is_explicit = chat_id[0] not in {"U", "W"}
-            return chat_id, None, is_explicit
     if platform_name == "matrix":
         trimmed = target_ref.strip()
         split_idx = trimmed.rfind(":$")
@@ -949,19 +905,7 @@ async def _send_to_platform(platform, pconfig, chat_id, message, thread_id=None,
 
     last_result = None
     for chunk in chunks:
-        if platform == Platform.SLACK:
-            # Slack migrated to a bundled plugin (#41112); delivery flows
-            # through the registry's standalone_sender_fn, which applies
-            # mrkdwn formatting and posts via the Slack Web API.
-            from gateway.platform_registry import platform_registry
-            _slack_entry = platform_registry.get("slack")
-            if _slack_entry is None or _slack_entry.standalone_sender_fn is None:
-                result = {"error": "Slack plugin not registered or missing standalone_sender_fn"}
-            else:
-                result = await _slack_entry.standalone_sender_fn(
-                    pconfig, chat_id, chunk, thread_id=thread_id
-                )
-        elif platform == Platform.WHATSAPP:
+        if platform == Platform.WHATSAPP:
             result = await _registry_standalone_send("whatsapp", pconfig, chat_id, chunk, thread_id)
         elif platform == Platform.SIGNAL:
             result = await _send_signal(pconfig.extra, chat_id, chunk)

@@ -122,8 +122,6 @@ async def build_channel_directory(adapters: Dict[Any, Any]) -> Dict[str, Any]:
         try:
             if platform == Platform.DISCORD:
                 platforms["discord"] = _build_discord(adapter)
-            elif platform == Platform.SLACK:
-                platforms["slack"] = await _build_slack(adapter)
         except Exception as e:
             logger.warning("Channel directory: failed to build %s: %s", platform.value, e)
 
@@ -200,66 +198,6 @@ def _build_discord(adapter) -> List[Dict[str, str]]:
     return channels
 
 
-async def _build_slack(adapter) -> List[Dict[str, Any]]:
-    """List Slack channels the bot has joined across all workspaces.
-
-    Uses ``users.conversations`` against each workspace's web client. Pulls
-    public + private channels the bot is a member of, then merges in DMs
-    discovered from session history (IMs aren't useful to enumerate
-    proactively).
-    """
-    team_clients = getattr(adapter, "_team_clients", None) or {}
-    if not team_clients:
-        return _build_from_sessions("slack")
-
-    channels: List[Dict[str, Any]] = []
-    seen_ids: set = set()
-
-    for team_id, client in team_clients.items():
-        try:
-            cursor: Optional[str] = None
-            for _page in range(20):  # safety cap on pagination
-                response = await client.users_conversations(
-                    types="public_channel,private_channel",
-                    exclude_archived=True,
-                    limit=200,
-                    cursor=cursor,
-                )
-                if not response.get("ok"):
-                    logger.warning(
-                        "Channel directory: users.conversations not ok for team %s: %s",
-                        team_id,
-                        response.get("error", "unknown"),
-                    )
-                    break
-                for ch in response.get("channels", []):
-                    cid = ch.get("id")
-                    name = ch.get("name")
-                    if not cid or not name or cid in seen_ids:
-                        continue
-                    seen_ids.add(cid)
-                    channels.append({
-                        "id": cid,
-                        "name": name,
-                        "type": "private" if ch.get("is_private") else "channel",
-                    })
-                cursor = (response.get("response_metadata") or {}).get("next_cursor")
-                if not cursor:
-                    break
-        except Exception as e:
-            logger.warning(
-                "Channel directory: failed to list Slack channels for team %s: %s",
-                team_id, e,
-            )
-            continue
-
-    # Merge in DM/group entries discovered from session history.
-    for entry in _build_from_sessions("slack"):
-        if entry.get("id") not in seen_ids:
-            channels.append(entry)
-            seen_ids.add(entry.get("id"))
-
-    return channels
 
 
 def _build_from_sessions(platform_name: str) -> List[Dict[str, str]]:

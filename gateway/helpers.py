@@ -487,12 +487,8 @@ async def _send_or_update_status_coro(adapter, chat_id, status_key, content, met
 
 def _resolve_progress_thread_id(platform: Any, source_thread_id: Any, event_message_id: Any) -> Optional[str]:
     """Return thread/root ID that progress/status bubbles should target."""
-    platform_value = getattr(platform, "value", platform)
-    platform_key = str(platform_value or "").lower()
     if source_thread_id:
         return str(source_thread_id)
-    if platform_key in {"slack", "mattermost"} and event_message_id:
-        return str(event_message_id)
     return None
 
 
@@ -1391,12 +1387,8 @@ _PORT_BINDING_PLATFORM_VALUES = frozenset({
     "webhook",
     "api_server",
     "msgraph_webhook",
-    "feishu",
     "wecom_callback",
     "bluebubbles",
-    "sms",
-    "whatsapp_cloud",
-    "line",
 })
 
 
@@ -1778,11 +1770,9 @@ logger = logging.getLogger(__name__)
 
 
 _OWN_POLICY_OPEN_ENV = {
-    Platform.WECOM: ("WECOM_DM_POLICY", "WECOM_GROUP_POLICY", "WECOM_ALLOW_ALL_USERS"),
     Platform.WEIXIN: ("WEIXIN_DM_POLICY", "WEIXIN_GROUP_POLICY", "WEIXIN_ALLOW_ALL_USERS"),
     Platform.YUANBAO: ("YUANBAO_DM_POLICY", "YUANBAO_GROUP_POLICY", "YUANBAO_ALLOW_ALL_USERS"),
     Platform.QQBOT: (None, None, "QQ_ALLOW_ALL_USERS"),
-    Platform.WHATSAPP: ("WHATSAPP_DM_POLICY", "WHATSAPP_GROUP_POLICY", "WHATSAPP_ALLOW_ALL_USERS"),
 }
 
 

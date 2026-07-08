@@ -572,14 +572,10 @@ class StreamingConfig:
 # -----------------------------------------------------------------------------
 # Each callable receives a ``PlatformConfig`` and returns ``True`` when the
 # platform is sufficiently configured to be considered "connected".  Platforms
-# that rely on the generic ``token or api_key`` check (Telegram, Discord,
-# Slack, Matrix, Mattermost, HomeAssistant) do not need an entry here.
+# that rely on the generic ``token or api_key`` check (Discord, Slack) do not need an entry here.
 _PLATFORM_CONNECTED_CHECKERS: dict[Platform, Callable[[PlatformConfig], bool]] = {
     Platform.WEIXIN: lambda cfg: bool(
         cfg.extra.get("account_id") and (cfg.token or cfg.extra.get("token"))
-    ),
-    Platform.WHATSAPP_CLOUD: lambda cfg: bool(
-        cfg.extra.get("phone_number_id") and cfg.extra.get("access_token")
     ),
     Platform.SIGNAL: lambda cfg: bool(cfg.extra.get("http_url")),
     Platform.API_SERVER: lambda cfg: True,
@@ -1132,20 +1128,12 @@ def load_gateway_config() -> GatewayConfig:
                     bridged["cron_continuable_surface"] = platform_cfg["cron_continuable_surface"]
                 if "require_mention" in platform_cfg:
                     bridged["require_mention"] = platform_cfg["require_mention"]
-                if plat == Platform.TELEGRAM and "allowed_chats" in platform_cfg:
-                    bridged["allowed_chats"] = platform_cfg["allowed_chats"]
-                if plat == Platform.TELEGRAM and "group_allowed_chats" in platform_cfg:
-                    bridged["group_allowed_chats"] = platform_cfg["group_allowed_chats"]
-                if plat == Platform.TELEGRAM and "allowed_topics" in platform_cfg:
-                    bridged["allowed_topics"] = platform_cfg["allowed_topics"]
                 if "free_response_channels" in platform_cfg:
                     bridged["free_response_channels"] = platform_cfg["free_response_channels"]
                 if "mention_patterns" in platform_cfg:
                     bridged["mention_patterns"] = platform_cfg["mention_patterns"]
                 if "exclusive_bot_mentions" in platform_cfg:
                     bridged["exclusive_bot_mentions"] = platform_cfg["exclusive_bot_mentions"]
-                if plat == Platform.TELEGRAM and "observe_unmentioned_group_messages" in platform_cfg:
-                    bridged["observe_unmentioned_group_messages"] = platform_cfg["observe_unmentioned_group_messages"]
                 if "dm_policy" in platform_cfg:
                     bridged["dm_policy"] = platform_cfg["dm_policy"]
                 if "allow_from" in platform_cfg:
@@ -1162,7 +1150,7 @@ def load_gateway_config() -> GatewayConfig:
                     bridged["group_allow_admin_from"] = platform_cfg["group_allow_admin_from"]
                 if "group_user_allowed_commands" in platform_cfg:
                     bridged["group_user_allowed_commands"] = platform_cfg["group_user_allowed_commands"]
-                if plat in {Platform.DISCORD, Platform.SLACK} and "channel_skill_bindings" in platform_cfg:
+                if plat in {Platform.DISCORD} and "channel_skill_bindings" in platform_cfg:
                     bridged["channel_skill_bindings"] = platform_cfg["channel_skill_bindings"]
                 if "channel_prompts" in platform_cfg:
                     channel_prompts = platform_cfg["channel_prompts"]
@@ -1242,54 +1230,11 @@ def load_gateway_config() -> GatewayConfig:
             # adapter.py::_apply_yaml_config), dispatched in the
             # ``apply_yaml_config_fn`` loop above. #41112 / #3823.
 
-            # Bridge top-level require_mention to Telegram when the telegram: section
-            # does not already provide one.  Users often write "require_mention: true"
-            # at the top level alongside group_sessions_per_user, expecting it to work
-            # the same way (#3979).
-            _tl_require_mention = yaml_cfg.get("require_mention")
-            if _tl_require_mention is not None:
-                _tg_section = yaml_cfg.get("telegram") or {}
-                if "require_mention" not in _tg_section:
-                    _tg_plat = platforms_data.setdefault(Platform.TELEGRAM.value, {})
-                    _tg_extra = _tg_plat.setdefault("extra", {})
-                    _tg_extra.setdefault("require_mention", _tl_require_mention)
-                    # Also bridge to the TELEGRAM_REQUIRE_MENTION env var that the
-                    # adapter reads at runtime.  This used to live in the telegram_cfg
-                    # block in core; it stays in core because it keys off the TOP-LEVEL
-                    # require_mention (not a telegram: block), so the telegram plugin's
-                    # apply_yaml_config_fn hook — which only runs when a telegram config
-                    # block exists — can't cover the no-telegram-block case (#3979).
-                    if not os.getenv("TELEGRAM_REQUIRE_MENTION"):
-                        os.environ["TELEGRAM_REQUIRE_MENTION"] = str(_tl_require_mention).lower()
-
-            # Telegram settings → env vars / extra: migrated to the telegram
-            # plugin's apply_yaml_config_fn hook
-            # (plugins/platforms/telegram/adapter.py). #41112 / #3823.
-
-            # WhatsApp settings → env vars: migrated to the whatsapp plugin's
-            # apply_yaml_config_fn hook (plugins/platforms/whatsapp/adapter.py).
-            # #41112 / #3823.
-
             # Signal settings → env vars (env vars take precedence)
             signal_cfg = yaml_cfg.get("signal", {})
             if isinstance(signal_cfg, dict):
                 if "require_mention" in signal_cfg and not os.getenv("SIGNAL_REQUIRE_MENTION"):
                     os.environ["SIGNAL_REQUIRE_MENTION"] = str(signal_cfg["require_mention"]).lower()
-
-            # DingTalk settings → env vars: migrated to the dingtalk plugin's
-            # apply_yaml_config_fn hook (plugins/platforms/dingtalk/adapter.py).
-            # #41112 / #3823.
-
-            # Mattermost config bridge moved into plugins/platforms/mattermost/
-            # adapter.py::_apply_yaml_config — see #25443 (apply_yaml_config_fn).
-
-            # Matrix settings → env vars: migrated to the matrix plugin's
-            # apply_yaml_config_fn hook (plugins/platforms/matrix/adapter.py).
-            # #41112 / #3823.
-
-            # Feishu settings → env vars: migrated to the feishu plugin's
-            # apply_yaml_config_fn hook (plugins/platforms/feishu/adapter.py).
-            # #41112 / #3823.
 
     except Exception as e:
         logger.warning(
@@ -1334,11 +1279,7 @@ def _validate_gateway_config(config: "GatewayConfig") -> None:
     # Warn about empty bot tokens — platforms that loaded an empty string
     # won't connect and the cause can be confusing without a log line.
     _token_env_names = {
-        Platform.TELEGRAM: "TELEGRAM_BOT_TOKEN",
         Platform.DISCORD: "DISCORD_BOT_TOKEN",
-        Platform.SLACK: "SLACK_BOT_TOKEN",
-        Platform.MATTERMOST: "MATTERMOST_TOKEN",
-        Platform.MATRIX: "MATRIX_ACCESS_TOKEN",
         Platform.WEIXIN: "WEIXIN_TOKEN",
     }
     for platform, pconfig in config.platforms.items():
@@ -1401,36 +1342,6 @@ def _apply_env_overrides(config: GatewayConfig) -> None:
             platform_config.enabled = True
         return platform_config
     
-    # Telegram
-    telegram_token = getenv("TELEGRAM_BOT_TOKEN")
-    if telegram_token:
-        telegram_config = _enable_from_env(Platform.TELEGRAM)
-        telegram_config.token = telegram_token
-    
-    # Reply threading mode for Telegram (off/first/all)
-    telegram_reply_mode = getenv("TELEGRAM_REPLY_TO_MODE", "").lower()
-    if telegram_reply_mode in {"off", "first", "all"}:
-        if Platform.TELEGRAM not in config.platforms:
-            config.platforms[Platform.TELEGRAM] = PlatformConfig()
-        config.platforms[Platform.TELEGRAM].reply_to_mode = telegram_reply_mode
-    
-    telegram_fallback_ips = getenv("TELEGRAM_FALLBACK_IPS", "")
-    if telegram_fallback_ips:
-        if Platform.TELEGRAM not in config.platforms:
-            config.platforms[Platform.TELEGRAM] = PlatformConfig()
-        config.platforms[Platform.TELEGRAM].extra["fallback_ips"] = [
-            ip.strip() for ip in telegram_fallback_ips.split(",") if ip.strip()
-        ]
-
-    telegram_home = getenv("TELEGRAM_HOME_CHANNEL")
-    if telegram_home and Platform.TELEGRAM in config.platforms:
-        config.platforms[Platform.TELEGRAM].home_channel = HomeChannel(
-            platform=Platform.TELEGRAM,
-            chat_id=telegram_home,
-            name=getenv("TELEGRAM_HOME_CHANNEL_NAME", "Home"),
-            thread_id=getenv("TELEGRAM_HOME_CHANNEL_THREAD_ID") or None,
-        )
-    
     # Discord
     discord_token = getenv("DISCORD_BOT_TOKEN")
     if discord_token:
@@ -1452,116 +1363,7 @@ def _apply_env_overrides(config: GatewayConfig) -> None:
         if Platform.DISCORD not in config.platforms:
             config.platforms[Platform.DISCORD] = PlatformConfig()
         config.platforms[Platform.DISCORD].reply_to_mode = discord_reply_mode
-    
-    # WhatsApp (typically uses different auth mechanism)
-    whatsapp_enabled = is_truthy_value(getenv("WHATSAPP_ENABLED", ""))
-    whatsapp_disabled_explicitly = getenv("WHATSAPP_ENABLED", "").lower() in {"false", "0", "no"}
-    if Platform.WHATSAPP in config.platforms:
-        # YAML config exists — respect explicit disable
-        wa_cfg = config.platforms[Platform.WHATSAPP]
-        if whatsapp_disabled_explicitly:
-            wa_cfg.enabled = False
-        elif whatsapp_enabled:
-            wa_cfg.enabled = True
-        # else: keep whatever the YAML set
-    elif whatsapp_enabled:
-        config.platforms[Platform.WHATSAPP] = PlatformConfig(enabled=True)
-    whatsapp_home = getenv("WHATSAPP_HOME_CHANNEL")
-    if whatsapp_home and Platform.WHATSAPP in config.platforms:
-        config.platforms[Platform.WHATSAPP].home_channel = HomeChannel(
-            platform=Platform.WHATSAPP,
-            chat_id=whatsapp_home,
-            name=getenv("WHATSAPP_HOME_CHANNEL_NAME", "Home"),
-            thread_id=getenv("WHATSAPP_HOME_CHANNEL_THREAD_ID") or None,
-        )
 
-    # WhatsApp Cloud API (official Business Platform via Meta).
-    # Distinct from the Baileys bridge: pure HTTP graph.facebook.com calls
-    # outbound, public webhook inbound. Both adapters can run in parallel
-    # against different phone numbers.
-    whatsapp_cloud_phone_id = getenv("WHATSAPP_CLOUD_PHONE_NUMBER_ID")
-    whatsapp_cloud_token = getenv("WHATSAPP_CLOUD_ACCESS_TOKEN")
-    if whatsapp_cloud_phone_id and whatsapp_cloud_token:
-        if Platform.WHATSAPP_CLOUD not in config.platforms:
-            config.platforms[Platform.WHATSAPP_CLOUD] = PlatformConfig()
-        config.platforms[Platform.WHATSAPP_CLOUD].enabled = True
-        config.platforms[Platform.WHATSAPP_CLOUD].extra.update({
-            "phone_number_id": whatsapp_cloud_phone_id,
-            "access_token": whatsapp_cloud_token,
-        })
-        # Optional: app_id / app_secret (signature verification)
-        wa_cloud_app_id = getenv("WHATSAPP_CLOUD_APP_ID")
-        if wa_cloud_app_id:
-            config.platforms[Platform.WHATSAPP_CLOUD].extra["app_id"] = wa_cloud_app_id
-        wa_cloud_app_secret = getenv("WHATSAPP_CLOUD_APP_SECRET")
-        if wa_cloud_app_secret:
-            config.platforms[Platform.WHATSAPP_CLOUD].extra["app_secret"] = wa_cloud_app_secret
-        # Optional: WABA id (analytics, future use)
-        wa_cloud_waba_id = getenv("WHATSAPP_CLOUD_WABA_ID")
-        if wa_cloud_waba_id:
-            config.platforms[Platform.WHATSAPP_CLOUD].extra["waba_id"] = wa_cloud_waba_id
-        # Webhook verify token — Meta hub.verify_token shared secret
-        wa_cloud_verify_token = getenv("WHATSAPP_CLOUD_VERIFY_TOKEN")
-        if wa_cloud_verify_token:
-            config.platforms[Platform.WHATSAPP_CLOUD].extra["verify_token"] = wa_cloud_verify_token
-        # Webhook server bind config (defaults baked into the adapter)
-        wa_cloud_host = getenv("WHATSAPP_CLOUD_WEBHOOK_HOST")
-        if wa_cloud_host:
-            config.platforms[Platform.WHATSAPP_CLOUD].extra["webhook_host"] = wa_cloud_host
-        wa_cloud_port = getenv("WHATSAPP_CLOUD_WEBHOOK_PORT")
-        if wa_cloud_port:
-            try:
-                config.platforms[Platform.WHATSAPP_CLOUD].extra["webhook_port"] = int(wa_cloud_port)
-            except ValueError:
-                pass
-        wa_cloud_path = getenv("WHATSAPP_CLOUD_WEBHOOK_PATH")
-        if wa_cloud_path:
-            config.platforms[Platform.WHATSAPP_CLOUD].extra["webhook_path"] = wa_cloud_path
-        # Graph API version override (rarely needed)
-        wa_cloud_api_version = getenv("WHATSAPP_CLOUD_API_VERSION")
-        if wa_cloud_api_version:
-            config.platforms[Platform.WHATSAPP_CLOUD].extra["api_version"] = wa_cloud_api_version
-    whatsapp_cloud_home = getenv("WHATSAPP_CLOUD_HOME_CHANNEL")
-    if whatsapp_cloud_home and Platform.WHATSAPP_CLOUD in config.platforms:
-        config.platforms[Platform.WHATSAPP_CLOUD].home_channel = HomeChannel(
-            platform=Platform.WHATSAPP_CLOUD,
-            chat_id=whatsapp_cloud_home,
-            name=getenv("WHATSAPP_CLOUD_HOME_CHANNEL_NAME", "Home"),
-            thread_id=getenv("WHATSAPP_CLOUD_HOME_CHANNEL_THREAD_ID") or None,
-        )
-
-    # Slack
-    slack_token = getenv("SLACK_BOT_TOKEN")
-    if slack_token:
-        if Platform.SLACK not in config.platforms:
-            # No yaml config for Slack — env-only setup, enable it
-            config.platforms[Platform.SLACK] = PlatformConfig()
-            config.platforms[Platform.SLACK].enabled = True
-        else:
-            slack_config = config.platforms[Platform.SLACK]
-            # Read (don't pop) the explicit-enable marker: the registry-driven
-            # plugin-enable pass below also needs it to avoid re-enabling a
-            # platform the user explicitly disabled (Slack is now a plugin
-            # entry — #41112). The flag is cleared once for all platforms in
-            # the final cleanup at the end of _apply_env_overrides.
-            enabled_was_explicit = bool(slack_config.extra.get("_enabled_explicit", False))
-            if not slack_config.enabled and not enabled_was_explicit:
-                # Top-level Slack settings such as channel prompts should not
-                # turn an env-token setup into a disabled platform. Only an
-                # explicit slack.enabled/platforms.slack.enabled false should.
-                slack_config.enabled = True
-        # If yaml config exists, respect its enabled flag (don't override
-        # explicit enabled: false). Token is still stored so skills that
-        # send Slack messages can use it without activating the gateway adapter.
-        config.platforms[Platform.SLACK].token = slack_token
-    slack_home = getenv("SLACK_HOME_CHANNEL")
-    if slack_home and Platform.SLACK in config.platforms:
-        config.platforms[Platform.SLACK].home_channel = HomeChannel(
-            platform=Platform.SLACK,
-            chat_id=slack_home,
-            name=getenv("SLACK_HOME_CHANNEL_NAME", ""),
-            thread_id=getenv("SLACK_HOME_CHANNEL_THREAD_ID") or None,
-        )
     
     # Signal
     signal_url = getenv("SIGNAL_HTTP_URL")
@@ -1581,71 +1383,6 @@ def _apply_env_overrides(config: GatewayConfig) -> None:
             name=getenv("SIGNAL_HOME_CHANNEL_NAME", "Home"),
             thread_id=getenv("SIGNAL_HOME_CHANNEL_THREAD_ID") or None,
         )
-
-    # Mattermost
-    mattermost_token = getenv("MATTERMOST_TOKEN")
-    if mattermost_token:
-        mattermost_url = getenv("MATTERMOST_URL", "")
-        if not mattermost_url:
-            logger.warning("MATTERMOST_TOKEN set but MATTERMOST_URL is missing")
-        mattermost_config = _enable_from_env(Platform.MATTERMOST)
-        mattermost_config.token = mattermost_token
-        mattermost_config.extra["url"] = mattermost_url
-    mattermost_home = getenv("MATTERMOST_HOME_CHANNEL")
-    if mattermost_home and Platform.MATTERMOST in config.platforms:
-        config.platforms[Platform.MATTERMOST].home_channel = HomeChannel(
-            platform=Platform.MATTERMOST,
-            chat_id=mattermost_home,
-            name=getenv("MATTERMOST_HOME_CHANNEL_NAME", "Home"),
-            thread_id=getenv("MATTERMOST_HOME_CHANNEL_THREAD_ID") or None,
-        )
-
-    # Matrix
-    matrix_token = getenv("MATRIX_ACCESS_TOKEN")
-    matrix_homeserver = getenv("MATRIX_HOMESERVER", "")
-    if matrix_token or getenv("MATRIX_PASSWORD"):
-        if not matrix_homeserver:
-            logger.warning("MATRIX_ACCESS_TOKEN/MATRIX_PASSWORD set but MATRIX_HOMESERVER is missing")
-        matrix_config = _enable_from_env(Platform.MATRIX)
-        if matrix_token:
-            matrix_config.token = matrix_token
-        matrix_config.extra["homeserver"] = matrix_homeserver
-        matrix_user = getenv("MATRIX_USER_ID", "")
-        if matrix_user:
-            matrix_config.extra["user_id"] = matrix_user
-        matrix_password = getenv("MATRIX_PASSWORD", "")
-        if matrix_password:
-            matrix_config.extra["password"] = matrix_password
-        matrix_e2ee_mode = getenv("MATRIX_E2EE_MODE", "").strip().lower()
-        matrix_e2ee = (
-            matrix_e2ee_mode in ("required", "require", "optional", "prefer", "preferred")
-            or is_truthy_value(getenv("MATRIX_ENCRYPTION", ""))
-        )
-        matrix_config.extra["encryption"] = matrix_e2ee
-        if matrix_e2ee_mode:
-            matrix_config.extra["e2ee_mode"] = matrix_e2ee_mode
-        matrix_device_id = getenv("MATRIX_DEVICE_ID", "")
-        if matrix_device_id:
-            matrix_config.extra["device_id"] = matrix_device_id
-    matrix_home = getenv("MATRIX_HOME_ROOM")
-    if matrix_home and Platform.MATRIX in config.platforms:
-        config.platforms[Platform.MATRIX].home_channel = HomeChannel(
-            platform=Platform.MATRIX,
-            chat_id=matrix_home,
-            name=getenv("MATRIX_HOME_ROOM_NAME", "Home"),
-            thread_id=getenv("MATRIX_HOME_ROOM_THREAD_ID") or None,
-        )
-
-    # Home Assistant
-    hass_token = getenv("HASS_TOKEN")
-    if hass_token:
-        if Platform.HOMEASSISTANT not in config.platforms:
-            config.platforms[Platform.HOMEASSISTANT] = PlatformConfig()
-        config.platforms[Platform.HOMEASSISTANT].enabled = True
-        config.platforms[Platform.HOMEASSISTANT].token = hass_token
-        hass_url = getenv("HASS_URL")
-        if hass_url:
-            config.platforms[Platform.HOMEASSISTANT].extra["url"] = hass_url
 
     # Email
     email_addr = getenv("EMAIL_ADDRESS")
@@ -1668,22 +1405,6 @@ def _apply_env_overrides(config: GatewayConfig) -> None:
             chat_id=email_home,
             name=getenv("EMAIL_HOME_ADDRESS_NAME", "Home"),
             thread_id=getenv("EMAIL_HOME_ADDRESS_THREAD_ID") or None,
-        )
-
-    # SMS (Twilio)
-    twilio_sid = getenv("TWILIO_ACCOUNT_SID")
-    if twilio_sid:
-        if Platform.SMS not in config.platforms:
-            config.platforms[Platform.SMS] = PlatformConfig()
-        config.platforms[Platform.SMS].enabled = True
-        config.platforms[Platform.SMS].api_key = getenv("TWILIO_AUTH_TOKEN", "")
-    sms_home = getenv("SMS_HOME_CHANNEL")
-    if sms_home and Platform.SMS in config.platforms:
-        config.platforms[Platform.SMS].home_channel = HomeChannel(
-            platform=Platform.SMS,
-            chat_id=sms_home,
-            name=getenv("SMS_HOME_CHANNEL_NAME", "Home"),
-            thread_id=getenv("SMS_HOME_CHANNEL_THREAD_ID") or None,
         )
 
     # API Server
@@ -1780,94 +1501,6 @@ def _apply_env_overrides(config: GatewayConfig) -> None:
                 config.platforms[Platform.MSGRAPH_WEBHOOK].extra[
                     "allowed_source_cidrs"
                 ] = cidrs
-
-    # DingTalk
-    dingtalk_client_id = getenv("DINGTALK_CLIENT_ID")
-    dingtalk_client_secret = getenv("DINGTALK_CLIENT_SECRET")
-    if dingtalk_client_id and dingtalk_client_secret:
-        if Platform.DINGTALK not in config.platforms:
-            config.platforms[Platform.DINGTALK] = PlatformConfig()
-        config.platforms[Platform.DINGTALK].enabled = True
-        config.platforms[Platform.DINGTALK].extra.update({
-            "client_id": dingtalk_client_id,
-            "client_secret": dingtalk_client_secret,
-        })
-        dingtalk_home = getenv("DINGTALK_HOME_CHANNEL")
-        if dingtalk_home:
-            config.platforms[Platform.DINGTALK].home_channel = HomeChannel(
-                platform=Platform.DINGTALK,
-                chat_id=dingtalk_home,
-                name=getenv("DINGTALK_HOME_CHANNEL_NAME", "Home"),
-                thread_id=getenv("DINGTALK_HOME_CHANNEL_THREAD_ID") or None,
-            )
-
-    # Feishu / Lark
-    feishu_app_id = getenv("FEISHU_APP_ID")
-    feishu_app_secret = getenv("FEISHU_APP_SECRET")
-    if feishu_app_id and feishu_app_secret:
-        if Platform.FEISHU not in config.platforms:
-            config.platforms[Platform.FEISHU] = PlatformConfig()
-        config.platforms[Platform.FEISHU].enabled = True
-        config.platforms[Platform.FEISHU].extra.update({
-            "app_id": feishu_app_id,
-            "app_secret": feishu_app_secret,
-            "domain": getenv("FEISHU_DOMAIN", "feishu"),
-            "connection_mode": getenv("FEISHU_CONNECTION_MODE", "websocket"),
-        })
-        feishu_encrypt_key = getenv("FEISHU_ENCRYPT_KEY", "")
-        if feishu_encrypt_key:
-            config.platforms[Platform.FEISHU].extra["encrypt_key"] = feishu_encrypt_key
-        feishu_verification_token = getenv("FEISHU_VERIFICATION_TOKEN", "")
-        if feishu_verification_token:
-            config.platforms[Platform.FEISHU].extra["verification_token"] = feishu_verification_token
-        feishu_home = getenv("FEISHU_HOME_CHANNEL")
-        if feishu_home:
-            config.platforms[Platform.FEISHU].home_channel = HomeChannel(
-                platform=Platform.FEISHU,
-                chat_id=feishu_home,
-                name=getenv("FEISHU_HOME_CHANNEL_NAME", "Home"),
-                thread_id=getenv("FEISHU_HOME_CHANNEL_THREAD_ID") or None,
-            )
-
-    # WeCom (Enterprise WeChat)
-    wecom_bot_id = getenv("WECOM_BOT_ID")
-    wecom_secret = getenv("WECOM_SECRET")
-    if wecom_bot_id and wecom_secret:
-        if Platform.WECOM not in config.platforms:
-            config.platforms[Platform.WECOM] = PlatformConfig()
-        config.platforms[Platform.WECOM].enabled = True
-        config.platforms[Platform.WECOM].extra.update({
-            "bot_id": wecom_bot_id,
-            "secret": wecom_secret,
-        })
-        wecom_ws_url = getenv("WECOM_WEBSOCKET_URL", "")
-        if wecom_ws_url:
-            config.platforms[Platform.WECOM].extra["websocket_url"] = wecom_ws_url
-        wecom_home = getenv("WECOM_HOME_CHANNEL")
-        if wecom_home:
-            config.platforms[Platform.WECOM].home_channel = HomeChannel(
-                platform=Platform.WECOM,
-                chat_id=wecom_home,
-                name=getenv("WECOM_HOME_CHANNEL_NAME", "Home"),
-                thread_id=getenv("WECOM_HOME_CHANNEL_THREAD_ID") or None,
-            )
-
-    # WeCom callback mode (self-built apps)
-    wecom_callback_corp_id = getenv("WECOM_CALLBACK_CORP_ID")
-    wecom_callback_corp_secret = getenv("WECOM_CALLBACK_CORP_SECRET")
-    if wecom_callback_corp_id and wecom_callback_corp_secret:
-        if Platform.WECOM_CALLBACK not in config.platforms:
-            config.platforms[Platform.WECOM_CALLBACK] = PlatformConfig()
-        config.platforms[Platform.WECOM_CALLBACK].enabled = True
-        config.platforms[Platform.WECOM_CALLBACK].extra.update({
-            "corp_id": wecom_callback_corp_id,
-            "corp_secret": wecom_callback_corp_secret,
-            "agent_id": getenv("WECOM_CALLBACK_AGENT_ID", ""),
-            "token": getenv("WECOM_CALLBACK_TOKEN", ""),
-            "encoding_aes_key": getenv("WECOM_CALLBACK_ENCODING_AES_KEY", ""),
-            "host": getenv("WECOM_CALLBACK_HOST", "0.0.0.0"),
-            "port": getenv_int("WECOM_CALLBACK_PORT", 8645),
-        })
 
     # Weixin (personal WeChat via iLink Bot API)
     weixin_token = getenv("WEIXIN_TOKEN")

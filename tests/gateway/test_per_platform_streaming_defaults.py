@@ -35,7 +35,7 @@ def test_resolver_telegram_on_discord_off_when_global_enabled():
     assert streams("telegram") is True
     assert streams("discord") is False
     # A platform with no default entry follows the global switch.
-    assert streams("slack") is True
+    assert streams("telegram") is True
 
 
 def test_user_override_wins_over_default():

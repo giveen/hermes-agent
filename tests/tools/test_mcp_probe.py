@@ -39,7 +39,7 @@ class TestProbeMcpServerTools:
     def test_returns_empty_when_all_servers_disabled(self):
         config = {
             "github": {"command": "npx", "enabled": False},
-            "slack": {"command": "npx", "enabled": "off"},
+            "telegram": {"command": "npx", "enabled": "off"},
         }
         with patch("tools.mcp_tool._load_mcp_config", return_value=config):
             from tools.mcp_tool import probe_mcp_server_tools

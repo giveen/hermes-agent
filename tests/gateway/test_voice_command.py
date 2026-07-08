@@ -190,7 +190,7 @@ class TestHandleVoiceCommand:
             "telegram:off_chat": "off",
             "telegram:on_chat": "voice_only",
             "telegram:tts_chat": "all",
-            "slack:999": "voice_only",  # wrong platform, must be ignored
+            "telegram:999": "voice_only",  # wrong platform, must be ignored
         }
         adapter = SimpleNamespace(
             _auto_tts_default=False,
@@ -254,13 +254,13 @@ class TestHandleVoiceCommand:
         """Same chat_id on different platforms must not collide (#12542)."""
         telegram_event = _make_event("/voice on", chat_id="999")
         slack_event = _make_event("/voice off", chat_id="999")
-        slack_event.source.platform.value = "slack"
+        slack_event.source.platform.value = "telegram"
 
         await runner._handle_voice_command(telegram_event)
         await runner._handle_voice_command(slack_event)
 
         assert runner._voice_mode["telegram:999"] == "voice_only"
-        assert runner._voice_mode["slack:999"] == "off"
+        assert runner._voice_mode["telegram:999"] == "off"
 
 
 # =====================================================================
@@ -444,7 +444,7 @@ class TestSendVoiceReply:
         mock_adapter = AsyncMock()
         mock_adapter.send_voice = AsyncMock()
         event = _make_event()
-        event.source.platform = Platform.SLACK
+        event.source.platform = Platform.TELEGRAM
         runner.adapters[event.source.platform] = mock_adapter
 
         tts_result = json.dumps({"success": True, "file_path": "/tmp/test.mp3"})

@@ -1191,6 +1191,20 @@ def read_file_tool(path: str, offset: int = 1, limit: int = 500, task_id: str = 
 
         _resolved = _resolve_path_for_task(path, task_id)
 
+        # ── .llmignore guard ──────────────────────────────────────────
+        # Respect the .llmignore spec (https://rival.tips/llmignore).
+        # Files matching .llmignore patterns are not readable via this tool.
+        from tools.file_ignore import is_llmignored
+        if is_llmignored(str(_resolved)):
+            return json.dumps({
+                "error": (
+                    f"Cannot read '{path}': this file is excluded by a .llmignore "
+                    "rule (see https://rival.tips/llmignore). "
+                    "Files matching .llmignore patterns are never read or sent "
+                    "to an LLM."
+                ),
+            })
+
         # ── Structured-document extraction ────────────────────────────
         # Try before the binary-extension guard so .docx/.xlsx can render as text.
         # Malformed documents fall through to the normal path/binary guard.
@@ -1968,16 +1982,39 @@ def search_tool(pattern: str, target: str = "content", path: str = ".",
             limit=limit, offset=offset, output_mode=output_mode, context=context
         )
         omitted = _filter_read_blocked_search_results(result, task_id)
-        if hasattr(result, 'matches'):
+
+        # ── .llmignore search result filtering ─────────────────────────
+        # Remove matches from paths excluded by .llmignore cascades.
+        from tools.file_ignore import is_llmignored
+        llmignore_omitted = 0
+        if hasattr(result, 'matches') and result.matches:
+            filtered: list = []
             for m in result.matches:
-                if hasattr(m, 'content') and m.content:
-                    m.content = redact_sensitive_text(m.content, file_read=True)
+                m_path = m.path if hasattr(m, 'path') else ''
+                if m_path and is_llmignored(m_path):
+                    llmignore_omitted += 1
+                else:
+                    filtered.append(m)
+            result.matches = filtered
+            if llmignore_omitted:
+                result.total_count = max(0, (result.total_count or 0) - llmignore_omitted)
+                omitted = (omitted or 0) + llmignore_omitted
+        if hasattr(result, 'content') and result.content:
+            result.content = redact_sensitive_text(result.content, file_read=True)
         result_dict = result.to_dict(densify=True)
 
         if omitted:
+            reasons = []
+            # _filter_read_blocked_search_results consumes from omitted
+            # llmignore_omitted is added to omitted above
+            reasons.append("credential / secret / cache / Hermes-internal paths")
+            if llmignore_omitted:
+                reasons.append(
+                    f"{llmignore_omitted} excluded by .llmignore rules "
+                    "(see https://rival.tips/llmignore)"
+                )
             result_dict["_omitted"] = (
-                f"{omitted} result(s) omitted because they target credential, "
-                "token, cache, or secret-bearing environment files."
+                f"{omitted} result(s) omitted: {'; '.join(reasons)}."
             )
 
         if count >= 3:
