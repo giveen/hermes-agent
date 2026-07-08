@@ -23,6 +23,9 @@ def _strip_ansi(s: str) -> str:
 def cli_stub(monkeypatch):
     from cli import HermesCLI
     import cli as climod
+    import hermes_cli.cli_display_mixin as mixin_mod
+    from hermes_cli.cli_display_mixin import _inject_cli_globals
+    _inject_cli_globals()
 
     cli = HermesCLI.__new__(HermesCLI)
     cli.show_reasoning = False
@@ -32,8 +35,10 @@ def cli_stub(monkeypatch):
 
     emitted = []
     monkeypatch.setattr(climod, "_cprint", lambda s: emitted.append(s))
+    monkeypatch.setattr(mixin_mod, "_cprint", lambda s: emitted.append(s))
     # Deterministic width regardless of the test runner's terminal
     monkeypatch.setattr(climod, "_terminal_width_for_streaming", lambda: 74)
+    monkeypatch.setattr(mixin_mod, "_terminal_width_for_streaming", lambda: 74)
     return cli, emitted
 
 

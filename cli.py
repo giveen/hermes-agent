@@ -3479,8 +3479,8 @@ def _build_compact_banner() -> str:
     dim_color = _skin.get_color("banner_dim", "#B8860B") if _skin else "#B8860B"
 
     if skin_name == "default":
-        line1 = "⚕ NOUS HERMES - AI Agent Framework"
-        tiny_line = "⚕ NOUS HERMES"
+        line1 = "⚝ NOUS HERMES - AI Agent Framework"
+        tiny_line = "⚝ NOUS HERMES"
     else:
         agent_name = _skin.get_branding("agent_name", "Hermes Agent") if _skin else "Hermes Agent"
         line1 = f"{agent_name} - AI Agent Framework"
@@ -3703,6 +3703,13 @@ class HermesCLI(CLIAgentSetupMixin, CLICommandsMixin, CLIDisplayMixin, CLIBillin
             resume: Session ID to resume (restores conversation history from SQLite)
             pass_session_id: Include the session ID in the agent's system prompt
         """
+
+        # Eagerly inject cli.py names into cli_display_mixin.py's module
+        # globals so methods extracted to CLIDisplayMixin can resolve bare
+        # name references like _cprint, _accent_hex, _DIM, _RST, etc.
+        # Module-level __getattr__ does NOT work for LOAD_GLOBAL bytecode.
+        from hermes_cli.cli_display_mixin import _inject_cli_globals as _do_inject
+        _do_inject()
         # Initialize Rich console
         self.console = Console()
         self.config = CLI_CONFIG
@@ -7182,8 +7189,9 @@ class HermesCLI(CLIAgentSetupMixin, CLICommandsMixin, CLIDisplayMixin, CLIBillin
         # Add user message to history
         self.conversation_history.append({"role": "user", "content": message})
 
-        ChatConsole().print(f"[{_accent_hex()}]{'─' * 40}[/]")
-        print(flush=True)
+        # Local import to avoid any scope/import-order issues with ChatConsole
+        from cli import ChatConsole as _ChatConsole
+        _ChatConsole().print(f"[{_accent_hex()}]{'─' * 40}[/]")
         
         try:
             # Run the conversation with interrupt monitoring

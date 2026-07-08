@@ -1288,6 +1288,7 @@ class CLIDisplayMixin:
 
     def _print_user_message_preview(self, user_input: str) -> None:
         """Render a user message using the normal chat scrollback style."""
+        from cli import ChatConsole, _accent_hex
         ChatConsole().print(f"[{_accent_hex()}]{'─' * 40}[/]")
         text = str(user_input or "")
         if "\n" in text:
@@ -3225,10 +3226,10 @@ class CLIDisplayMixin:
             return bool(cmd and cmd.name == "steer")
         except Exception:
             return False
-
     def _output_console(self):
         """Use prompt_toolkit-safe Rich rendering once the TUI is live."""
         if getattr(self, "_app", None):
+            from cli import ChatConsole
             return ChatConsole()
         return self.console
 
@@ -4303,4 +4304,111 @@ class CLIDisplayMixin:
                 completions_menu,
             ] if item is not None
         ]
+_CLI_GLOBALS_INJECTED = False
 
+
+def _inject_cli_globals():
+    """Inject ``cli.py`` names into this module's globals dict.
+
+    Called on first ``__getattr__`` miss AND eagerly from
+    ``HermesCLI.__init__`` (where ``cli.py`` is fully loaded).
+    Re-entrant: safe to call multiple times.  Switches to idle
+    once all known names are confirmed present in globals, to
+    avoid redundant work after the initial early-import pass
+    (when ``HermesCLI`` and other late-defined names may still
+    be missing).
+
+    This is necessary because Python's ``LOAD_GLOBAL`` bytecode
+    reads the module's ``__dict__`` directly and does NOT invoke
+    ``__getattr__``.  Without injection, bare name references
+    (``_cprint``, ``_DIM``, ``_RST``, ``_ACCENT``, ``_accent_hex``,
+    etc.) inside method bodies raise ``NameError`` at runtime.
+
+    ``__getattr__`` alone (PEP 562) only helps for explicit
+    attribute access (``module.name``), not for ``LOAD_GLOBAL``.
+    """
+    global _CLI_GLOBALS_INJECTED
+    import cli as _cli_mod
+    g = globals()
+    _needed = {
+        # CLI display helpers
+        '_accent_hex', '_cprint', '_DIM', '_RST', '_ACCENT', '_BOLD',
+        '_STREAM_PAD', '_b', '_d',
+        # Content formatting
+        '_strip_markdown_syntax', '_terminal_width_for_streaming',
+        '_maybe_remap_for_light_mode', '_render_final_assistant_content',
+        '_strip_reasoning_tags', '_rich_text_from_ansi',
+        '_assistant_content_as_text', '_assistant_copy_text',
+        '_preserve_windows_dot_segments_for_markdown',
+        '_escape', '_format_context_length',
+        # Module references
+        'AIAgent', 'HermesCLI', 'ChatConsole',
+        # Config & state
+        '_hermes_home', 'CLI_CONFIG', 'logger', 'save_config_value',
+        # CLI-specific functions
+        'set_approval_callback', 'set_secret_capture_callback',
+        'set_sudo_password_callback',
+        # Table helpers (from cli.py imports)
+        'looks_like_table_row', 'is_table_divider', 'realign_markdown_tables',
+        # Output history
+        '_record_output_history', '_replay_output_history',
+        '_output_history_exists', '_clear_output_history',
+        '_record_output_history_entry', '_suspend_output_history',
+        # Helper functions
+        'get_tool_emoji', 'get_cute_tool_message',
+        'tool_progress_hint_cli', 'save_config',
+        'display_hermes_home', 'get_hermes_home',
+        'get_active_profile_name', 'get_active_prompt_symbol',
+        'base_url_host_matches',
+        'resolve_command', 'clear_provider_models_cache',
+        'format_duration_compact', 'format_token_count_compact',
+        'detect_compromised', 'capture_local_edit_snapshot',
+        'get_tool_preview_max_len', '_cli_visible_print',
+        'normalize_model_for_provider',
+        'prompt_for_secret', 'render_edit_diff_with_delta',
+        # Async helpers
+        '_asyncio',
+        # Shell hooks / image analysis
+        'vision_analyze_tool', '_detect_light_mode',
+        '_looks_like_slash_command',
+        # Process registry
+        'process_registry',
+        # Prompt_toolkit / UI helpers
+        'run_in_terminal', 'get_app', 'curses_single_select',
+        'mark_seen', 'is_seen', 'TOOL_PROGRESS_FLAG',
+        # Voice / TTS
+        'format_voice_record_key_for_status',
+        # Pet / branding
+        'PetRenderer', 'derive_pet_state',
+        # Session helpers
+        'SessionDB', 'query_session_listing',
+        # Platform / insights
+        'Platform', 'InsightsEngine',
+        # Settings helpers
+        '_AGGREGATOR_PROVIDERS',
+        # String constants
+        '_TERMINAL_INPUT_MODE_RESET_SEQ',
+    }
+    _all_found = True
+    for name in _needed:
+        if name not in g:
+            try:
+                g[name] = getattr(_cli_mod, name)
+            except AttributeError:
+                _all_found = False
+    if _all_found:
+        _CLI_GLOBALS_INJECTED = True
+
+
+def __getattr__(name):
+    """Lazy-import names from cli.py that were referenced without importing.
+
+    On first call also injects those names into ``globals()`` so
+    ``LOAD_GLOBAL`` bytecode in method bodies resolves them directly.
+    """
+    _inject_cli_globals()
+    import cli as _mod
+    try:
+        return getattr(_mod, name)
+    except AttributeError:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

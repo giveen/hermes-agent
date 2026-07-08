@@ -682,6 +682,17 @@ class ChatCompletionsTransport(ProviderTransport):
         # loop's refusal handler surfaces it clearly and stops. ``refusal`` is
         # ``None`` for normal responses, so this is a no-op in the common case.
         content = msg.content
+        # Some local servers and thinking models return the visible response
+        # exclusively in ``reasoning_content`` with empty ``content``, even
+        # without a ``reasoning_effort`` request parameter. Promote it to
+        # ``content`` so the agent loop sees the model's actual output instead
+        # of an empty response that triggers a retry loop or silent hang.
+        # Mirrors the ``refusal`` promotion pattern below — only promote when
+        # there is no real content and no tool_calls, and ``reasoning_content``
+        # has the actual output text.
+        if not (isinstance(content, str) and content.strip()) and not tool_calls:
+            if reasoning_content and isinstance(reasoning_content, str) and reasoning_content.strip():
+                content = reasoning_content
         refusal = getattr(msg, "refusal", None)
         if refusal is None and hasattr(msg, "model_extra"):
             _msg_extra = getattr(msg, "model_extra", None) or {}
