@@ -31,12 +31,10 @@ _DEFAULT_PLATFORM_TOOLSETS = {
 
 # Maps a tools_config provider's ``managed_nous_feature`` to the tool-pool
 # coverage category (hermes_cli.nous_account.TOOL_COVERAGE_CATEGORIES). Lets the
-# `hermes tools` picker scope its entitlement gate to the selected backend, so a
-# free-tool-pool user is allowed image gen but denied video gen at select time —
-# consistent with the per-category feature gates in get_nous_subscription_features.
+# `hermes tools` picker scope its entitlement gate to the selected backend, so
+# eligibility is consistent with the per-category feature gates in get_nous_subscription_features.
 MANAGED_FEATURE_COVERAGE_CATEGORY: Dict[str, str] = {
     "web": "firecrawl",
-    "video_gen": "fal-video",
     "tts": "openai-audio",
     # STT shares the TTS coverage category: both ride the managed
     # "openai-audio" gateway endpoint (speech + transcriptions).
@@ -92,16 +90,13 @@ class NousSubscriptionFeatures:
     def browser(self) -> NousFeatureState:
         return self.features["browser"]
 
-    @property
-    def video_gen(self) -> NousFeatureState:
-        return self.features["video_gen"]
 
     @property
     def modal(self) -> NousFeatureState:
         return self.features["modal"]
 
     def items(self) -> Iterable[NousFeatureState]:
-        ordered = ("web", "video_gen", "tts", "stt", "browser", "modal")
+        ordered = ("web", "tts", "stt", "browser", "modal")
         for key in ordered:
             yield self.features[key]
 
@@ -342,8 +337,7 @@ def get_nous_subscription_features(
         account_info = None
 
     # Coarse "entitled to any managed tool" gate: paid access OR a live free
-    # tool pool. Per-backend availability is then narrowed by coverage below
-    # (the pool funds image but not video, etc.).
+    # tool pool. Per-backend availability is then narrowed by coverage below.
     managed_tools_flag = bool(
         account_info
         and account_info.logged_in
@@ -356,7 +350,6 @@ def get_nous_subscription_features(
     subscribed = provider_is_nous or nous_auth_present
 
     web_tool_enabled = _toolset_enabled(config, "web")
-    video_tool_enabled = _toolset_enabled(config, "video_gen")
     tts_tool_enabled = _toolset_enabled(config, "tts")
     browser_tool_enabled = _toolset_enabled(config, "browser")
     modal_tool_enabled = _toolset_enabled(config, "terminal")
@@ -396,8 +389,6 @@ def get_nous_subscription_features(
     tts_use_gateway = _uses_gateway(tts_cfg)
     stt_use_gateway = _uses_gateway(stt_cfg)
     browser_use_gateway = _uses_gateway(browser_cfg)
-    video_gen_cfg = config.get("video_gen") if isinstance(config.get("video_gen"), dict) else {}
-    video_use_gateway = _uses_gateway(video_gen_cfg)
 
     direct_exa = bool(get_env_value("EXA_API_KEY"))
     direct_firecrawl = bool(get_env_value("FIRECRAWL_API_KEY") or get_env_value("FIRECRAWL_API_URL"))
@@ -405,7 +396,6 @@ def get_nous_subscription_features(
     direct_tavily = bool(get_env_value("TAVILY_API_KEY"))
     direct_searxng = bool(get_env_value("SEARXNG_URL"))
     direct_fal = fal_key_is_configured()
-    direct_fal_video = direct_fal  # same FAL_KEY; separate var so use_gateway is independent
     direct_openai_tts = bool(resolve_openai_audio_api_key())
     direct_elevenlabs = bool(get_env_value("ELEVENLABS_API_KEY"))
     direct_camofox = bool(get_env_value("CAMOFOX_URL"))
@@ -435,8 +425,6 @@ def get_nous_subscription_features(
         direct_exa = False
         direct_parallel = False
         direct_tavily = False
-    if video_use_gateway:
-        direct_fal_video = False
     if tts_use_gateway:
         direct_openai_tts = False
         direct_elevenlabs = False
@@ -454,15 +442,6 @@ def get_nous_subscription_features(
         and nous_auth_present
         and is_managed_tool_gateway_ready("firecrawl")
         and _entitled_for("firecrawl")
-    )
-    # Video gen rides the same fal-queue gateway as image gen, but the free tool
-    # pool funds image and NOT video — so gate it on its own coverage category
-    # rather than aliasing it to image. (Paid users are entitled to both.)
-    managed_video_available = (
-        managed_tools_flag
-        and nous_auth_present
-        and is_managed_tool_gateway_ready("fal-queue")
-        and _entitled_for("fal-video")
     )
     managed_tts_available = (
         managed_tools_flag
@@ -515,11 +494,6 @@ def get_nous_subscription_features(
     web_available = bool(
         managed_web_available or direct_exa or direct_firecrawl or direct_parallel or direct_tavily or direct_searxng
     )
-
-
-    video_managed = video_tool_enabled and managed_video_available and not direct_fal_video
-    video_active = bool(video_tool_enabled and (video_managed or direct_fal_video))
-    video_available = bool(managed_video_available or direct_fal_video)
 
     tts_current_provider = tts_provider or "edge"
     tts_managed = (
@@ -629,18 +603,6 @@ def get_nous_subscription_features(
             toolset_enabled=web_tool_enabled,
             current_provider=web_backend or web_search_backend or "",
             explicit_configured=bool(web_backend or web_search_backend),
-        ),
-        "video_gen": NousFeatureState(
-            key="video_gen",
-            label="Video generation",
-            included_by_default=False,
-            available=video_available,
-            active=video_active,
-            managed_by_nous=video_managed,
-            direct_override=video_active and not video_managed,
-            toolset_enabled=video_tool_enabled,
-            current_provider="FAL" if direct_fal_video else ("Nous Subscription" if video_managed else ""),
-            explicit_configured=direct_fal_video,
         ),
         "tts": NousFeatureState(
             key="tts",
@@ -793,22 +755,6 @@ def apply_nous_managed_defaults(
         browser_cfg["cloud_provider"] = "browser-use"
         changed.add("browser")
 
-
-    # Video gen is not funded by the free tool pool, so only wire managed video
-    # defaults for users entitled to it (paid). Pool-only users keep video off.
-    if (
-        "video_gen" in selected_toolsets
-        and not fal_key_is_configured()
-        and features.account_info.tool_gateway_entitled_for("fal-video")
-    ):
-        video_cfg = config.get("video_gen")
-        if not isinstance(video_cfg, dict):
-            video_cfg = {}
-            config["video_gen"] = video_cfg
-        video_cfg["provider"] = "fal"
-        video_cfg["use_gateway"] = True
-        changed.add("video_gen")
-
     return changed
 
 
@@ -818,7 +764,6 @@ def apply_nous_managed_defaults(
 
 _GATEWAY_TOOL_LABELS = {
     "web": "Web search & extract (Firecrawl)",
-    "video_gen": "Video generation (FAL)",
     "tts": "Text-to-speech (OpenAI TTS)",
     "stt": "Speech-to-text (OpenAI Whisper)",
     "browser": "Browser automation (Browser Use)",
@@ -827,7 +772,6 @@ _GATEWAY_TOOL_LABELS = {
 
 def _get_gateway_direct_credentials() -> Dict[str, bool]:
     """Return a dict of tool_key -> has_direct_credentials."""
-    fal_direct = fal_key_is_configured()
     return {
         "web": bool(
             get_env_value("FIRECRAWL_API_KEY")
@@ -836,7 +780,6 @@ def _get_gateway_direct_credentials() -> Dict[str, bool]:
             or get_env_value("TAVILY_API_KEY")
             or get_env_value("EXA_API_KEY")
         ),
-        "video_gen": fal_direct,
         "tts": bool(
             resolve_openai_audio_api_key()
             or get_env_value("ELEVENLABS_API_KEY")
@@ -859,13 +802,12 @@ def _get_gateway_direct_credentials() -> Dict[str, bool]:
 
 _GATEWAY_DIRECT_LABELS = {
     "web": "Firecrawl/Exa/Parallel/Tavily key",
-    "video_gen": "FAL key",
     "tts": "OpenAI/ElevenLabs key",
     "stt": "OpenAI/Groq/Mistral key",
     "browser": "Browser Use/Browserbase key",
 }
 
-_ALL_GATEWAY_KEYS = ("web", "video_gen", "tts", "stt", "browser")
+_ALL_GATEWAY_KEYS = ("web", "tts", "stt", "browser")
 
 
 def get_gateway_eligible_tools(
@@ -883,8 +825,7 @@ def get_gateway_eligible_tools(
     is not using Nous as their provider.
     """
     # Fetch entitlement once: it gates the offer (paid access OR a live free tool
-    # pool) AND tells us which categories are covered (the pool funds image but
-    # not video, etc.). Fails closed on any error.
+    # pool) AND tells us which categories are covered. Fails closed on any error.
     try:
         account_info = get_nous_portal_account_info(force_fresh=force_fresh)
     except Exception:
@@ -908,7 +849,6 @@ def get_gateway_eligible_tools(
     # use_gateway was explicitly set.
     opted_in = {
         "web": _uses_gateway(config.get("web")),
-        "video_gen": _uses_gateway(config.get("video_gen")),
         "tts": _uses_gateway(config.get("tts")),
         "stt": _uses_gateway(config.get("stt")),
         "browser": _uses_gateway(config.get("browser")),
@@ -918,9 +858,7 @@ def get_gateway_eligible_tools(
     has_direct: list[str] = []
     already_managed: list[str] = []
     for key in _ALL_GATEWAY_KEYS:
-        # Only offer tools the user's entitlement actually covers. For a free
-        # tool pool that means image but not video; paid users are covered for
-        # everything.
+        # Only offer tools the user's entitlement actually covers.
         if not account_info.tool_gateway_entitled_for(
             MANAGED_FEATURE_COVERAGE_CATEGORY[key]
         ):
@@ -995,14 +933,6 @@ def apply_gateway_defaults(
         image_cfg["use_gateway"] = True
         changed.add("image_gen")
 
-    if "video_gen" in tool_keys:
-        video_cfg = config.get("video_gen")
-        if not isinstance(video_cfg, dict):
-            video_cfg = {}
-            config["video_gen"] = video_cfg
-        video_cfg["provider"] = "fal"
-        video_cfg["use_gateway"] = True
-        changed.add("video_gen")
 
     return changed
 
@@ -1018,7 +948,7 @@ def prompt_enable_tool_gateway(
     "Pool enabled" is the trigger: a user with a live free tool pool (or paid
     access) is shown a per-tool checklist of the covered managed backends and
     picks which to route through the gateway. The free pool funds web/image/
-    tts/browser but not video, so the checklist only lists covered tools (the
+    tts/browser, so the checklist only lists covered tools (the
     coverage filter lives in get_gateway_eligible_tools).
 
     Returns the set of tools that were enabled, or empty set if the user
@@ -1116,8 +1046,7 @@ def ensure_nous_portal_access(
 
     Entitlement is satisfied by paid service access OR a live free tool pool.
     When ``coverage_category`` is given (e.g. ``"fal"`` for image gen), the pool
-    must cover that category specifically — so a pool user selecting video
-    (``"fal-video"``, not pool-funded) is correctly denied.
+    must cover that category specifically.
 
     Returns ``True`` when the account is entitled after the flow, ``False``
     otherwise (declined login, login failed, or no entitlement).

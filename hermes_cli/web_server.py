@@ -11121,34 +11121,15 @@ class ToolsetProviderSelect(BaseModel):
     profile: Optional[str] = None
 
 
-# Toolsets whose backends carry a selectable model catalog, mapped to the
-# config.yaml section their `model` key lives in. Mirrors the CLI's
-# post-selection model pickers (`_configure_imagegen_model_for_plugin` /
-# `_configure_videogen_model_for_plugin` in tools_config.py).
-_MODEL_CATALOG_TOOLSETS = {
-    "video_gen": "video_gen",
-}
+_MODEL_CATALOG_TOOLSETS: dict = {}
 
 
 def _resolve_toolset_model_plugin(ts_key: str, provider_row: dict) -> Optional[str]:
     """Map a provider picker row to its model-catalog plugin name.
-
-    Plugin-backed rows carry ``image_gen_plugin_name`` / ``video_gen_plugin_name``;
-    the managed "Nous Subscription" image row instead carries the legacy
-    ``imagegen_backend: "fal"`` marker (same underlying FAL catalog).
     """
-    if ts_key == "video_gen":
-        return provider_row.get("video_gen_plugin_name")
     return None
 
 
-def _toolset_model_catalog(ts_key: str, plugin_name: str):
-    """Return ``(catalog_dict, default_model)`` for a toolset's plugin backend."""
-    from hermes_cli.tools_config import (
-        _plugin_video_gen_catalog,
-    )
-
-    return _plugin_video_gen_catalog(plugin_name)
 
 
 def _find_toolset_provider_row(ts_key: str, config: dict, provider: Optional[str]) -> Optional[dict]:
@@ -11240,7 +11221,7 @@ class ToolsetModelSelect(BaseModel):
 async def select_toolset_model(
     name: str, body: ToolsetModelSelect, profile: Optional[str] = None
 ):
-    """Persist a backend model selection (``video_gen.model``).
+    """Persist a backend model selection.
 
     Validates the model against the resolved backend's catalog — the same
     write the CLI's post-selection model picker performs. Returns 400 for

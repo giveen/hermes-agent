@@ -131,25 +131,6 @@ TOOLSETS = {
         "includes": []
     },
 
-    "video": {
-        "description": "Video analysis and understanding tools (opt-in, not in default toolset)",
-        "tools": ["video_analyze"],
-        "includes": []
-    },
-    
-
-    "video_gen": {
-        "description": (
-            "Video generation tools. Single ``video_generate`` tool covers "
-            "text-to-video (prompt only) and image-to-video (prompt + "
-            "image_url), plus reference-to-video. Provider-specific edit/"
-            "extend workflows may appear as separate tools. Configure via "
-            "``hermes tools`` → Video Generation."
-        ),
-        "tools": ["video_generate", "xai_video_edit", "xai_video_extend"],
-        "includes": []
-    },
-
     "computer_use": {
         "description": (
             "Background desktop control via cua-driver (macOS/Windows/Linux) — "
