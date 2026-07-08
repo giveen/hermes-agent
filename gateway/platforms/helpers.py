@@ -29,7 +29,7 @@ class MessageDeduplicator:
 
     Replaces the identical ``_seen_messages`` / ``_is_duplicate()`` pattern
     previously duplicated in discord, slack, dingtalk, wecom, weixin,
-    mattermost, and feishu adapters.
+    and feishu adapters.
 
     Usage::
 

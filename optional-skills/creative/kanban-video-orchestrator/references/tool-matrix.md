@@ -45,7 +45,6 @@ called from the terminal toolset; they don't appear in `always_load`.
 | `songwriting-and-ai-music` | Songwriting craft + Suno prompt patterns | Music supervisor when commissioning a track via Suno |
 | `heartmula` | Open-source music generation (Apache-2.0, Suno-like) | Music supervisor generating bespoke tracks without external APIs |
 | `songsee` | Spectrograms, mel/chroma/MFCC of audio files | Music supervisor analyzing tracks; foley-designer designing to a beat; editor visualizing a mix |
-| `spotify` | Spotify control — play, search, queue, manage playlists | Music supervisor sourcing existing tracks; reference research |
 | `youtube-content` | Fetch transcripts + transform to chapters/summaries/posts | Documentary cut, content adaptation, research for explainers |
 | `gif-search` | Find existing GIFs | Editor / concept artist sourcing references |
 | `gifs` | GIF tooling | Masterer producing GIF deliverables |
@@ -233,7 +232,6 @@ skills:
     # plus (depending on what the project needs):
     # - songwriting-and-ai-music      (commissioning Suno tracks)
     # - heartmula                     (commissioning open-source local generation)
-    # - spotify                       (sourcing existing tracks)
 ```
 
 ### editor / audio-mixer / captioner / masterer
@@ -282,7 +280,6 @@ key is present in `${HERMES_HOME:-~/.hermes}/.env` (or macOS Keychain) before fi
 | Kling | `KLING_API_KEY` | image-to-video-generator (alternate) |
 | Luma | `LUMA_API_KEY` | image-to-video-generator (alternate) |
 | Suno | `SUNO_API_KEY` | music-supervisor (paired with `songwriting-and-ai-music`) |
-| Spotify | `SPOTIFY_CLIENT_ID` + `SPOTIFY_CLIENT_SECRET` | music-supervisor (paired with `spotify` skill) |
 | Anthropic | `ANTHROPIC_API_KEY` | every Hermes profile (Claude) |
 
 If a key is missing, prompt the user to add it. Storage methods, in order of

@@ -1397,7 +1397,6 @@ class TestShouldSendMediaAsAudio:
         from gateway.platforms.base import should_send_media_as_audio
         for ext in (".mp3", ".m4a", ".wav", ".flac", ".ogg", ".opus"):
             assert should_send_media_as_audio("signal", ext) is True
-            assert should_send_media_as_audio("mattermost", ext) is True
 
     def test_telegram_mp3_and_m4a_route_to_audio(self):
         from gateway.platforms.base import should_send_media_as_audio

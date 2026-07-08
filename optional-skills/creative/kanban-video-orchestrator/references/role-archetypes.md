@@ -164,7 +164,6 @@ audio's energy.
 - **Skills:** `songsee` (audio visualization), plus one of:
   - `songwriting-and-ai-music` — when commissioning lyrics + Suno prompts
   - `heartmula` — when generating music with the open-source local model
-  - `spotify` — when sourcing existing tracks
 - **Outputs:** `audio/track.mp3`, `audio/beats.json`, optional
   `audio/track-spectrogram.png`
 
@@ -294,7 +293,7 @@ violations.
   renderer causes thrashing.
 - **A separate profile per scene.** No. Profiles are per-role, not per-scene.
   Eight scenes use one or two renderer profiles, not eight.
-- **A "general" profile that does everything.** Worse than no specialization.
+- **One "general" profile that does everything.** Worse than no specialization.
   The kanban routing breaks down if every task fits every profile.
 - **No reviewer for important deliverables.** Saves an hour of pipeline time
   but ships flaws.

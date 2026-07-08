@@ -21,7 +21,6 @@ const SOURCE_LABELS: Record<string, string> = {
   webhook: 'Webhook',
   weixin: 'WeChat',
   whatsapp: 'WhatsApp',
-  yuanbao: 'Yuanbao'
 }
 
 const SOURCE_ALIASES: Record<string, string[]> = {
@@ -63,8 +62,6 @@ export const MESSAGING_SESSION_SOURCE_IDS = [
   'weixin',
   'wecom',
   'qqbot',
-  'yuanbao',
-  'dingtalk',
   'feishu'
 ]
 const MESSAGING_SOURCE_IDS = new Set(MESSAGING_SESSION_SOURCE_IDS)

@@ -782,8 +782,7 @@ class TestSubcommandCompletion:
         """`/tools enable ` should suggest currently-disabled toolsets."""
         from hermes_cli import commands as commands_mod
 
-        # `web` is enabled, `spotify` is disabled — enabling should only offer
-        # the disabled ones.
+        # `/tools enable ` should suggest currently-disabled toolsets.
         monkeypatch.setattr(
             "hermes_cli.tools_config._get_platform_tools",
             lambda *_a, **_k: {"web", "file"},
@@ -799,7 +798,6 @@ class TestSubcommandCompletion:
         # Should include disabled toolsets, exclude already-enabled ones.
         assert "web" not in texts
         assert "file" not in texts
-        assert "spotify" in texts
 
     def test_tools_disable_completes_enabled_toolsets_only(self, monkeypatch):
         monkeypatch.setattr(
@@ -817,36 +815,7 @@ class TestSubcommandCompletion:
         # Should include enabled toolsets, exclude disabled ones.
         assert texts == {"web", "file"}
 
-    def test_tools_enable_partial_filters(self, monkeypatch):
-        monkeypatch.setattr(
-            "hermes_cli.tools_config._get_platform_tools",
-            lambda *_a, **_k: set(),
-        )
-        monkeypatch.setattr("hermes_cli.config.load_config", lambda: {})
-        monkeypatch.setattr(
-            "hermes_cli.tools_config._get_plugin_toolset_keys",
-            lambda: set(),
-        )
 
-        completions = _completions(SlashCommandCompleter(), "/tools enable sp")
-        texts = {c.text for c in completions}
-        assert texts == {"spotify"}
-
-    def test_tools_enable_skips_already_listed(self, monkeypatch):
-        """If the user already typed a name, don't suggest it again."""
-        monkeypatch.setattr(
-            "hermes_cli.tools_config._get_platform_tools",
-            lambda *_a, **_k: set(),
-        )
-        monkeypatch.setattr("hermes_cli.config.load_config", lambda: {})
-        monkeypatch.setattr(
-            "hermes_cli.tools_config._get_plugin_toolset_keys",
-            lambda: set(),
-        )
-
-        completions = _completions(SlashCommandCompleter(), "/tools enable spotify ")
-        texts = {c.text for c in completions}
-        assert "spotify" not in texts
 
     def test_tools_suggests_mcp_server_prefixes(self, monkeypatch):
         monkeypatch.setattr(

@@ -455,36 +455,6 @@ def _print_setup_summary(config: dict, hermes_home):
             ("Browser Automation", False, missing_browser_hint)
         )
 
-    # Image generation — FAL (direct or via Nous), or any plugin-registered
-    # provider (OpenAI, etc.)
-    if subscription_features.image_gen.managed_by_nous:
-        tool_status.append(("Image Generation (Nous subscription)", True, None))
-    elif subscription_features.image_gen.available:
-        tool_status.append(("Image Generation", True, None))
-    else:
-        # Fall back to probing plugin-registered providers so OpenAI-only
-        # setups don't show as "missing FAL_KEY".
-        _img_backend = None
-        try:
-            from agent.image_gen_registry import list_providers
-            from hermes_cli.plugins import _ensure_plugins_discovered
-
-            _ensure_plugins_discovered()
-            for _p in list_providers():
-                if _p.name == "fal":
-                    continue
-                try:
-                    if _p.is_available():
-                        _img_backend = _p.display_name
-                        break
-                except Exception:
-                    continue
-        except Exception:
-            pass
-        if _img_backend:
-            tool_status.append((f"Image Generation ({_img_backend})", True, None))
-        else:
-            tool_status.append(("Image Generation", False, "FAL_KEY or OPENAI_API_KEY"))
 
     # Video generation — opt-in via `hermes tools` → Video Generation.
     # Only show the row when a plugin reports available so we don't badger
@@ -560,14 +530,6 @@ def _print_setup_summary(config: dict, hermes_home):
     if get_env_value("HASS_TOKEN"):
         tool_status.append(("Smart Home (Home Assistant)", True, None))
 
-    # Spotify (OAuth via hermes auth spotify — check auth.json, not env vars)
-    try:
-        from hermes_cli.auth import get_provider_auth_state
-        _spotify_state = get_provider_auth_state("spotify") or {}
-        if _spotify_state.get("access_token") or _spotify_state.get("refresh_token"):
-            tool_status.append(("Spotify (PKCE OAuth)", True, None))
-    except Exception:
-        pass
 
     # Skills Hub
     if get_env_value("GITHUB_TOKEN"):

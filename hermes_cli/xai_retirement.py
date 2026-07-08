@@ -67,7 +67,6 @@ def find_retired_xai_refs(config: Dict[str, Any]) -> List[RetirementIssue]:
       - ``auxiliary.<any>.model`` (introspective — covers future aux slots)
       - ``delegation.model``
       - ``tts.xai.model``
-      - ``plugins.image_gen.xai.model``
     """
     issues: List[RetirementIssue] = []
 
@@ -109,13 +108,6 @@ def find_retired_xai_refs(config: Dict[str, Any]) -> List[RetirementIssue]:
         if isinstance(tts_xai, dict):
             _check("tts.xai.model", tts_xai.get("model"))
 
-    plugins = config.get("plugins")
-    if isinstance(plugins, dict):
-        image_gen = plugins.get("image_gen")
-        if isinstance(image_gen, dict):
-            ig_xai = image_gen.get("xai")
-            if isinstance(ig_xai, dict):
-                _check("plugins.image_gen.xai.model", ig_xai.get("model"))
 
     return issues
 

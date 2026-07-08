@@ -4814,55 +4814,6 @@ _PLATFORMS = [
     # Matrix moved to plugins/platforms/matrix/ — setup metadata discovered
     # dynamically via the platform registry entry registered by
     # plugins/platforms/matrix/adapter.py::register(). #41112.
-    {
-        "key": "mattermost",
-        "label": "Mattermost",
-        "emoji": "💬",
-        "token_var": "MATTERMOST_TOKEN",
-        "setup_instructions": [
-            "1. In Mattermost: Integrations → Bot Accounts → Add Bot Account",
-            "   (System Console → Integrations → Bot Accounts must be enabled)",
-            "2. Give it a username (e.g. hermes) and copy the bot token",
-            "3. Works with any self-hosted Mattermost instance — enter your server URL",
-            "4. To find your user ID: click your avatar (top-left) → Profile",
-            "   Your user ID is displayed there — click it to copy.",
-            "   ⚠ This is NOT your username — it's a 26-character alphanumeric ID.",
-            "5. To get a channel ID: click the channel name → View Info → copy the ID",
-        ],
-        "vars": [
-            {
-                "name": "MATTERMOST_URL",
-                "prompt": "Server URL (e.g. https://mm.example.com)",
-                "password": False,
-                "help": "Your Mattermost server URL. Works with any self-hosted instance.",
-            },
-            {
-                "name": "MATTERMOST_TOKEN",
-                "prompt": "Bot token",
-                "password": True,
-                "help": "Paste the bot token from step 2 above.",
-            },
-            {
-                "name": "MATTERMOST_ALLOWED_USERS",
-                "prompt": "Allowed user IDs (comma-separated)",
-                "password": False,
-                "is_allowlist": True,
-                "help": "Your Mattermost user ID from step 4 above.",
-            },
-            {
-                "name": "MATTERMOST_HOME_CHANNEL",
-                "prompt": "Home channel ID (for cron/notification delivery, or empty to set later with /set-home)",
-                "password": False,
-                "help": "Channel ID where Hermes delivers cron results and notifications.",
-            },
-            {
-                "name": "MATTERMOST_REPLY_MODE",
-                "prompt": "Reply mode — 'off' for flat messages, 'thread' for threaded replies (default: off)",
-                "password": False,
-                "help": "off = flat channel messages, thread = replies nest under your message.",
-            },
-        ],
-    },
     # WhatsApp moved to plugins/platforms/whatsapp/ — setup metadata discovered
     # dynamically via the platform registry entry registered by
     # plugins/platforms/whatsapp/adapter.py::register(). #41112.
@@ -4961,32 +4912,6 @@ _PLATFORMS = [
                 "prompt": "Home channel (user/group OpenID for cron delivery, or empty)",
                 "password": False,
                 "help": "OpenID to deliver cron results and notifications to.",
-            },
-        ],
-    },
-    {
-        "key": "yuanbao",
-        "label": "Yuanbao",
-        "emoji": "💎",
-        "token_var": "YUANBAO_APP_ID",
-        "setup_instructions": [
-            "1. Download the Yuanbao app from https://yuanbao.tencent.com/",
-            "2. In the app, go to PAI → My Bot and create a new bot",
-            "3. After the bot is created, copy the App ID and App Secret",
-            "4. Enter them below and Hermes will connect automatically over WebSocket",
-        ],
-        "vars": [
-            {
-                "name": "YUANBAO_APP_ID",
-                "prompt": "App ID",
-                "password": False,
-                "help": "The App ID from your Yuanbao IM Bot credentials.",
-            },
-            {
-                "name": "YUANBAO_APP_SECRET",
-                "prompt": "App Secret",
-                "password": True,
-                "help": "The App Secret (used for HMAC signing) from your Yuanbao IM Bot.",
             },
         ],
     },
@@ -5888,9 +5813,6 @@ def _builtin_setup_fn(key: str):
         # matrix moved into the plugin: setup_fn registered by
         # plugins/platforms/matrix/adapter.py::register() and dispatched via
         # the plugin path in _configure_platform(). #41112.
-        # mattermost moved into the plugin: setup_fn is registered by
-        # plugins/platforms/mattermost/adapter.py::register() and dispatched
-        # via the plugin path in _configure_platform().
         "bluebubbles": _s._setup_bluebubbles,
         "webhooks": _s._setup_webhooks,
         "signal": _setup_signal,

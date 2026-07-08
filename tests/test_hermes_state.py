@@ -1013,10 +1013,8 @@ class TestMessageStorage:
         assert conv[1]["tool_call_id"] == "call_1"
 
     def test_platform_message_id_round_trips(self, db):
-        """Platform-side message ids (yuanbao msg_id, telegram update_id, …)
         survive append → get_messages_as_conversation under the
         ``message_id`` key so platform recall flows can match by exact id."""
-        db.create_session(session_id="s_pmi", source="yuanbao")
         db.append_message(
             "s_pmi",
             role="user",
@@ -1035,8 +1033,6 @@ class TestMessageStorage:
     def test_replace_messages_preserves_platform_message_id(self, db):
         """``rewrite_transcript`` (which goes through replace_messages) must
         keep the platform_message_id round-trip working for /retry, /undo,
-        /compress and yuanbao's recall rewrite path."""
-        db.create_session(session_id="s_rep", source="yuanbao")
         db.replace_messages(
             "s_rep",
             [

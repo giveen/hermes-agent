@@ -40,7 +40,7 @@ _HERMES_CORE_TOOLS = [
     # File manipulation
     "read_file", "write_file", "patch", "search_files",
     # Vision + image generation
-    "vision_analyze", "image_generate",
+    "vision_analyze",
     # Skills
     "skills_list", "skill_view", "skill_manage",
     # Browser automation
@@ -137,11 +137,6 @@ TOOLSETS = {
         "includes": []
     },
     
-    "image_gen": {
-        "description": "Creative generation tools (images)",
-        "tools": ["image_generate"],
-        "includes": []
-    },
 
     "video_gen": {
         "description": (
@@ -337,7 +332,7 @@ TOOLSETS = {
     "safe": {
         "description": "Safe toolkit without terminal access",
         "tools": [],
-        "includes": ["web", "vision", "image_gen"]
+        "includes": ["web", "vision"]
     },
 
     # Coding posture (base Hermes — CLI/TUI/desktop/ACP). Auto-selected in a
@@ -404,8 +399,8 @@ TOOLSETS = {
             "terminal", "process",
             # File manipulation
             "read_file", "write_file", "patch", "search_files",
-            # Vision + image generation
-            "vision_analyze", "image_generate",
+            # Vision
+            "vision_analyze",
             # Skills
             "skills_list", "skill_view", "skill_manage",
             # Browser automation

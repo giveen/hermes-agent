@@ -1103,11 +1103,6 @@ class TestPromptBuilderConstants:
         # Local media delivery guidance must remain intact.
         assert "include MEDIA:" in hint
 
-    def test_platform_hints_mattermost(self):
-        hint = PLATFORM_HINTS["mattermost"]
-        assert "Mattermost" in hint
-        assert "MEDIA:" in hint
-        assert "Markdown" in hint
 
     def test_platform_hints_matrix(self):
         hint = PLATFORM_HINTS["matrix"]

@@ -4,7 +4,6 @@ import { isDesktopToolsetVisible } from './desktop-toolsets'
 
 describe('isDesktopToolsetVisible', () => {
   it('hides platform-coupled and internal toolsets', () => {
-    for (const name of ['discord', 'discord_admin', 'yuanbao', 'context_engine', 'moa']) {
       expect(isDesktopToolsetVisible(name)).toBe(false)
     }
   })

@@ -516,8 +516,8 @@ def _resolve_gateway_display_bool(
     """Resolve a boolean display setting with optional platform-only opt-in.
 
     Some display features expose assistant scratch text rather than deliberate
-    user-facing output.  For high-noise threaded chat surfaces such as
-    Mattermost, a global opt-in is too broad: they must be enabled with an
+    user-facing output.  For high-noise threaded chat surfaces,
+    a global opt-in is too broad: they must be enabled with an
     explicit display.platforms.<platform>.<setting> override.
     """
     current_platform = _gateway_platform_value(platform or platform_key)
@@ -1771,7 +1771,6 @@ logger = logging.getLogger(__name__)
 
 _OWN_POLICY_OPEN_ENV = {
     Platform.WEIXIN: ("WEIXIN_DM_POLICY", "WEIXIN_GROUP_POLICY", "WEIXIN_ALLOW_ALL_USERS"),
-    Platform.YUANBAO: ("YUANBAO_DM_POLICY", "YUANBAO_GROUP_POLICY", "YUANBAO_ALLOW_ALL_USERS"),
     Platform.QQBOT: (None, None, "QQ_ALLOW_ALL_USERS"),
 }
 
@@ -1787,7 +1786,6 @@ def _own_policy_open_startup_violation(config) -> Optional[str]:
         dm_env, group_env, allow_all_env = open_env
         extra = getattr(platform_config, "extra", None) or {}
         dm_policy = str(
-            extra.get("dm_policy")
             or (os.getenv(dm_env, "pairing") if dm_env else "pairing")
         ).strip().lower()
         group_policy = str(

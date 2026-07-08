@@ -1,0 +1,4038 @@
+{
+  "hermes_cli/cli_display_mixin.py": [
+    {
+      "line": 1183,
+      "name": "_cprint",
+      "method": "_emit_reasoning_preview",
+      "locally_imported": false
+    },
+    {
+      "line": 1796,
+      "name": "_looks_like_slash_command",
+      "method": "_submit_editor_buffer",
+      "locally_imported": false
+    },
+    {
+      "line": 2265,
+      "name": "_cli_visible_print",
+      "method": "_show_recent_sessions",
+      "locally_imported": false
+    },
+    {
+      "line": 2270,
+      "name": "_cli_visible_print",
+      "method": "_show_recent_sessions",
+      "locally_imported": false
+    },
+    {
+      "line": 2271,
+      "name": "_cli_visible_print",
+      "method": "_show_recent_sessions",
+      "locally_imported": false
+    },
+    {
+      "line": 2272,
+      "name": "_cli_visible_print",
+      "method": "_show_recent_sessions",
+      "locally_imported": false
+    },
+    {
+      "line": 2278,
+      "name": "_cli_visible_print",
+      "method": "_show_recent_sessions",
+      "locally_imported": false
+    },
+    {
+      "line": 2279,
+      "name": "_cli_visible_print",
+      "method": "_show_recent_sessions",
+      "locally_imported": false
+    },
+    {
+      "line": 2280,
+      "name": "_cli_visible_print",
+      "method": "_show_recent_sessions",
+      "locally_imported": false
+    },
+    {
+      "line": 2281,
+      "name": "_cli_visible_print",
+      "method": "_show_recent_sessions",
+      "locally_imported": false
+    },
+    {
+      "line": 2797,
+      "name": "_cprint",
+      "method": "_apply_model_switch_result",
+      "locally_imported": false
+    },
+    {
+      "line": 2798,
+      "name": "_cprint",
+      "method": "_apply_model_switch_result",
+      "locally_imported": false
+    },
+    {
+      "line": 3107,
+      "name": "_cprint",
+      "method": "_handle_model_switch",
+      "locally_imported": false
+    },
+    {
+      "line": 3108,
+      "name": "_cprint",
+      "method": "_handle_model_switch",
+      "locally_imported": false
+    },
+    {
+      "line": 3395,
+      "name": "_cprint",
+      "method": "_on_tool_gen_start",
+      "locally_imported": false
+    },
+    {
+      "line": 3585,
+      "name": "_cprint",
+      "method": "_persist_prompt_summary",
+      "locally_imported": false
+    },
+    {
+      "line": 3642,
+      "name": "_cprint",
+      "method": "_clarify_callback",
+      "locally_imported": false
+    },
+    {
+      "line": 3693,
+      "name": "_cprint",
+      "method": "_sudo_password_callback",
+      "locally_imported": false
+    },
+    {
+      "line": 1174,
+      "name": "_cprint",
+      "method": "_emit_reasoning_preview",
+      "locally_imported": false
+    },
+    {
+      "line": 1322,
+      "name": "_cprint",
+      "method": "_stream_reasoning_delta",
+      "locally_imported": false
+    },
+    {
+      "line": 1330,
+      "name": "_cprint",
+      "method": "_stream_reasoning_delta",
+      "locally_imported": false
+    },
+    {
+      "line": 1332,
+      "name": "_cprint",
+      "method": "_stream_reasoning_delta",
+      "locally_imported": false
+    },
+    {
+      "line": 1344,
+      "name": "_cprint",
+      "method": "_close_reasoning_box",
+      "locally_imported": false
+    },
+    {
+      "line": 1534,
+      "name": "_b",
+      "method": "_emit_stream_text",
+      "locally_imported": false
+    },
+    {
+      "line": 1542,
+      "name": "_cprint",
+      "method": "_emit_stream_text",
+      "locally_imported": false
+    },
+    {
+      "line": 1550,
+      "name": "_cprint",
+      "method": "_emit_one",
+      "locally_imported": false
+    },
+    {
+      "line": 1663,
+      "name": "_cprint",
+      "method": "_flush_stream",
+      "locally_imported": false
+    },
+    {
+      "line": 1669,
+      "name": "_cprint",
+      "method": "_flush_stream",
+      "locally_imported": false
+    },
+    {
+      "line": 1731,
+      "name": "_cprint",
+      "method": "_open_external_editor",
+      "locally_imported": false
+    },
+    {
+      "line": 1734,
+      "name": "_cprint",
+      "method": "_open_external_editor",
+      "locally_imported": false
+    },
+    {
+      "line": 1737,
+      "name": "_cprint",
+      "method": "_open_external_editor",
+      "locally_imported": false
+    },
+    {
+      "line": 1741,
+      "name": "_cprint",
+      "method": "_open_external_editor",
+      "locally_imported": false
+    },
+    {
+      "line": 1817,
+      "name": "_cprint",
+      "method": "_submit_editor_buffer",
+      "locally_imported": false
+    },
+    {
+      "line": 2045,
+      "name": "_cprint",
+      "method": "_recover_terminal_input_modes",
+      "locally_imported": false
+    },
+    {
+      "line": 2267,
+      "name": "_cli_visible_print",
+      "method": "_show_recent_sessions",
+      "locally_imported": false
+    },
+    {
+      "line": 2269,
+      "name": "_cli_visible_print",
+      "method": "_show_recent_sessions",
+      "locally_imported": false
+    },
+    {
+      "line": 2277,
+      "name": "_cli_visible_print",
+      "method": "_show_recent_sessions",
+      "locally_imported": false
+    },
+    {
+      "line": 2721,
+      "name": "_cprint",
+      "method": "_apply_model_switch_result",
+      "locally_imported": false
+    },
+    {
+      "line": 2822,
+      "name": "_cprint",
+      "method": "_apply_model_switch_result",
+      "locally_imported": false
+    },
+    {
+      "line": 2829,
+      "name": "_cprint",
+      "method": "_apply_model_switch_result",
+      "locally_imported": false
+    },
+    {
+      "line": 2831,
+      "name": "_cprint",
+      "method": "_apply_model_switch_result",
+      "locally_imported": false
+    },
+    {
+      "line": 2833,
+      "name": "save_config_value",
+      "method": "_apply_model_switch_result",
+      "locally_imported": false
+    },
+    {
+      "line": 2836,
+      "name": "_cprint",
+      "method": "_apply_model_switch_result",
+      "locally_imported": false
+    },
+    {
+      "line": 2838,
+      "name": "_cprint",
+      "method": "_apply_model_switch_result",
+      "locally_imported": false
+    },
+    {
+      "line": 3024,
+      "name": "_cprint",
+      "method": "_handle_model_switch",
+      "locally_imported": false
+    },
+    {
+      "line": 3041,
+      "name": "_cprint",
+      "method": "_handle_model_switch",
+      "locally_imported": false
+    },
+    {
+      "line": 3125,
+      "name": "_cprint",
+      "method": "_handle_model_switch",
+      "locally_imported": false
+    },
+    {
+      "line": 3129,
+      "name": "_cprint",
+      "method": "_handle_model_switch",
+      "locally_imported": false
+    },
+    {
+      "line": 3137,
+      "name": "_cprint",
+      "method": "_handle_model_switch",
+      "locally_imported": false
+    },
+    {
+      "line": 3141,
+      "name": "_cprint",
+      "method": "_handle_model_switch",
+      "locally_imported": false
+    },
+    {
+      "line": 3145,
+      "name": "save_config_value",
+      "method": "_handle_model_switch",
+      "locally_imported": false
+    },
+    {
+      "line": 3148,
+      "name": "_cprint",
+      "method": "_handle_model_switch",
+      "locally_imported": false
+    },
+    {
+      "line": 3150,
+      "name": "_cprint",
+      "method": "_handle_model_switch",
+      "locally_imported": false
+    },
+    {
+      "line": 3187,
+      "name": "_cprint",
+      "method": "_handle_codex_runtime",
+      "locally_imported": false
+    },
+    {
+      "line": 3190,
+      "name": "_cprint",
+      "method": "_handle_codex_runtime",
+      "locally_imported": false
+    },
+    {
+      "line": 3233,
+      "name": "ChatConsole",
+      "method": "_output_console",
+      "locally_imported": false
+    },
+    {
+      "line": 3427,
+      "name": "_cprint",
+      "method": "_on_tool_progress",
+      "locally_imported": false
+    },
+    {
+      "line": 3763,
+      "name": "_cprint",
+      "method": "_approval_callback",
+      "locally_imported": false
+    },
+    {
+      "line": 151,
+      "name": "_replay_output_history",
+      "method": "_recover_after_resize",
+      "locally_imported": false
+    },
+    {
+      "line": 1130,
+      "name": "_DIM",
+      "method": "_flush_credit_notices",
+      "locally_imported": false
+    },
+    {
+      "line": 1131,
+      "name": "_cprint",
+      "method": "_flush_credit_notices",
+      "locally_imported": false
+    },
+    {
+      "line": 1183,
+      "name": "_DIM",
+      "method": "_emit_reasoning_preview",
+      "locally_imported": false
+    },
+    {
+      "line": 1183,
+      "name": "_RST",
+      "method": "_emit_reasoning_preview",
+      "locally_imported": false
+    },
+    {
+      "line": 1292,
+      "name": "ChatConsole",
+      "method": "_print_user_message_preview",
+      "locally_imported": false
+    },
+    {
+      "line": 1341,
+      "name": "_cprint",
+      "method": "_close_reasoning_box",
+      "locally_imported": false
+    },
+    {
+      "line": 1565,
+      "name": "_strip_markdown_syntax",
+      "method": "_flush_table_buf",
+      "locally_imported": false
+    },
+    {
+      "line": 1566,
+      "name": "_terminal_width_for_streaming",
+      "method": "_flush_table_buf",
+      "locally_imported": false
+    },
+    {
+      "line": 1591,
+      "name": "_strip_markdown_syntax",
+      "method": "_emit_stream_text",
+      "locally_imported": false
+    },
+    {
+      "line": 1608,
+      "name": "_terminal_width_for_streaming",
+      "method": "_emit_stream_text",
+      "locally_imported": false
+    },
+    {
+      "line": 1656,
+      "name": "_strip_markdown_syntax",
+      "method": "_flush_stream",
+      "locally_imported": false
+    },
+    {
+      "line": 1657,
+      "name": "_terminal_width_for_streaming",
+      "method": "_flush_stream",
+      "locally_imported": false
+    },
+    {
+      "line": 1659,
+      "name": "_cprint",
+      "method": "_flush_stream",
+      "locally_imported": false
+    },
+    {
+      "line": 1662,
+      "name": "_strip_markdown_syntax",
+      "method": "_flush_stream",
+      "locally_imported": false
+    },
+    {
+      "line": 1768,
+      "name": "_cprint",
+      "method": "_open_external_editor",
+      "locally_imported": false
+    },
+    {
+      "line": 2077,
+      "name": "_cprint",
+      "method": "_preprocess_images_with_vision",
+      "locally_imported": false
+    },
+    {
+      "line": 2680,
+      "name": "_cprint",
+      "method": "_confirm_and_apply_model_switch_result",
+      "locally_imported": false
+    },
+    {
+      "line": 2684,
+      "name": "_cprint",
+      "method": "_confirm_and_apply_model_switch_result",
+      "locally_imported": false
+    },
+    {
+      "line": 2816,
+      "name": "_cprint",
+      "method": "_apply_model_switch_result",
+      "locally_imported": false
+    },
+    {
+      "line": 2821,
+      "name": "_cprint",
+      "method": "_apply_model_switch_result",
+      "locally_imported": false
+    },
+    {
+      "line": 2835,
+      "name": "save_config_value",
+      "method": "_apply_model_switch_result",
+      "locally_imported": false
+    },
+    {
+      "line": 2956,
+      "name": "_cprint",
+      "method": "_handle_model_switch",
+      "locally_imported": false
+    },
+    {
+      "line": 2993,
+      "name": "_cprint",
+      "method": "_handle_model_switch",
+      "locally_imported": false
+    },
+    {
+      "line": 2994,
+      "name": "_cprint",
+      "method": "_handle_model_switch",
+      "locally_imported": false
+    },
+    {
+      "line": 2995,
+      "name": "_cprint",
+      "method": "_handle_model_switch",
+      "locally_imported": false
+    },
+    {
+      "line": 2996,
+      "name": "_cprint",
+      "method": "_handle_model_switch",
+      "locally_imported": false
+    },
+    {
+      "line": 2997,
+      "name": "_cprint",
+      "method": "_handle_model_switch",
+      "locally_imported": false
+    },
+    {
+      "line": 2998,
+      "name": "_cprint",
+      "method": "_handle_model_switch",
+      "locally_imported": false
+    },
+    {
+      "line": 3128,
+      "name": "_cprint",
+      "method": "_handle_model_switch",
+      "locally_imported": false
+    },
+    {
+      "line": 3147,
+      "name": "save_config_value",
+      "method": "_handle_model_switch",
+      "locally_imported": false
+    },
+    {
+      "line": 3168,
+      "name": "_cprint",
+      "method": "_handle_codex_runtime",
+      "locally_imported": false
+    },
+    {
+      "line": 3175,
+      "name": "_cprint",
+      "method": "_handle_codex_runtime",
+      "locally_imported": false
+    },
+    {
+      "line": 3195,
+      "name": "_looks_like_slash_command",
+      "method": "_should_handle_model_command_inline",
+      "locally_imported": false
+    },
+    {
+      "line": 3218,
+      "name": "_looks_like_slash_command",
+      "method": "_should_handle_steer_command_inline",
+      "locally_imported": false
+    },
+    {
+      "line": 3336,
+      "name": "_cprint",
+      "method": "_show_billing",
+      "locally_imported": false
+    },
+    {
+      "line": 3338,
+      "name": "_cprint",
+      "method": "_show_billing",
+      "locally_imported": false
+    },
+    {
+      "line": 3563,
+      "name": "_cprint",
+      "method": "_on_tool_complete",
+      "locally_imported": false
+    },
+    {
+      "line": 3585,
+      "name": "_DIM",
+      "method": "_persist_prompt_summary",
+      "locally_imported": false
+    },
+    {
+      "line": 3585,
+      "name": "_RST",
+      "method": "_persist_prompt_summary",
+      "locally_imported": false
+    },
+    {
+      "line": 3642,
+      "name": "_DIM",
+      "method": "_clarify_callback",
+      "locally_imported": false
+    },
+    {
+      "line": 3642,
+      "name": "_RST",
+      "method": "_clarify_callback",
+      "locally_imported": false
+    },
+    {
+      "line": 3693,
+      "name": "_DIM",
+      "method": "_sudo_password_callback",
+      "locally_imported": false
+    },
+    {
+      "line": 3693,
+      "name": "_RST",
+      "method": "_sudo_password_callback",
+      "locally_imported": false
+    },
+    {
+      "line": 1174,
+      "name": "_DIM",
+      "method": "_emit_reasoning_preview",
+      "locally_imported": false
+    },
+    {
+      "line": 1174,
+      "name": "_RST",
+      "method": "_emit_reasoning_preview",
+      "locally_imported": false
+    },
+    {
+      "line": 1242,
+      "name": "_accent_hex",
+      "method": "_format_submitted_user_message_preview",
+      "locally_imported": false
+    },
+    {
+      "line": 1259,
+      "name": "_accent_hex",
+      "method": "_format_submitted_user_message_preview",
+      "locally_imported": false
+    },
+    {
+      "line": 1292,
+      "name": "_accent_hex",
+      "method": "_print_user_message_preview",
+      "locally_imported": false
+    },
+    {
+      "line": 1295,
+      "name": "ChatConsole",
+      "method": "_print_user_message_preview",
+      "locally_imported": false
+    },
+    {
+      "line": 1297,
+      "name": "ChatConsole",
+      "method": "_print_user_message_preview",
+      "locally_imported": false
+    },
+    {
+      "line": 1322,
+      "name": "_DIM",
+      "method": "_stream_reasoning_delta",
+      "locally_imported": false
+    },
+    {
+      "line": 1322,
+      "name": "_RST",
+      "method": "_stream_reasoning_delta",
+      "locally_imported": false
+    },
+    {
+      "line": 1330,
+      "name": "_DIM",
+      "method": "_stream_reasoning_delta",
+      "locally_imported": false
+    },
+    {
+      "line": 1330,
+      "name": "_RST",
+      "method": "_stream_reasoning_delta",
+      "locally_imported": false
+    },
+    {
+      "line": 1332,
+      "name": "_DIM",
+      "method": "_stream_reasoning_delta",
+      "locally_imported": false
+    },
+    {
+      "line": 1332,
+      "name": "_RST",
+      "method": "_stream_reasoning_delta",
+      "locally_imported": false
+    },
+    {
+      "line": 1344,
+      "name": "_DIM",
+      "method": "_close_reasoning_box",
+      "locally_imported": false
+    },
+    {
+      "line": 1344,
+      "name": "_RST",
+      "method": "_close_reasoning_box",
+      "locally_imported": false
+    },
+    {
+      "line": 1535,
+      "name": "_b",
+      "method": "_emit_stream_text",
+      "locally_imported": false
+    },
+    {
+      "line": 1542,
+      "name": "_ACCENT",
+      "method": "_emit_stream_text",
+      "locally_imported": false
+    },
+    {
+      "line": 1542,
+      "name": "_RST",
+      "method": "_emit_stream_text",
+      "locally_imported": false
+    },
+    {
+      "line": 1618,
+      "name": "_strip_markdown_syntax",
+      "method": "_emit_stream_text",
+      "locally_imported": false
+    },
+    {
+      "line": 1669,
+      "name": "_ACCENT",
+      "method": "_flush_stream",
+      "locally_imported": false
+    },
+    {
+      "line": 1669,
+      "name": "_RST",
+      "method": "_flush_stream",
+      "locally_imported": false
+    },
+    {
+      "line": 1731,
+      "name": "_DIM",
+      "method": "_open_external_editor",
+      "locally_imported": false
+    },
+    {
+      "line": 1731,
+      "name": "_RST",
+      "method": "_open_external_editor",
+      "locally_imported": false
+    },
+    {
+      "line": 1734,
+      "name": "_DIM",
+      "method": "_open_external_editor",
+      "locally_imported": false
+    },
+    {
+      "line": 1734,
+      "name": "_RST",
+      "method": "_open_external_editor",
+      "locally_imported": false
+    },
+    {
+      "line": 1737,
+      "name": "_DIM",
+      "method": "_open_external_editor",
+      "locally_imported": false
+    },
+    {
+      "line": 1737,
+      "name": "_RST",
+      "method": "_open_external_editor",
+      "locally_imported": false
+    },
+    {
+      "line": 1741,
+      "name": "_DIM",
+      "method": "_open_external_editor",
+      "locally_imported": false
+    },
+    {
+      "line": 1741,
+      "name": "_RST",
+      "method": "_open_external_editor",
+      "locally_imported": false
+    },
+    {
+      "line": 1803,
+      "name": "_cprint",
+      "method": "_submit_editor_buffer",
+      "locally_imported": false
+    },
+    {
+      "line": 1868,
+      "name": "_cprint",
+      "method": "_ensure_tirith_security",
+      "locally_imported": false
+    },
+    {
+      "line": 2046,
+      "name": "_DIM",
+      "method": "_recover_terminal_input_modes",
+      "locally_imported": false
+    },
+    {
+      "line": 2047,
+      "name": "_RST",
+      "method": "_recover_terminal_input_modes",
+      "locally_imported": false
+    },
+    {
+      "line": 2784,
+      "name": "_cprint",
+      "method": "_apply_model_switch_result",
+      "locally_imported": false
+    },
+    {
+      "line": 3090,
+      "name": "_cprint",
+      "method": "_handle_model_switch",
+      "locally_imported": false
+    },
+    {
+      "line": 3427,
+      "name": "_DIM",
+      "method": "_on_tool_progress",
+      "locally_imported": false
+    },
+    {
+      "line": 3427,
+      "name": "_RST",
+      "method": "_on_tool_progress",
+      "locally_imported": false
+    },
+    {
+      "line": 3478,
+      "name": "_cprint",
+      "method": "_on_tool_progress",
+      "locally_imported": false
+    },
+    {
+      "line": 3551,
+      "name": "_cprint",
+      "method": "_on_tool_complete",
+      "locally_imported": false
+    },
+    {
+      "line": 3679,
+      "name": "_cprint",
+      "method": "_sudo_password_callback",
+      "locally_imported": false
+    },
+    {
+      "line": 3681,
+      "name": "_cprint",
+      "method": "_sudo_password_callback",
+      "locally_imported": false
+    },
+    {
+      "line": 3763,
+      "name": "_DIM",
+      "method": "_approval_callback",
+      "locally_imported": false
+    },
+    {
+      "line": 3763,
+      "name": "_RST",
+      "method": "_approval_callback",
+      "locally_imported": false
+    },
+    {
+      "line": 1129,
+      "name": "_DIM",
+      "method": "_flush_credit_notices",
+      "locally_imported": false
+    },
+    {
+      "line": 1131,
+      "name": "_RST",
+      "method": "_flush_credit_notices",
+      "locally_imported": false
+    },
+    {
+      "line": 1297,
+      "name": "_accent_hex",
+      "method": "_print_user_message_preview",
+      "locally_imported": false
+    },
+    {
+      "line": 1341,
+      "name": "_DIM",
+      "method": "_close_reasoning_box",
+      "locally_imported": false
+    },
+    {
+      "line": 1341,
+      "name": "_RST",
+      "method": "_close_reasoning_box",
+      "locally_imported": false
+    },
+    {
+      "line": 1550,
+      "name": "_STREAM_PAD",
+      "method": "_emit_one",
+      "locally_imported": false
+    },
+    {
+      "line": 1550,
+      "name": "_RST",
+      "method": "_emit_one",
+      "locally_imported": false
+    },
+    {
+      "line": 1550,
+      "name": "_STREAM_PAD",
+      "method": "_emit_one",
+      "locally_imported": false
+    },
+    {
+      "line": 1663,
+      "name": "_STREAM_PAD",
+      "method": "_flush_stream",
+      "locally_imported": false
+    },
+    {
+      "line": 1663,
+      "name": "_RST",
+      "method": "_flush_stream",
+      "locally_imported": false
+    },
+    {
+      "line": 1663,
+      "name": "_STREAM_PAD",
+      "method": "_flush_stream",
+      "locally_imported": false
+    },
+    {
+      "line": 1768,
+      "name": "_DIM",
+      "method": "_open_external_editor",
+      "locally_imported": false
+    },
+    {
+      "line": 1768,
+      "name": "_RST",
+      "method": "_open_external_editor",
+      "locally_imported": false
+    },
+    {
+      "line": 2077,
+      "name": "_DIM",
+      "method": "_preprocess_images_with_vision",
+      "locally_imported": false
+    },
+    {
+      "line": 2077,
+      "name": "_RST",
+      "method": "_preprocess_images_with_vision",
+      "locally_imported": false
+    },
+    {
+      "line": 2091,
+      "name": "_cprint",
+      "method": "_preprocess_images_with_vision",
+      "locally_imported": false
+    },
+    {
+      "line": 2099,
+      "name": "_cprint",
+      "method": "_preprocess_images_with_vision",
+      "locally_imported": false
+    },
+    {
+      "line": 2107,
+      "name": "_cprint",
+      "method": "_preprocess_images_with_vision",
+      "locally_imported": false
+    },
+    {
+      "line": 3433,
+      "name": "_cprint",
+      "method": "_on_tool_progress",
+      "locally_imported": false
+    },
+    {
+      "line": 1659,
+      "name": "_STREAM_PAD",
+      "method": "_flush_stream",
+      "locally_imported": false
+    },
+    {
+      "line": 1659,
+      "name": "_RST",
+      "method": "_flush_stream",
+      "locally_imported": false
+    },
+    {
+      "line": 1659,
+      "name": "_STREAM_PAD",
+      "method": "_flush_stream",
+      "locally_imported": false
+    },
+    {
+      "line": 1803,
+      "name": "_DIM",
+      "method": "_submit_editor_buffer",
+      "locally_imported": false
+    },
+    {
+      "line": 1803,
+      "name": "_RST",
+      "method": "_submit_editor_buffer",
+      "locally_imported": false
+    },
+    {
+      "line": 1869,
+      "name": "_DIM",
+      "method": "_ensure_tirith_security",
+      "locally_imported": false
+    },
+    {
+      "line": 1870,
+      "name": "_RST",
+      "method": "_ensure_tirith_security",
+      "locally_imported": false
+    },
+    {
+      "line": 3336,
+      "name": "_d",
+      "method": "_show_billing",
+      "locally_imported": false
+    },
+    {
+      "line": 3338,
+      "name": "_d",
+      "method": "_show_billing",
+      "locally_imported": false
+    },
+    {
+      "line": 3499,
+      "name": "CLI_CONFIG",
+      "method": "_on_tool_progress",
+      "locally_imported": false
+    },
+    {
+      "line": 3501,
+      "name": "_cprint",
+      "method": "_on_tool_progress",
+      "locally_imported": false
+    },
+    {
+      "line": 3679,
+      "name": "_DIM",
+      "method": "_sudo_password_callback",
+      "locally_imported": false
+    },
+    {
+      "line": 3679,
+      "name": "_RST",
+      "method": "_sudo_password_callback",
+      "locally_imported": false
+    },
+    {
+      "line": 3681,
+      "name": "_DIM",
+      "method": "_sudo_password_callback",
+      "locally_imported": false
+    },
+    {
+      "line": 3681,
+      "name": "_RST",
+      "method": "_sudo_password_callback",
+      "locally_imported": false
+    },
+    {
+      "line": 2091,
+      "name": "_DIM",
+      "method": "_preprocess_images_with_vision",
+      "locally_imported": false
+    },
+    {
+      "line": 2091,
+      "name": "_RST",
+      "method": "_preprocess_images_with_vision",
+      "locally_imported": false
+    },
+    {
+      "line": 2099,
+      "name": "_DIM",
+      "method": "_preprocess_images_with_vision",
+      "locally_imported": false
+    },
+    {
+      "line": 2099,
+      "name": "_RST",
+      "method": "_preprocess_images_with_vision",
+      "locally_imported": false
+    },
+    {
+      "line": 2107,
+      "name": "_DIM",
+      "method": "_preprocess_images_with_vision",
+      "locally_imported": false
+    },
+    {
+      "line": 2107,
+      "name": "_RST",
+      "method": "_preprocess_images_with_vision",
+      "locally_imported": false
+    },
+    {
+      "line": 3433,
+      "name": "_DIM",
+      "method": "_on_tool_progress",
+      "locally_imported": false
+    },
+    {
+      "line": 3433,
+      "name": "_RST",
+      "method": "_on_tool_progress",
+      "locally_imported": false
+    },
+    {
+      "line": 4219,
+      "name": "_maybe_remap_for_light_mode",
+      "method": "_remap_value",
+      "locally_imported": false
+    },
+    {
+      "line": 3501,
+      "name": "_DIM",
+      "method": "_on_tool_progress",
+      "locally_imported": false
+    },
+    {
+      "line": 3501,
+      "name": "_RST",
+      "method": "_on_tool_progress",
+      "locally_imported": false
+    }
+  ],
+  "hermes_cli/cli_commands_mixin.py": [
+    {
+      "line": 270,
+      "name": "_cprint",
+      "method": "_handle_agents_command",
+      "locally_imported": false
+    },
+    {
+      "line": 296,
+      "name": "_cprint",
+      "method": "_handle_agents_command",
+      "locally_imported": false
+    },
+    {
+      "line": 389,
+      "name": "_assistant_copy_text",
+      "method": "_handle_copy_command",
+      "locally_imported": false
+    },
+    {
+      "line": 419,
+      "name": "_cprint",
+      "method": "_handle_image_command",
+      "locally_imported": false
+    },
+    {
+      "line": 494,
+      "name": "_cprint",
+      "method": "_handle_tools_command",
+      "locally_imported": false
+    },
+    {
+      "line": 503,
+      "name": "_cprint",
+      "method": "_handle_tools_command",
+      "locally_imported": false
+    },
+    {
+      "line": 628,
+      "name": "_cprint",
+      "method": "_handle_handoff_command",
+      "locally_imported": false
+    },
+    {
+      "line": 629,
+      "name": "_cprint",
+      "method": "_handle_handoff_command",
+      "locally_imported": false
+    },
+    {
+      "line": 665,
+      "name": "_cprint",
+      "method": "_handle_handoff_command",
+      "locally_imported": false
+    },
+    {
+      "line": 666,
+      "name": "_cprint",
+      "method": "_handle_handoff_command",
+      "locally_imported": false
+    },
+    {
+      "line": 998,
+      "name": "_cprint",
+      "method": "_handle_branch_command",
+      "locally_imported": false
+    },
+    {
+      "line": 1002,
+      "name": "_cprint",
+      "method": "_handle_branch_command",
+      "locally_imported": false
+    },
+    {
+      "line": 1003,
+      "name": "_cprint",
+      "method": "_handle_branch_command",
+      "locally_imported": false
+    },
+    {
+      "line": 1595,
+      "name": "save_config_value",
+      "method": "_save_write_approval",
+      "locally_imported": false
+    },
+    {
+      "line": 1622,
+      "name": "_cprint",
+      "method": "_handle_background_command",
+      "locally_imported": false
+    },
+    {
+      "line": 1623,
+      "name": "_cprint",
+      "method": "_handle_background_command",
+      "locally_imported": false
+    },
+    {
+      "line": 1624,
+      "name": "_cprint",
+      "method": "_handle_background_command",
+      "locally_imported": false
+    },
+    {
+      "line": 1776,
+      "name": "_cprint",
+      "method": "_handle_bundles_command",
+      "locally_imported": false
+    },
+    {
+      "line": 1786,
+      "name": "_cprint",
+      "method": "_handle_bundles_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2110,
+      "name": "_cprint",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2115,
+      "name": "_cprint",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2140,
+      "name": "_cprint",
+      "method": "_handle_goal_draft",
+      "locally_imported": false
+    },
+    {
+      "line": 2154,
+      "name": "_cprint",
+      "method": "_handle_goal_draft",
+      "locally_imported": false
+    },
+    {
+      "line": 2248,
+      "name": "_cprint",
+      "method": "_handle_subgoal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2285,
+      "name": "save_config_value",
+      "method": "_handle_skin_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2410,
+      "name": "save_config_value",
+      "method": "_handle_footer_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2460,
+      "name": "save_config_value",
+      "method": "_handle_timestamps_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2544,
+      "name": "save_config_value",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2580,
+      "name": "save_config_value",
+      "method": "_handle_busy_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2631,
+      "name": "save_config_value",
+      "method": "_handle_fast_command",
+      "locally_imported": false
+    },
+    {
+      "line": 274,
+      "name": "_cprint",
+      "method": "_handle_agents_command",
+      "locally_imported": false
+    },
+    {
+      "line": 277,
+      "name": "_cprint",
+      "method": "_handle_agents_command",
+      "locally_imported": false
+    },
+    {
+      "line": 287,
+      "name": "_cprint",
+      "method": "_handle_agents_command",
+      "locally_imported": false
+    },
+    {
+      "line": 331,
+      "name": "_cprint",
+      "method": "_handle_journey_command",
+      "locally_imported": false
+    },
+    {
+      "line": 344,
+      "name": "_cprint",
+      "method": "_handle_paste_command",
+      "locally_imported": false
+    },
+    {
+      "line": 359,
+      "name": "_cprint",
+      "method": "_handle_paste_command",
+      "locally_imported": false
+    },
+    {
+      "line": 369,
+      "name": "_cprint",
+      "method": "_handle_copy_command",
+      "locally_imported": false
+    },
+    {
+      "line": 391,
+      "name": "_cprint",
+      "method": "_handle_copy_command",
+      "locally_imported": false
+    },
+    {
+      "line": 396,
+      "name": "_cprint",
+      "method": "_handle_copy_command",
+      "locally_imported": false
+    },
+    {
+      "line": 406,
+      "name": "_cprint",
+      "method": "_handle_image_command",
+      "locally_imported": false
+    },
+    {
+      "line": 412,
+      "name": "_cprint",
+      "method": "_handle_image_command",
+      "locally_imported": false
+    },
+    {
+      "line": 415,
+      "name": "_cprint",
+      "method": "_handle_image_command",
+      "locally_imported": false
+    },
+    {
+      "line": 421,
+      "name": "_cprint",
+      "method": "_handle_image_command",
+      "locally_imported": false
+    },
+    {
+      "line": 540,
+      "name": "_cprint",
+      "method": "_handle_handoff_command",
+      "locally_imported": false
+    },
+    {
+      "line": 541,
+      "name": "_cprint",
+      "method": "_handle_handoff_command",
+      "locally_imported": false
+    },
+    {
+      "line": 542,
+      "name": "_cprint",
+      "method": "_handle_handoff_command",
+      "locally_imported": false
+    },
+    {
+      "line": 568,
+      "name": "_cprint",
+      "method": "_handle_handoff_command",
+      "locally_imported": false
+    },
+    {
+      "line": 573,
+      "name": "_cprint",
+      "method": "_handle_handoff_command",
+      "locally_imported": false
+    },
+    {
+      "line": 574,
+      "name": "_cprint",
+      "method": "_handle_handoff_command",
+      "locally_imported": false
+    },
+    {
+      "line": 580,
+      "name": "_cprint",
+      "method": "_handle_handoff_command",
+      "locally_imported": false
+    },
+    {
+      "line": 591,
+      "name": "_cprint",
+      "method": "_handle_handoff_command",
+      "locally_imported": false
+    },
+    {
+      "line": 625,
+      "name": "_cprint",
+      "method": "_handle_handoff_command",
+      "locally_imported": false
+    },
+    {
+      "line": 689,
+      "name": "_cprint",
+      "method": "_handle_resume_command",
+      "locally_imported": false
+    },
+    {
+      "line": 699,
+      "name": "_cprint",
+      "method": "_handle_resume_command",
+      "locally_imported": false
+    },
+    {
+      "line": 708,
+      "name": "_cprint",
+      "method": "_handle_resume_command",
+      "locally_imported": false
+    },
+    {
+      "line": 728,
+      "name": "_cprint",
+      "method": "_handle_resume_command",
+      "locally_imported": false
+    },
+    {
+      "line": 729,
+      "name": "_cprint",
+      "method": "_handle_resume_command",
+      "locally_imported": false
+    },
+    {
+      "line": 739,
+      "name": "_cprint",
+      "method": "_handle_resume_command",
+      "locally_imported": false
+    },
+    {
+      "line": 749,
+      "name": "_cprint",
+      "method": "_handle_resume_command",
+      "locally_imported": false
+    },
+    {
+      "line": 818,
+      "name": "_cprint",
+      "method": "_handle_resume_command",
+      "locally_imported": false
+    },
+    {
+      "line": 825,
+      "name": "_cprint",
+      "method": "_handle_resume_command",
+      "locally_imported": false
+    },
+    {
+      "line": 869,
+      "name": "_cprint",
+      "method": "_handle_branch_command",
+      "locally_imported": false
+    },
+    {
+      "line": 874,
+      "name": "_cprint",
+      "method": "_handle_branch_command",
+      "locally_imported": false
+    },
+    {
+      "line": 1536,
+      "name": "ChatConsole",
+      "method": "_handle_skills_command",
+      "locally_imported": false
+    },
+    {
+      "line": 1607,
+      "name": "_cprint",
+      "method": "_handle_background_command",
+      "locally_imported": false
+    },
+    {
+      "line": 1608,
+      "name": "_cprint",
+      "method": "_handle_background_command",
+      "locally_imported": false
+    },
+    {
+      "line": 1609,
+      "name": "_cprint",
+      "method": "_handle_background_command",
+      "locally_imported": false
+    },
+    {
+      "line": 1619,
+      "name": "_cprint",
+      "method": "_handle_background_command",
+      "locally_imported": false
+    },
+    {
+      "line": 1768,
+      "name": "_cprint",
+      "method": "_handle_bundles_command",
+      "locally_imported": false
+    },
+    {
+      "line": 1769,
+      "name": "_cprint",
+      "method": "_handle_bundles_command",
+      "locally_imported": false
+    },
+    {
+      "line": 1773,
+      "name": "_cprint",
+      "method": "_handle_bundles_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2006,
+      "name": "_cprint",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2013,
+      "name": "_cprint",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2018,
+      "name": "_cprint",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2019,
+      "name": "_cprint",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2085,
+      "name": "_cprint",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2112,
+      "name": "_cprint",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2137,
+      "name": "_cprint",
+      "method": "_handle_goal_draft",
+      "locally_imported": false
+    },
+    {
+      "line": 2156,
+      "name": "_cprint",
+      "method": "_handle_goal_draft",
+      "locally_imported": false
+    },
+    {
+      "line": 2159,
+      "name": "_cprint",
+      "method": "_handle_goal_draft",
+      "locally_imported": false
+    },
+    {
+      "line": 2165,
+      "name": "_cprint",
+      "method": "_handle_goal_draft",
+      "locally_imported": false
+    },
+    {
+      "line": 2195,
+      "name": "_cprint",
+      "method": "_handle_subgoal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2199,
+      "name": "_cprint",
+      "method": "_handle_subgoal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2204,
+      "name": "_cprint",
+      "method": "_handle_subgoal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2205,
+      "name": "_cprint",
+      "method": "_handle_subgoal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2226,
+      "name": "_cprint",
+      "method": "_handle_subgoal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2359,
+      "name": "_cprint",
+      "method": "_handle_prompt_compose_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2394,
+      "name": "_cprint",
+      "method": "_handle_footer_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2415,
+      "name": "_cprint",
+      "method": "_handle_footer_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2417,
+      "name": "_cprint",
+      "method": "_handle_footer_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2446,
+      "name": "_cprint",
+      "method": "_handle_timestamps_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2465,
+      "name": "_cprint",
+      "method": "_handle_timestamps_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2467,
+      "name": "_cprint",
+      "method": "_handle_timestamps_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2494,
+      "name": "_cprint",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2495,
+      "name": "_cprint",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2496,
+      "name": "_cprint",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2506,
+      "name": "save_config_value",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2507,
+      "name": "_cprint",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2508,
+      "name": "_cprint",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2514,
+      "name": "save_config_value",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2515,
+      "name": "_cprint",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2521,
+      "name": "save_config_value",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2522,
+      "name": "_cprint",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2523,
+      "name": "_cprint",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2529,
+      "name": "save_config_value",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2530,
+      "name": "_cprint",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2536,
+      "name": "_cprint",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2537,
+      "name": "_cprint",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2538,
+      "name": "_cprint",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2545,
+      "name": "_cprint",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2547,
+      "name": "_cprint",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2562,
+      "name": "_cprint",
+      "method": "_handle_busy_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2569,
+      "name": "_cprint",
+      "method": "_handle_busy_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2570,
+      "name": "_cprint",
+      "method": "_handle_busy_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2575,
+      "name": "_cprint",
+      "method": "_handle_busy_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2576,
+      "name": "_cprint",
+      "method": "_handle_busy_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2587,
+      "name": "_cprint",
+      "method": "_handle_busy_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2588,
+      "name": "_cprint",
+      "method": "_handle_busy_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2590,
+      "name": "_cprint",
+      "method": "_handle_busy_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2596,
+      "name": "_cprint",
+      "method": "_handle_fast_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2611,
+      "name": "_cprint",
+      "method": "_handle_fast_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2612,
+      "name": "_cprint",
+      "method": "_handle_fast_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2632,
+      "name": "_cprint",
+      "method": "_handle_fast_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2634,
+      "name": "_cprint",
+      "method": "_handle_fast_command",
+      "locally_imported": false
+    },
+    {
+      "line": 290,
+      "name": "_cprint",
+      "method": "_handle_agents_command",
+      "locally_imported": false
+    },
+    {
+      "line": 333,
+      "name": "_cprint",
+      "method": "_handle_journey_command",
+      "locally_imported": false
+    },
+    {
+      "line": 355,
+      "name": "_cprint",
+      "method": "_handle_paste_command",
+      "locally_imported": false
+    },
+    {
+      "line": 357,
+      "name": "_cprint",
+      "method": "_handle_paste_command",
+      "locally_imported": false
+    },
+    {
+      "line": 379,
+      "name": "_cprint",
+      "method": "_handle_copy_command",
+      "locally_imported": false
+    },
+    {
+      "line": 386,
+      "name": "_cprint",
+      "method": "_handle_copy_command",
+      "locally_imported": false
+    },
+    {
+      "line": 398,
+      "name": "_cprint",
+      "method": "_handle_copy_command",
+      "locally_imported": false
+    },
+    {
+      "line": 423,
+      "name": "_cprint",
+      "method": "_handle_image_command",
+      "locally_imported": false
+    },
+    {
+      "line": 466,
+      "name": "_cprint",
+      "method": "_run_capture",
+      "locally_imported": false
+    },
+    {
+      "line": 494,
+      "name": "_ACCENT",
+      "method": "_handle_tools_command",
+      "locally_imported": false
+    },
+    {
+      "line": 494,
+      "name": "_RST",
+      "method": "_handle_tools_command",
+      "locally_imported": false
+    },
+    {
+      "line": 503,
+      "name": "_DIM",
+      "method": "_handle_tools_command",
+      "locally_imported": false
+    },
+    {
+      "line": 503,
+      "name": "_RST",
+      "method": "_handle_tools_command",
+      "locally_imported": false
+    },
+    {
+      "line": 551,
+      "name": "_cprint",
+      "method": "_handle_handoff_command",
+      "locally_imported": false
+    },
+    {
+      "line": 557,
+      "name": "_cprint",
+      "method": "_handle_handoff_command",
+      "locally_imported": false
+    },
+    {
+      "line": 563,
+      "name": "_cprint",
+      "method": "_handle_handoff_command",
+      "locally_imported": false
+    },
+    {
+      "line": 608,
+      "name": "_cprint",
+      "method": "_handle_handoff_command",
+      "locally_imported": false
+    },
+    {
+      "line": 646,
+      "name": "_cprint",
+      "method": "_handle_handoff_command",
+      "locally_imported": false
+    },
+    {
+      "line": 647,
+      "name": "_cprint",
+      "method": "_handle_handoff_command",
+      "locally_imported": false
+    },
+    {
+      "line": 648,
+      "name": "_cprint",
+      "method": "_handle_handoff_command",
+      "locally_imported": false
+    },
+    {
+      "line": 649,
+      "name": "_cprint",
+      "method": "_handle_handoff_command",
+      "locally_imported": false
+    },
+    {
+      "line": 655,
+      "name": "_cprint",
+      "method": "_handle_handoff_command",
+      "locally_imported": false
+    },
+    {
+      "line": 656,
+      "name": "_cprint",
+      "method": "_handle_handoff_command",
+      "locally_imported": false
+    },
+    {
+      "line": 716,
+      "name": "_cprint",
+      "method": "_handle_resume_command",
+      "locally_imported": false
+    },
+    {
+      "line": 717,
+      "name": "_cprint",
+      "method": "_handle_resume_command",
+      "locally_imported": false
+    },
+    {
+      "line": 851,
+      "name": "_cprint",
+      "method": "_handle_sessions_command",
+      "locally_imported": false
+    },
+    {
+      "line": 854,
+      "name": "_cprint",
+      "method": "_handle_sessions_command",
+      "locally_imported": false
+    },
+    {
+      "line": 933,
+      "name": "_cprint",
+      "method": "_handle_branch_command",
+      "locally_imported": false
+    },
+    {
+      "line": 1017,
+      "name": "save_config_value",
+      "method": "_handle_personality_command",
+      "locally_imported": false
+    },
+    {
+      "line": 1636,
+      "name": "AIAgent",
+      "method": "run_background",
+      "locally_imported": false
+    },
+    {
+      "line": 1693,
+      "name": "_cprint",
+      "method": "run_background",
+      "locally_imported": false
+    },
+    {
+      "line": 1694,
+      "name": "_cprint",
+      "method": "run_background",
+      "locally_imported": false
+    },
+    {
+      "line": 1763,
+      "name": "_cprint",
+      "method": "_handle_bundles_command",
+      "locally_imported": false
+    },
+    {
+      "line": 1776,
+      "name": "_BOLD",
+      "method": "_handle_bundles_command",
+      "locally_imported": false
+    },
+    {
+      "line": 1776,
+      "name": "_RST",
+      "method": "_handle_bundles_command",
+      "locally_imported": false
+    },
+    {
+      "line": 1787,
+      "name": "_DIM",
+      "method": "_handle_bundles_command",
+      "locally_imported": false
+    },
+    {
+      "line": 1788,
+      "name": "_RST",
+      "method": "_handle_bundles_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2030,
+      "name": "_cprint",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2038,
+      "name": "_cprint",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2040,
+      "name": "_cprint",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2046,
+      "name": "_cprint",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2048,
+      "name": "_cprint",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2049,
+      "name": "_cprint",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2059,
+      "name": "_cprint",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2061,
+      "name": "_cprint",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2070,
+      "name": "_cprint",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2091,
+      "name": "_cprint",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2093,
+      "name": "_cprint",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2107,
+      "name": "_cprint",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2114,
+      "name": "_cprint",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2116,
+      "name": "_DIM",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2119,
+      "name": "_RST",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2140,
+      "name": "_DIM",
+      "method": "_handle_goal_draft",
+      "locally_imported": false
+    },
+    {
+      "line": 2140,
+      "name": "_RST",
+      "method": "_handle_goal_draft",
+      "locally_imported": false
+    },
+    {
+      "line": 2151,
+      "name": "_cprint",
+      "method": "_handle_goal_draft",
+      "locally_imported": false
+    },
+    {
+      "line": 2158,
+      "name": "_cprint",
+      "method": "_handle_goal_draft",
+      "locally_imported": false
+    },
+    {
+      "line": 2214,
+      "name": "_cprint",
+      "method": "_handle_subgoal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2236,
+      "name": "_cprint",
+      "method": "_handle_subgoal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2238,
+      "name": "_cprint",
+      "method": "_handle_subgoal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2245,
+      "name": "_cprint",
+      "method": "_handle_subgoal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2355,
+      "name": "_cprint",
+      "method": "_handle_prompt_compose_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2525,
+      "name": "_cprint",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2626,
+      "name": "_cprint",
+      "method": "_handle_fast_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2627,
+      "name": "_cprint",
+      "method": "_handle_fast_command",
+      "locally_imported": false
+    },
+    {
+      "line": 345,
+      "name": "_DIM",
+      "method": "_handle_paste_command",
+      "locally_imported": false
+    },
+    {
+      "line": 347,
+      "name": "_RST",
+      "method": "_handle_paste_command",
+      "locally_imported": false
+    },
+    {
+      "line": 359,
+      "name": "_DIM",
+      "method": "_handle_paste_command",
+      "locally_imported": false
+    },
+    {
+      "line": 359,
+      "name": "_RST",
+      "method": "_handle_paste_command",
+      "locally_imported": false
+    },
+    {
+      "line": 376,
+      "name": "_cprint",
+      "method": "_handle_copy_command",
+      "locally_imported": false
+    },
+    {
+      "line": 383,
+      "name": "_assistant_copy_text",
+      "method": "_handle_copy_command",
+      "locally_imported": false
+    },
+    {
+      "line": 406,
+      "name": "_DIM",
+      "method": "_handle_image_command",
+      "locally_imported": false
+    },
+    {
+      "line": 406,
+      "name": "_RST",
+      "method": "_handle_image_command",
+      "locally_imported": false
+    },
+    {
+      "line": 412,
+      "name": "_DIM",
+      "method": "_handle_image_command",
+      "locally_imported": false
+    },
+    {
+      "line": 412,
+      "name": "_RST",
+      "method": "_handle_image_command",
+      "locally_imported": false
+    },
+    {
+      "line": 415,
+      "name": "_DIM",
+      "method": "_handle_image_command",
+      "locally_imported": false
+    },
+    {
+      "line": 415,
+      "name": "_RST",
+      "method": "_handle_image_command",
+      "locally_imported": false
+    },
+    {
+      "line": 421,
+      "name": "_DIM",
+      "method": "_handle_image_command",
+      "locally_imported": false
+    },
+    {
+      "line": 421,
+      "name": "_RST",
+      "method": "_handle_image_command",
+      "locally_imported": false
+    },
+    {
+      "line": 643,
+      "name": "_cprint",
+      "method": "_handle_handoff_command",
+      "locally_imported": false
+    },
+    {
+      "line": 1025,
+      "name": "save_config_value",
+      "method": "_handle_personality_command",
+      "locally_imported": false
+    },
+    {
+      "line": 1708,
+      "name": "ChatConsole",
+      "method": "run_background",
+      "locally_imported": false
+    },
+    {
+      "line": 1720,
+      "name": "_cprint",
+      "method": "run_background",
+      "locally_imported": false
+    },
+    {
+      "line": 1733,
+      "name": "_cprint",
+      "method": "run_background",
+      "locally_imported": false
+    },
+    {
+      "line": 1770,
+      "name": "_DIM",
+      "method": "_handle_bundles_command",
+      "locally_imported": false
+    },
+    {
+      "line": 1771,
+      "name": "_RST",
+      "method": "_handle_bundles_command",
+      "locally_imported": false
+    },
+    {
+      "line": 1773,
+      "name": "_DIM",
+      "method": "_handle_bundles_command",
+      "locally_imported": false
+    },
+    {
+      "line": 1773,
+      "name": "_RST",
+      "method": "_handle_bundles_command",
+      "locally_imported": false
+    },
+    {
+      "line": 1780,
+      "name": "ChatConsole",
+      "method": "_handle_bundles_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2006,
+      "name": "_DIM",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2006,
+      "name": "_RST",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2076,
+      "name": "_cprint",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2082,
+      "name": "_cprint",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2112,
+      "name": "_DIM",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2112,
+      "name": "_RST",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2137,
+      "name": "_DIM",
+      "method": "_handle_goal_draft",
+      "locally_imported": false
+    },
+    {
+      "line": 2137,
+      "name": "_RST",
+      "method": "_handle_goal_draft",
+      "locally_imported": false
+    },
+    {
+      "line": 2156,
+      "name": "_DIM",
+      "method": "_handle_goal_draft",
+      "locally_imported": false
+    },
+    {
+      "line": 2156,
+      "name": "_RST",
+      "method": "_handle_goal_draft",
+      "locally_imported": false
+    },
+    {
+      "line": 2160,
+      "name": "_DIM",
+      "method": "_handle_goal_draft",
+      "locally_imported": false
+    },
+    {
+      "line": 2162,
+      "name": "_RST",
+      "method": "_handle_goal_draft",
+      "locally_imported": false
+    },
+    {
+      "line": 2166,
+      "name": "_DIM",
+      "method": "_handle_goal_draft",
+      "locally_imported": false
+    },
+    {
+      "line": 2167,
+      "name": "_RST",
+      "method": "_handle_goal_draft",
+      "locally_imported": false
+    },
+    {
+      "line": 2195,
+      "name": "_DIM",
+      "method": "_handle_subgoal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2195,
+      "name": "_RST",
+      "method": "_handle_subgoal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2199,
+      "name": "_DIM",
+      "method": "_handle_subgoal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2199,
+      "name": "_RST",
+      "method": "_handle_subgoal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2219,
+      "name": "_cprint",
+      "method": "_handle_subgoal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2224,
+      "name": "_cprint",
+      "method": "_handle_subgoal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2233,
+      "name": "_cprint",
+      "method": "_handle_subgoal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2359,
+      "name": "_DIM",
+      "method": "_handle_prompt_compose_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2359,
+      "name": "_RST",
+      "method": "_handle_prompt_compose_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2407,
+      "name": "_cprint",
+      "method": "_handle_footer_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2456,
+      "name": "_cprint",
+      "method": "_handle_timestamps_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2494,
+      "name": "_ACCENT",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2494,
+      "name": "_RST",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2495,
+      "name": "_ACCENT",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2495,
+      "name": "_RST",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2496,
+      "name": "_DIM",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2496,
+      "name": "_RST",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2507,
+      "name": "_ACCENT",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2507,
+      "name": "_RST",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2508,
+      "name": "_DIM",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2508,
+      "name": "_RST",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2515,
+      "name": "_ACCENT",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2515,
+      "name": "_RST",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2522,
+      "name": "_ACCENT",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2522,
+      "name": "_RST",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2523,
+      "name": "_DIM",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2523,
+      "name": "_RST",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2530,
+      "name": "_ACCENT",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2530,
+      "name": "_RST",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2536,
+      "name": "_DIM",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2536,
+      "name": "_RST",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2537,
+      "name": "_DIM",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2537,
+      "name": "_RST",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2538,
+      "name": "_DIM",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2538,
+      "name": "_RST",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2545,
+      "name": "_ACCENT",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2545,
+      "name": "_RST",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2547,
+      "name": "_ACCENT",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2547,
+      "name": "_RST",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2562,
+      "name": "_ACCENT",
+      "method": "_handle_busy_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2562,
+      "name": "_RST",
+      "method": "_handle_busy_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2569,
+      "name": "_DIM",
+      "method": "_handle_busy_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2569,
+      "name": "_RST",
+      "method": "_handle_busy_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2570,
+      "name": "_DIM",
+      "method": "_handle_busy_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2570,
+      "name": "_RST",
+      "method": "_handle_busy_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2575,
+      "name": "_DIM",
+      "method": "_handle_busy_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2575,
+      "name": "_RST",
+      "method": "_handle_busy_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2576,
+      "name": "_DIM",
+      "method": "_handle_busy_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2576,
+      "name": "_RST",
+      "method": "_handle_busy_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2587,
+      "name": "_ACCENT",
+      "method": "_handle_busy_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2587,
+      "name": "_RST",
+      "method": "_handle_busy_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2588,
+      "name": "_DIM",
+      "method": "_handle_busy_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2588,
+      "name": "_RST",
+      "method": "_handle_busy_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2590,
+      "name": "_ACCENT",
+      "method": "_handle_busy_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2590,
+      "name": "_RST",
+      "method": "_handle_busy_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2611,
+      "name": "_ACCENT",
+      "method": "_handle_fast_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2611,
+      "name": "_RST",
+      "method": "_handle_fast_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2612,
+      "name": "_DIM",
+      "method": "_handle_fast_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2612,
+      "name": "_RST",
+      "method": "_handle_fast_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2632,
+      "name": "_ACCENT",
+      "method": "_handle_fast_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2632,
+      "name": "_RST",
+      "method": "_handle_fast_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2634,
+      "name": "_ACCENT",
+      "method": "_handle_fast_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2634,
+      "name": "_RST",
+      "method": "_handle_fast_command",
+      "locally_imported": false
+    },
+    {
+      "line": 357,
+      "name": "_DIM",
+      "method": "_handle_paste_command",
+      "locally_imported": false
+    },
+    {
+      "line": 357,
+      "name": "_RST",
+      "method": "_handle_paste_command",
+      "locally_imported": false
+    },
+    {
+      "line": 423,
+      "name": "_DIM",
+      "method": "_handle_image_command",
+      "locally_imported": false
+    },
+    {
+      "line": 423,
+      "name": "_RST",
+      "method": "_handle_image_command",
+      "locally_imported": false
+    },
+    {
+      "line": 1692,
+      "name": "ChatConsole",
+      "method": "run_background",
+      "locally_imported": false
+    },
+    {
+      "line": 1695,
+      "name": "ChatConsole",
+      "method": "run_background",
+      "locally_imported": false
+    },
+    {
+      "line": 1701,
+      "name": "_maybe_remap_for_light_mode",
+      "method": "run_background",
+      "locally_imported": false
+    },
+    {
+      "line": 1702,
+      "name": "_maybe_remap_for_light_mode",
+      "method": "run_background",
+      "locally_imported": false
+    },
+    {
+      "line": 1763,
+      "name": "_RST",
+      "method": "_handle_bundles_command",
+      "locally_imported": false
+    },
+    {
+      "line": 1781,
+      "name": "_accent_hex",
+      "method": "_handle_bundles_command",
+      "locally_imported": false
+    },
+    {
+      "line": 1785,
+      "name": "ChatConsole",
+      "method": "_handle_bundles_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2038,
+      "name": "_DIM",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2038,
+      "name": "_RST",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2046,
+      "name": "_DIM",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2046,
+      "name": "_RST",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2050,
+      "name": "_DIM",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2051,
+      "name": "_RST",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2061,
+      "name": "_DIM",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2061,
+      "name": "_RST",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2093,
+      "name": "_DIM",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2093,
+      "name": "_RST",
+      "method": "_handle_goal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2238,
+      "name": "_DIM",
+      "method": "_handle_subgoal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2238,
+      "name": "_RST",
+      "method": "_handle_subgoal_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2355,
+      "name": "_DIM",
+      "method": "_handle_prompt_compose_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2355,
+      "name": "_RST",
+      "method": "_handle_prompt_compose_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2525,
+      "name": "_DIM",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2525,
+      "name": "_RST",
+      "method": "_handle_reasoning_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2626,
+      "name": "_DIM",
+      "method": "_handle_fast_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2626,
+      "name": "_RST",
+      "method": "_handle_fast_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2627,
+      "name": "_DIM",
+      "method": "_handle_fast_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2627,
+      "name": "_RST",
+      "method": "_handle_fast_command",
+      "locally_imported": false
+    },
+    {
+      "line": 1692,
+      "name": "_accent_hex",
+      "method": "run_background",
+      "locally_imported": false
+    },
+    {
+      "line": 1695,
+      "name": "_accent_hex",
+      "method": "run_background",
+      "locally_imported": false
+    },
+    {
+      "line": 1710,
+      "name": "_render_final_assistant_content",
+      "method": "run_background",
+      "locally_imported": false
+    },
+    {
+      "line": 2735,
+      "name": "_cprint",
+      "method": "_handle_voice_command",
+      "locally_imported": false
+    },
+    {
+      "line": 2736,
+      "name": "_cprint",
+      "method": "_handle_voice_command",
+      "locally_imported": false
+    }
+  ],
+  "hermes_cli/cli_agent_setup_mixin.py": [
+    {
+      "line": 407,
+      "name": "_cprint",
+      "method": "_init_agent",
+      "locally_imported": false
+    },
+    {
+      "line": 343,
+      "name": "AIAgent",
+      "method": "_init_agent",
+      "locally_imported": false
+    },
+    {
+      "line": 494,
+      "name": "_accent_hex",
+      "method": "_preload_resumed_session",
+      "locally_imported": false
+    },
+    {
+      "line": 503,
+      "name": "_accent_hex",
+      "method": "_preload_resumed_session",
+      "locally_imported": false
+    },
+    {
+      "line": 75,
+      "name": "ChatConsole",
+      "method": "_ensure_runtime_credentials",
+      "locally_imported": false
+    },
+    {
+      "line": 269,
+      "name": "_cprint",
+      "method": "_init_agent",
+      "locally_imported": false
+    },
+    {
+      "line": 270,
+      "name": "_cprint",
+      "method": "_init_agent",
+      "locally_imported": false
+    },
+    {
+      "line": 578,
+      "name": "_strip_reasoning_tags",
+      "method": "_display_resumed_history",
+      "locally_imported": false
+    },
+    {
+      "line": 65,
+      "name": "_cprint",
+      "method": "_ensure_runtime_credentials",
+      "locally_imported": false
+    },
+    {
+      "line": 280,
+      "name": "ChatConsole",
+      "method": "_init_agent",
+      "locally_imported": false
+    },
+    {
+      "line": 433,
+      "name": "_cprint",
+      "method": "_init_agent",
+      "locally_imported": false
+    },
+    {
+      "line": 437,
+      "name": "_cprint",
+      "method": "_init_agent",
+      "locally_imported": false
+    },
+    {
+      "line": 441,
+      "name": "ChatConsole",
+      "method": "_init_agent",
+      "locally_imported": false
+    },
+    {
+      "line": 269,
+      "name": "_RST",
+      "method": "_init_agent",
+      "locally_imported": false
+    },
+    {
+      "line": 270,
+      "name": "_DIM",
+      "method": "_init_agent",
+      "locally_imported": false
+    },
+    {
+      "line": 270,
+      "name": "_RST",
+      "method": "_init_agent",
+      "locally_imported": false
+    },
+    {
+      "line": 305,
+      "name": "ChatConsole",
+      "method": "_init_agent",
+      "locally_imported": false
+    },
+    {
+      "line": 319,
+      "name": "ChatConsole",
+      "method": "_init_agent",
+      "locally_imported": false
+    },
+    {
+      "line": 306,
+      "name": "_accent_hex",
+      "method": "_init_agent",
+      "locally_imported": false
+    },
+    {
+      "line": 308,
+      "name": "_accent_hex",
+      "method": "_init_agent",
+      "locally_imported": false
+    },
+    {
+      "line": 320,
+      "name": "_accent_hex",
+      "method": "_init_agent",
+      "locally_imported": false
+    }
+  ],
+  "hermes_cli/cli_billing_mixin.py": [
+    {
+      "line": 9,
+      "name": "logger",
+      "method": "Module level",
+      "locally_imported": false
+    },
+    {
+      "line": 51,
+      "name": "_cprint",
+      "method": "_billing_overview",
+      "locally_imported": false
+    },
+    {
+      "line": 249,
+      "name": "_cprint",
+      "method": "_billing_confirm_and_charge",
+      "locally_imported": false
+    },
+    {
+      "line": 258,
+      "name": "_cprint",
+      "method": "_billing_confirm_and_charge",
+      "locally_imported": false
+    },
+    {
+      "line": 298,
+      "name": "_cprint",
+      "method": "_billing_confirm_and_charge",
+      "locally_imported": false
+    },
+    {
+      "line": 393,
+      "name": "_cprint",
+      "method": "_billing_handle_scope_required",
+      "locally_imported": false
+    },
+    {
+      "line": 452,
+      "name": "_cprint",
+      "method": "_billing_auto_reload_flow",
+      "locally_imported": false
+    },
+    {
+      "line": 454,
+      "name": "_cprint",
+      "method": "_billing_auto_reload_flow",
+      "locally_imported": false
+    },
+    {
+      "line": 544,
+      "name": "_cprint",
+      "method": "_billing_auto_reload_flow",
+      "locally_imported": false
+    },
+    {
+      "line": 608,
+      "name": "_cprint",
+      "method": "_billing_limit_screen",
+      "locally_imported": false
+    },
+    {
+      "line": 622,
+      "name": "_cprint",
+      "method": "_billing_limit_screen",
+      "locally_imported": false
+    },
+    {
+      "line": 79,
+      "name": "_cprint",
+      "method": "_billing_overview",
+      "locally_imported": false
+    },
+    {
+      "line": 84,
+      "name": "_cprint",
+      "method": "_billing_overview",
+      "locally_imported": false
+    },
+    {
+      "line": 88,
+      "name": "_cprint",
+      "method": "_billing_overview",
+      "locally_imported": false
+    },
+    {
+      "line": 96,
+      "name": "_cprint",
+      "method": "_billing_overview",
+      "locally_imported": false
+    },
+    {
+      "line": 176,
+      "name": "_cprint",
+      "method": "_billing_require_admin",
+      "locally_imported": false
+    },
+    {
+      "line": 181,
+      "name": "_cprint",
+      "method": "_billing_require_admin",
+      "locally_imported": false
+    },
+    {
+      "line": 197,
+      "name": "_cprint",
+      "method": "_billing_buy_flow",
+      "locally_imported": false
+    },
+    {
+      "line": 612,
+      "name": "_cprint",
+      "method": "_billing_limit_screen",
+      "locally_imported": false
+    },
+    {
+      "line": 51,
+      "name": "_b",
+      "method": "_billing_overview",
+      "locally_imported": false
+    },
+    {
+      "line": 249,
+      "name": "_b",
+      "method": "_billing_confirm_and_charge",
+      "locally_imported": false
+    },
+    {
+      "line": 258,
+      "name": "_d",
+      "method": "_billing_confirm_and_charge",
+      "locally_imported": false
+    },
+    {
+      "line": 298,
+      "name": "_d",
+      "method": "_billing_confirm_and_charge",
+      "locally_imported": false
+    },
+    {
+      "line": 393,
+      "name": "_d",
+      "method": "_billing_handle_scope_required",
+      "locally_imported": false
+    },
+    {
+      "line": 452,
+      "name": "_b",
+      "method": "_billing_auto_reload_flow",
+      "locally_imported": false
+    },
+    {
+      "line": 454,
+      "name": "_d",
+      "method": "_billing_auto_reload_flow",
+      "locally_imported": false
+    },
+    {
+      "line": 544,
+      "name": "_d",
+      "method": "_billing_auto_reload_flow",
+      "locally_imported": false
+    },
+    {
+      "line": 608,
+      "name": "_b",
+      "method": "_billing_limit_screen",
+      "locally_imported": false
+    },
+    {
+      "line": 622,
+      "name": "_d",
+      "method": "_billing_limit_screen",
+      "locally_imported": false
+    },
+    {
+      "line": 79,
+      "name": "_d",
+      "method": "_billing_overview",
+      "locally_imported": false
+    },
+    {
+      "line": 84,
+      "name": "_d",
+      "method": "_billing_overview",
+      "locally_imported": false
+    },
+    {
+      "line": 88,
+      "name": "_d",
+      "method": "_billing_overview",
+      "locally_imported": false
+    },
+    {
+      "line": 97,
+      "name": "_d",
+      "method": "_billing_overview",
+      "locally_imported": false
+    },
+    {
+      "line": 176,
+      "name": "_d",
+      "method": "_billing_require_admin",
+      "locally_imported": false
+    },
+    {
+      "line": 181,
+      "name": "_d",
+      "method": "_billing_require_admin",
+      "locally_imported": false
+    },
+    {
+      "line": 197,
+      "name": "_b",
+      "method": "_billing_buy_flow",
+      "locally_imported": false
+    },
+    {
+      "line": 612,
+      "name": "_d",
+      "method": "_billing_limit_screen",
+      "locally_imported": false
+    }
+  ],
+  "hermes_cli/cli_voice_mixin.py": [
+    {
+      "line": 9,
+      "name": "logger",
+      "method": "Module level",
+      "locally_imported": false
+    },
+    {
+      "line": 150,
+      "name": "_cprint",
+      "method": "_voice_start_recording",
+      "locally_imported": false
+    },
+    {
+      "line": 400,
+      "name": "_cprint",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 401,
+      "name": "_cprint",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 402,
+      "name": "_cprint",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 403,
+      "name": "_cprint",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 435,
+      "name": "_cprint",
+      "method": "_disable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 452,
+      "name": "_cprint",
+      "method": "_toggle_voice_tts",
+      "locally_imported": false
+    },
+    {
+      "line": 460,
+      "name": "_cprint",
+      "method": "_show_voice_status",
+      "locally_imported": false
+    },
+    {
+      "line": 461,
+      "name": "_cprint",
+      "method": "_show_voice_status",
+      "locally_imported": false
+    },
+    {
+      "line": 462,
+      "name": "_cprint",
+      "method": "_show_voice_status",
+      "locally_imported": false
+    },
+    {
+      "line": 463,
+      "name": "_cprint",
+      "method": "_show_voice_status",
+      "locally_imported": false
+    },
+    {
+      "line": 468,
+      "name": "_cprint",
+      "method": "_show_voice_status",
+      "locally_imported": false
+    },
+    {
+      "line": 469,
+      "name": "_cprint",
+      "method": "_show_voice_status",
+      "locally_imported": false
+    },
+    {
+      "line": 124,
+      "name": "_cprint",
+      "method": "_on_silence",
+      "locally_imported": false
+    },
+    {
+      "line": 199,
+      "name": "_cprint",
+      "method": "_voice_stop_and_transcribe",
+      "locally_imported": false
+    },
+    {
+      "line": 348,
+      "name": "_cprint",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 356,
+      "name": "_cprint",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 363,
+      "name": "_cprint",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 440,
+      "name": "_cprint",
+      "method": "_toggle_voice_tts",
+      "locally_imported": false
+    },
+    {
+      "line": 471,
+      "name": "_cprint",
+      "method": "_show_voice_status",
+      "locally_imported": false
+    },
+    {
+      "line": 150,
+      "name": "_ACCENT",
+      "method": "_voice_start_recording",
+      "locally_imported": false
+    },
+    {
+      "line": 150,
+      "name": "_RST",
+      "method": "_voice_start_recording",
+      "locally_imported": false
+    },
+    {
+      "line": 150,
+      "name": "_DIM",
+      "method": "_voice_start_recording",
+      "locally_imported": false
+    },
+    {
+      "line": 150,
+      "name": "_RST",
+      "method": "_voice_start_recording",
+      "locally_imported": false
+    },
+    {
+      "line": 193,
+      "name": "_cprint",
+      "method": "_voice_stop_and_transcribe",
+      "locally_imported": false
+    },
+    {
+      "line": 228,
+      "name": "_cprint",
+      "method": "_voice_stop_and_transcribe",
+      "locally_imported": false
+    },
+    {
+      "line": 330,
+      "name": "_cprint",
+      "method": "_voice_speak_response",
+      "locally_imported": false
+    },
+    {
+      "line": 358,
+      "name": "_cprint",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 365,
+      "name": "_cprint",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 400,
+      "name": "_ACCENT",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 400,
+      "name": "_RST",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 401,
+      "name": "_DIM",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 401,
+      "name": "_RST",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 402,
+      "name": "_DIM",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 402,
+      "name": "_RST",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 403,
+      "name": "_DIM",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 403,
+      "name": "_RST",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 435,
+      "name": "_DIM",
+      "method": "_disable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 435,
+      "name": "_RST",
+      "method": "_disable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 450,
+      "name": "_cprint",
+      "method": "_toggle_voice_tts",
+      "locally_imported": false
+    },
+    {
+      "line": 452,
+      "name": "_ACCENT",
+      "method": "_toggle_voice_tts",
+      "locally_imported": false
+    },
+    {
+      "line": 452,
+      "name": "_RST",
+      "method": "_toggle_voice_tts",
+      "locally_imported": false
+    },
+    {
+      "line": 460,
+      "name": "_BOLD",
+      "method": "_show_voice_status",
+      "locally_imported": false
+    },
+    {
+      "line": 460,
+      "name": "_RST",
+      "method": "_show_voice_status",
+      "locally_imported": false
+    },
+    {
+      "line": 469,
+      "name": "_BOLD",
+      "method": "_show_voice_status",
+      "locally_imported": false
+    },
+    {
+      "line": 469,
+      "name": "_RST",
+      "method": "_show_voice_status",
+      "locally_imported": false
+    },
+    {
+      "line": 124,
+      "name": "_DIM",
+      "method": "_on_silence",
+      "locally_imported": false
+    },
+    {
+      "line": 124,
+      "name": "_RST",
+      "method": "_on_silence",
+      "locally_imported": false
+    },
+    {
+      "line": 199,
+      "name": "_DIM",
+      "method": "_voice_stop_and_transcribe",
+      "locally_imported": false
+    },
+    {
+      "line": 199,
+      "name": "_RST",
+      "method": "_voice_stop_and_transcribe",
+      "locally_imported": false
+    },
+    {
+      "line": 221,
+      "name": "_cprint",
+      "method": "_voice_stop_and_transcribe",
+      "locally_imported": false
+    },
+    {
+      "line": 224,
+      "name": "_cprint",
+      "method": "_voice_stop_and_transcribe",
+      "locally_imported": false
+    },
+    {
+      "line": 252,
+      "name": "_cprint",
+      "method": "_voice_stop_and_transcribe",
+      "locally_imported": false
+    },
+    {
+      "line": 348,
+      "name": "_DIM",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 348,
+      "name": "_RST",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 356,
+      "name": "_ACCENT",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 356,
+      "name": "_RST",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 363,
+      "name": "_ACCENT",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 363,
+      "name": "_RST",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 368,
+      "name": "_cprint",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 369,
+      "name": "_cprint",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 370,
+      "name": "_cprint",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 372,
+      "name": "_cprint",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 440,
+      "name": "_DIM",
+      "method": "_toggle_voice_tts",
+      "locally_imported": false
+    },
+    {
+      "line": 440,
+      "name": "_RST",
+      "method": "_toggle_voice_tts",
+      "locally_imported": false
+    },
+    {
+      "line": 193,
+      "name": "_DIM",
+      "method": "_voice_stop_and_transcribe",
+      "locally_imported": false
+    },
+    {
+      "line": 193,
+      "name": "_RST",
+      "method": "_voice_stop_and_transcribe",
+      "locally_imported": false
+    },
+    {
+      "line": 228,
+      "name": "_DIM",
+      "method": "_voice_stop_and_transcribe",
+      "locally_imported": false
+    },
+    {
+      "line": 228,
+      "name": "_RST",
+      "method": "_voice_stop_and_transcribe",
+      "locally_imported": false
+    },
+    {
+      "line": 240,
+      "name": "_cprint",
+      "method": "_voice_stop_and_transcribe",
+      "locally_imported": false
+    },
+    {
+      "line": 330,
+      "name": "_DIM",
+      "method": "_voice_speak_response",
+      "locally_imported": false
+    },
+    {
+      "line": 330,
+      "name": "_RST",
+      "method": "_voice_speak_response",
+      "locally_imported": false
+    },
+    {
+      "line": 358,
+      "name": "_DIM",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 358,
+      "name": "_RST",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 365,
+      "name": "_DIM",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 365,
+      "name": "_RST",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 450,
+      "name": "_DIM",
+      "method": "_toggle_voice_tts",
+      "locally_imported": false
+    },
+    {
+      "line": 450,
+      "name": "_RST",
+      "method": "_toggle_voice_tts",
+      "locally_imported": false
+    },
+    {
+      "line": 221,
+      "name": "_DIM",
+      "method": "_voice_stop_and_transcribe",
+      "locally_imported": false
+    },
+    {
+      "line": 221,
+      "name": "_RST",
+      "method": "_voice_stop_and_transcribe",
+      "locally_imported": false
+    },
+    {
+      "line": 224,
+      "name": "_DIM",
+      "method": "_voice_stop_and_transcribe",
+      "locally_imported": false
+    },
+    {
+      "line": 224,
+      "name": "_RST",
+      "method": "_voice_stop_and_transcribe",
+      "locally_imported": false
+    },
+    {
+      "line": 252,
+      "name": "_DIM",
+      "method": "_voice_stop_and_transcribe",
+      "locally_imported": false
+    },
+    {
+      "line": 252,
+      "name": "_RST",
+      "method": "_voice_stop_and_transcribe",
+      "locally_imported": false
+    },
+    {
+      "line": 268,
+      "name": "_cprint",
+      "method": "_restart_recording",
+      "locally_imported": false
+    },
+    {
+      "line": 368,
+      "name": "_BOLD",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 368,
+      "name": "_RST",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 369,
+      "name": "_DIM",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 369,
+      "name": "_RST",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 370,
+      "name": "_BOLD",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 370,
+      "name": "_RST",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 372,
+      "name": "_BOLD",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 372,
+      "name": "_RST",
+      "method": "_enable_voice_mode",
+      "locally_imported": false
+    },
+    {
+      "line": 240,
+      "name": "_DIM",
+      "method": "_voice_stop_and_transcribe",
+      "locally_imported": false
+    },
+    {
+      "line": 240,
+      "name": "_RST",
+      "method": "_voice_stop_and_transcribe",
+      "locally_imported": false
+    },
+    {
+      "line": 268,
+      "name": "_DIM",
+      "method": "_restart_recording",
+      "locally_imported": false
+    },
+    {
+      "line": 268,
+      "name": "_RST",
+      "method": "_restart_recording",
+      "locally_imported": false
+    }
+  ]
+}

@@ -362,7 +362,6 @@ class GatewayAuthorizationMixin:
             Platform.WEIXIN: "WEIXIN_ALLOWED_USERS",
             Platform.BLUEBUBBLES: "BLUEBUBBLES_ALLOWED_USERS",
             Platform.QQBOT: "QQ_ALLOWED_USERS",
-            Platform.YUANBAO: "YUANBAO_ALLOWED_USERS",
         }
         platform_group_user_env_map: dict = {}  # legacy telegram only, removed
         platform_group_chat_env_map = {
@@ -377,7 +376,6 @@ class GatewayAuthorizationMixin:
             Platform.WEIXIN: "WEIXIN_ALLOW_ALL_USERS",
             Platform.BLUEBUBBLES: "BLUEBUBBLES_ALLOW_ALL_USERS",
             Platform.QQBOT: "QQ_ALLOW_ALL_USERS",
-            Platform.YUANBAO: "YUANBAO_ALLOW_ALL_USERS",
         }
 
         # Plugin platforms: check the registry for auth env var names
@@ -592,10 +590,6 @@ class GatewayAuthorizationMixin:
             if config.unauthorized_dm_behavior != "pair":  # non-default → explicit override
                 return config.unauthorized_dm_behavior
 
-        # Config-driven dm_policy (WeCom / Weixin / Yuanbao / QQBot). An
-        # allowlist or disabled DM policy means the operator restricted access,
-        # so unauthorized DMs should be dropped silently rather than answered
-        # with a pairing code. An explicit pairing policy opts back into codes.
         # Prefer the profile-scoped live adapter's resolved policy in multiplex
         # mode; fall back to the default profile's config.extra.
         if platform:

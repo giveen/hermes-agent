@@ -2189,13 +2189,7 @@ class GatewayLifecycleMixin:
                 return None
             return QQAdapter(config)
 
-        elif platform == Platform.YUANBAO:
-            from gateway.platforms.yuanbao import YuanbaoAdapter, WEBSOCKETS_AVAILABLE
-            if not WEBSOCKETS_AVAILABLE:
-                logger.warning("Yuanbao: websockets not installed. Run: pip install websockets")
-                return None
             return YuanbaoAdapter(config)
-
         return None
 
     def _make_adapter_auth_check(
@@ -2469,7 +2463,7 @@ class GatewayLifecycleMixin:
         interim_assistant_messages_mode = _display_surface_mode(
             "interim_assistant_messages",
             default=True,
-            require_platform_override_for={Platform.MATTERMOST},
+            require_platform_override_for=set(),
         )
         interim_assistant_messages_enabled = (
             source.platform != Platform.WEBHOOK
@@ -2477,12 +2471,10 @@ class GatewayLifecycleMixin:
         )
         # thinking_progress is independent — if enabled, we need the progress
         # queue even when tool_progress is off (thinking relay uses same infra).
-        # Mattermost requires a per-platform opt-in: global scratch-text display
-        # is too easy to leak into busy public threads.
         _thinking_mode = _display_surface_mode(
             "thinking_progress",
             default=False,
-            require_platform_override_for={Platform.MATTERMOST},
+            require_platform_override_for=set(),
         )
         _thinking_enabled = _thinking_mode != "off"
         needs_progress_queue = tool_progress_enabled or _thinking_enabled
@@ -2796,7 +2788,7 @@ class GatewayLifecycleMixin:
         _progress_metadata = _non_conversational_metadata(_progress_metadata, platform=source.platform)
         _progress_reply_to = (
             event_message_id
-            if source.platform in (Platform.FEISHU, Platform.MATTERMOST) and source.thread_id and event_message_id
+            if source.platform in (Platform.FEISHU,) and source.thread_id and event_message_id
             else None
         )
 
@@ -3834,8 +3826,8 @@ class GatewayLifecycleMixin:
             agent.clarify_callback = _clarify_callback_sync
 
             # Show assistant thinking between tool calls — independent of
-            # tool_progress mode. Mattermost needs an explicit per-platform
-            # opt-in so global scratch-text display does not leak into threads.
+            # tool_progress mode. Per-platform opt-in prevents global
+            # scratch-text display from leaking into busy public threads.
             agent.thinking_progress = _thinking_enabled
             # Store agent reference for interrupt support
             agent_holder[0] = agent

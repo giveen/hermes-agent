@@ -458,15 +458,11 @@ Enable/disable via `hermes tools` (interactive) or `hermes tools enable/disable 
 | `kanban` | Multi-agent work-queue tools (gated to workers) |
 | `debugging` | Extra introspection/debug tools (off by default) |
 | `safe` | Minimal, low-risk toolset for locked-down sessions |
-| `spotify` | Spotify playback and playlist control |
 | `homeassistant` | Smart home control (off by default) |
 | `discord` | Discord integration tools |
 | `discord_admin` | Discord admin/moderation tools |
 | `feishu_doc` | Feishu (Lark) document tools |
 | `feishu_drive` | Feishu (Lark) drive tools |
-| `yuanbao` | Yuanbao integration tools |
-| `rl` | Reinforcement learning tools (off by default) |
-
 Full enumeration lives in `toolsets.py` as the `TOOLSETS` dict; `_HERMES_CORE_TOOLS` is the default bundle most platforms inherit from.
 
 Tool changes take effect on `/reset` (new session). They do NOT apply mid-conversation to preserve prompt caching.

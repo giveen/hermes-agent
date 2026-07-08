@@ -525,8 +525,8 @@ def _resolve_gateway_display_bool(
     """Resolve a boolean display setting with optional platform-only opt-in.
 
     Some display features expose assistant scratch text rather than deliberate
-    user-facing output.  For high-noise threaded chat surfaces such as
-    Mattermost, a global opt-in is too broad: they must be enabled with an
+    user-facing output.  For high-noise threaded chat surfaces,
+    a global opt-in is too broad: they must be enabled with an
     explicit display.platforms.<platform>.<setting> override.
     """
     current_platform = _gateway_platform_value(platform or platform_key)
@@ -1787,7 +1787,6 @@ logger = logging.getLogger(__name__)
 
 _OWN_POLICY_OPEN_ENV = {
     Platform.WEIXIN: ("WEIXIN_DM_POLICY", "WEIXIN_GROUP_POLICY", "WEIXIN_ALLOW_ALL_USERS"),
-    Platform.YUANBAO: ("YUANBAO_DM_POLICY", "YUANBAO_GROUP_POLICY", "YUANBAO_ALLOW_ALL_USERS"),
     Platform.QQBOT: (None, None, "QQ_ALLOW_ALL_USERS"),
 }
 
@@ -3273,7 +3272,6 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
             "WEIXIN_ALLOWED_USERS",
             "BLUEBUBBLES_ALLOWED_USERS",
             "QQ_ALLOWED_USERS",
-            "YUANBAO_ALLOWED_USERS",
             "GATEWAY_ALLOWED_USERS",
         )
         _builtin_allow_all_vars = (
@@ -3285,7 +3283,6 @@ class GatewayRunner(GatewayAuthorizationMixin, GatewayKanbanWatchersMixin, Gatew
             "WEIXIN_ALLOW_ALL_USERS",
             "BLUEBUBBLES_ALLOW_ALL_USERS",
             "QQ_ALLOW_ALL_USERS",
-            "YUANBAO_ALLOW_ALL_USERS",
         )
         # Also pick up plugin-registered platforms — each entry can declare
         # its own allowed_users_env / allow_all_env, so the warning stays

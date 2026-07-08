@@ -5286,46 +5286,6 @@ _PLATFORM_OVERRIDES: dict[str, dict[str, Any]] = {
         "env_vars": ("QQ_APP_ID", "QQ_CLIENT_SECRET", "QQ_ALLOWED_USERS"),
         "required_env": ("QQ_APP_ID", "QQ_CLIENT_SECRET"),
     },
-    "yuanbao": {
-        "name": "Yuanbao (元宝)",
-        "description": "Connect Hermes to Tencent Yuanbao.",
-        "docs_url": "",
-        "required_env": (),
-    },
-    "api_server": {
-        "name": "API server",
-        "description": "Expose Hermes as an OpenAI-compatible HTTP API for tools like Open WebUI.",
-        "docs_url": "https://hermes-agent.nousresearch.com/docs/user-guide/messaging/",
-        "env_vars": (
-            "API_SERVER_ENABLED",
-            "API_SERVER_KEY",
-            "API_SERVER_PORT",
-            "API_SERVER_HOST",
-            "API_SERVER_MODEL_NAME",
-        ),
-        "required_env": (),
-    },
-    "webhook": {
-        "name": "Webhooks",
-        "description": "Receive events from GitHub, GitLab, and other webhook sources.",
-        "docs_url": "https://hermes-agent.nousresearch.com/docs/user-guide/messaging/webhooks/",
-        "env_vars": ("WEBHOOK_ENABLED", "WEBHOOK_PORT", "WEBHOOK_SECRET"),
-        "required_env": (),
-    },
-}
-
-# Display order: well-known platforms surface first; unknown plugins fall to
-# the end alphabetically.
-_PLATFORM_ORDER: tuple[str, ...] = (
-    "discord",
-    "slack",
-    "signal",
-    "bluebubbles",
-    "email",
-    "weixin",
-    "qqbot",
-    "yuanbao",
-    "api_server",
     "webhook",
 )
 
@@ -11166,7 +11126,6 @@ class ToolsetProviderSelect(BaseModel):
 # post-selection model pickers (`_configure_imagegen_model_for_plugin` /
 # `_configure_videogen_model_for_plugin` in tools_config.py).
 _MODEL_CATALOG_TOOLSETS = {
-    "image_gen": "image_gen",
     "video_gen": "video_gen",
 }
 
@@ -11178,10 +11137,6 @@ def _resolve_toolset_model_plugin(ts_key: str, provider_row: dict) -> Optional[s
     the managed "Nous Subscription" image row instead carries the legacy
     ``imagegen_backend: "fal"`` marker (same underlying FAL catalog).
     """
-    if ts_key == "image_gen":
-        return provider_row.get("image_gen_plugin_name") or (
-            "fal" if provider_row.get("imagegen_backend") else None
-        )
     if ts_key == "video_gen":
         return provider_row.get("video_gen_plugin_name")
     return None
@@ -11190,12 +11145,9 @@ def _resolve_toolset_model_plugin(ts_key: str, provider_row: dict) -> Optional[s
 def _toolset_model_catalog(ts_key: str, plugin_name: str):
     """Return ``(catalog_dict, default_model)`` for a toolset's plugin backend."""
     from hermes_cli.tools_config import (
-        _plugin_image_gen_catalog,
         _plugin_video_gen_catalog,
     )
 
-    if ts_key == "image_gen":
-        return _plugin_image_gen_catalog(plugin_name)
     return _plugin_video_gen_catalog(plugin_name)
 
 
@@ -11288,7 +11240,7 @@ class ToolsetModelSelect(BaseModel):
 async def select_toolset_model(
     name: str, body: ToolsetModelSelect, profile: Optional[str] = None
 ):
-    """Persist a backend model selection (``image_gen.model`` / ``video_gen.model``).
+    """Persist a backend model selection (``video_gen.model``).
 
     Validates the model against the resolved backend's catalog — the same
     write the CLI's post-selection model picker performs. Returns 400 for

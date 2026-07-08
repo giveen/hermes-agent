@@ -240,10 +240,10 @@ class TestPlatformDefaults:
         assert resolve_display_setting({}, "discord", "tool_progress") == "all"
 
     def test_medium_tier_platforms(self):
-        """Mattermost, Matrix, Feishu, WhatsApp default to 'new' tool progress."""
+        """Matrix, Feishu, WhatsApp default to 'new' tool progress."""
         from gateway.display_config import resolve_display_setting
 
-        for plat in ("mattermost", "matrix", "feishu", "whatsapp"):
+        for plat in ("matrix", "feishu", "whatsapp"):
             assert resolve_display_setting({}, plat, "tool_progress") == "new", plat
 
     def test_telegram_defaults_tool_progress_off(self):

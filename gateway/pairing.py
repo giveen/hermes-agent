@@ -68,7 +68,6 @@ _PLATFORM_ALLOWLIST_ENV = {
     "weixin": "WEIXIN_ALLOWED_USERS",
     "bluebubbles": "BLUEBUBBLES_ALLOWED_USERS",
     "qqbot": "QQ_ALLOWED_USERS",
-    "yuanbao": "YUANBAO_ALLOWED_USERS",
 }
 
 

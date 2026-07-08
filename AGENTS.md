@@ -245,7 +245,6 @@ hermes-agent/
 │   ├── platforms/        # Adapter per platform (telegram, discord, slack, whatsapp,
 │   │                     #   homeassistant, signal, matrix, mattermost, email, sms,
 │   │                     #   dingtalk, wecom, weixin, feishu, qqbot, bluebubbles,
-│   │                     #   yuanbao, webhook, api_server, ...). See ADDING_A_PLATFORM.md.
 │   └── builtin_hooks/    # Extension point for always-registered gateway hooks (none shipped)
 ├── plugins/              # Plugin system (see "Plugins" section below)
 │   ├── memory/           # Memory-provider plugins (honcho, mem0, supermemory, ...)
@@ -255,8 +254,7 @@ hermes-agent/
 │   ├── hermes-achievements/  # Gamified achievement tracking
 │   ├── observability/    # Metrics / traces / logs plugin
 │   ├── image_gen/        # Image-generation providers
-│   └── <others>/         # disk-cleanup, google_meet, platforms, spotify,
-│                         #   strike-freedom-cockpit, ...
+│   └── <others>/         # disk-cleanup, google_meet, platforms,
 ├── optional-skills/      # Heavier/niche skills shipped but NOT active by default
 ├── skills/               # Built-in skills bundled with the repo
 ├── ui-tui/               # Ink (React) terminal UI — `hermes --tui`
@@ -972,7 +970,6 @@ Current toolset keys: `browser`, `clarify`, `code_execution`, `cronjob`,
 `debugging`, `delegation`, `discord`, `discord_admin`, `feishu_doc`,
 `feishu_drive`, `file`, `homeassistant`, `image_gen`, `kanban`, `memory`,
 `messaging`, `moa`, `rl`, `safe`, `search`, `session_search`, `skills`,
-`spotify`, `terminal`, `todo`, `tts`, `video`, `vision`, `web`, `yuanbao`.
 
 Enable/disable per platform via `hermes tools` (the curses UI) or the
 `tools.<platform>.enabled` / `tools.<platform>.disabled` lists in

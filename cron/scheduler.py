@@ -204,7 +204,6 @@ def _resolve_cron_enabled_toolsets(job: dict, cfg: dict) -> list[str] | None:
 _KNOWN_DELIVERY_PLATFORMS = frozenset({
     "discord", "signal",
     "weixin", "email", "webhook", "bluebubbles",
-    "qqbot", "yuanbao",
 })
 
 # Platforms that support a configured cron/notification home target, mapped to

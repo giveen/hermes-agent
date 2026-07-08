@@ -65,7 +65,6 @@ CONFIGURABLE_TOOLSETS = [
     ("code_execution",  "⚡ Code Execution",            "execute_code"),
     ("vision",          "👁️  Vision / Image Analysis",  "vision_analyze"),
     ("video",           "🎬 Video Analysis",            "video_analyze (requires video-capable model)"),
-    ("image_gen",       "🎨 Image Generation",          "image_generate"),
     ("video_gen",       "🎬 Video Generation",          "video_generate (text/image/reference)"),
     ("x_search",        "🐦 X (Twitter) Search",        "x_search (requires xAI OAuth or XAI_API_KEY)"),
     ("tts",             "🔊 Text-to-Speech",            "text_to_speech"),
@@ -77,11 +76,8 @@ CONFIGURABLE_TOOLSETS = [
     ("clarify",         "❓ Clarifying Questions",      "clarify"),
     ("delegation",      "👥 Task Delegation",           "delegate_task"),
     ("cronjob",         "⏰ Cron Jobs",                 "create/list/update/pause/resume/run, with optional attached skills"),
-    ("spotify",          "🎵 Spotify",                  "playback, search, playlists, library"),
     ("discord",         "💬 Discord (read/participate)", "fetch messages, search members, create thread"),
     ("discord_admin",   "🛡️  Discord Server Admin",    "list channels/roles, pin, assign roles"),
-    ("yuanbao",          "🤖 Yuanbao",                  "group info, member queries, DM"),
-    ("computer_use",     "🖱️  Computer Use (macOS/Windows/Linux)", "background desktop control via cua-driver"),
 ]
 
 
@@ -114,7 +110,8 @@ def gui_toolset_label(label: str) -> str:
 # `hermes tools` → X (Twitter) Search setup walks users through credential
 # setup. The tool's check_fn means the schema still won't appear to the
 # model if the credential later goes missing or expires.
-_DEFAULT_OFF_TOOLSETS = {"spotify", "discord", "discord_admin", "video", "video_gen", "x_search"}
+
+_DEFAULT_OFF_TOOLSETS = {"discord", "discord_admin", "video", "video_gen", "x_search"}
 
 
 def _xai_credentials_present() -> bool:
@@ -170,7 +167,6 @@ def _get_effective_configurable_toolsets():
     Plugin toolsets are appended at the end so they appear after the
     built-in toolsets in the TUI checklist. A plugin whose toolset key
     already appears in ``CONFIGURABLE_TOOLSETS`` is skipped — bundled
-    plugins (e.g. ``plugins/spotify``) share their toolset key with the
     built-in entry, and we want the built-in label/description to win.
     Without the dedupe, ``hermes tools`` → "reconfigure existing" would
     list the same toolset twice.
@@ -359,32 +355,6 @@ TOOL_CATEGORIES = {
             },
         ],
     },
-    "image_gen": {
-        "name": "Image Generation",
-        "icon": "🎨",
-        # Per-provider rows for FAL.ai (`plugins/image_gen/fal`), OpenAI,
-        # OpenAI Codex, and xAI are injected at runtime from each
-        # ``plugins.image_gen.<vendor>`` package via
-        # ``_plugin_image_gen_providers()`` in ``_visible_providers``.
-        # Only non-provider UX setup-flow rows remain here:
-        #   - "Nous Subscription" — managed FAL billed via the Nous
-        #     subscription (requires_nous_auth + override_env_vars).
-        #     Uses the fal plugin as the underlying backend but has a
-        #     distinct setup UX.
-        # Mirrors the shape browser/video_gen ship today.
-        "providers": [
-            {
-                "name": "Nous Subscription",
-                "badge": "subscription",
-                "tag": "Managed FAL image generation billed to your subscription",
-                "env_vars": [],
-                "requires_nous_auth": True,
-                "managed_nous_feature": "image_gen",
-                "override_env_vars": ["FAL_KEY"],
-                "imagegen_backend": "fal",
-            },
-        ],
-    },
     "video_gen": {
         "name": "Video Generation",
         "icon": "🎬",
@@ -489,18 +459,6 @@ TOOL_CATEGORIES = {
                 ],
                 "browser_provider": "camofox",
                 "post_setup": "camofox",
-            },
-        ],
-    },
-    "spotify": {
-        "name": "Spotify",
-        "icon": "🎵",
-        "providers": [
-            {
-                "name": "Spotify Web API",
-                "tag": "PKCE OAuth — opens the setup wizard",
-                "env_vars": [],
-                "post_setup": "spotify",
             },
         ],
     },
@@ -1339,34 +1297,6 @@ def _run_post_setup(post_setup_key: str):
         _print_info("    No API key required. DuckDuckGo enforces server-side rate limits.")
         _print_info("    Pair with an extract provider if you also need web_extract.")
 
-    elif post_setup_key == "spotify":
-        # Run the full `hermes auth spotify` flow — if the user has no
-        # client_id yet, this drops them into the interactive wizard
-        # (opens the Spotify dashboard, prompts for client_id, persists
-        # to ~/.hermes/.env), then continues straight into PKCE. If they
-        # already have an app, it skips the wizard and just does OAuth.
-        from types import SimpleNamespace
-        try:
-            from hermes_cli.auth import login_spotify_command
-        except Exception as exc:
-            _print_warning(f"    Could not load Spotify auth: {exc}")
-            _print_info("    Run manually: hermes auth spotify")
-            return
-        _print_info("    Starting Spotify login...")
-        try:
-            login_spotify_command(SimpleNamespace(
-                client_id=None, redirect_uri=None, scope=None,
-                no_browser=False, timeout=None,
-            ))
-            _print_success("    Spotify authenticated")
-        except SystemExit as exc:
-            # User aborted the wizard, or OAuth failed — don't fail the
-            # toolset enable; they can retry with `hermes auth spotify`.
-            _print_warning(f"    Spotify login did not complete: {exc}")
-            _print_info("    Run later: hermes auth spotify")
-        except Exception as exc:
-            _print_warning(f"    Spotify login failed: {exc}")
-            _print_info("    Run manually: hermes auth spotify")
 
     elif post_setup_key == "langfuse":
         # Install the langfuse SDK.
@@ -1484,7 +1414,6 @@ def valid_post_setup_keys() -> Set[str]:
     # Plugin-registered providers can declare their own post_setup hooks.
     for builder in (
         _plugin_web_search_providers,
-        _plugin_image_gen_providers,
         _plugin_video_gen_providers,
         _plugin_browser_providers,
     ):
@@ -1633,12 +1562,10 @@ def _get_platform_tools(
             if ts in configurable_keys and _toolset_allowed_for_platform(ts, platform)
         }
         # Mixed config: composite toolset alongside configurables (e.g.
-        # ``[hermes-cli, spotify]`` after enabling Spotify via ``hermes
         # tools``). Without expansion the composite name is silently dropped,
         # leaving sessions with only the configurable opt-ins and no native
         # tools. Mirror the else-branch's subset inference, but apply
         # _DEFAULT_OFF_TOOLSETS only to the implicit expansion — anything the
-        # user explicitly listed (e.g. ``spotify``) must survive.
         composite_tools = set()
         for ts_name in toolset_names:
             if ts_name in configurable_keys or ts_name in plugin_ts_keys:
@@ -1765,9 +1692,7 @@ def _get_platform_tools(
             claimed.update(ts_tools)
 
     # Plugin toolsets: enabled by default unless explicitly disabled, or
-    # unless the toolset is in _DEFAULT_OFF_TOOLSETS (e.g. spotify —
     # shipped as a bundled plugin but user must opt in via `hermes tools`
-    # so we don't ship 7 Spotify tool schemas to users who don't use it).
     # A plugin toolset is "known" for a platform once `hermes tools`
     # has been saved for that platform (tracked via known_plugin_toolsets).
     # Unknown plugins default to enabled; known-but-absent = disabled.
@@ -1973,7 +1898,7 @@ def _toolset_has_keys(
         except Exception:
             return False
 
-    if ts_key in {"web", "image_gen", "video_gen", "tts", "browser"}:
+    if ts_key in {"web", "video_gen", "tts", "browser"}:
         features = get_nous_subscription_features(config, force_fresh=force_fresh)
         feature = features.features.get(ts_key)
         if feature and (feature.available or feature.managed_by_nous):
@@ -2134,46 +2059,6 @@ def _configure_toolset(
     else:
         # Simple fallback for vision, moa, etc.
         _configure_simple_requirements(ts_key)
-
-
-def _plugin_image_gen_providers() -> list[dict]:
-    """Build picker-row dicts from plugin-registered image gen providers.
-
-    Each returned dict looks like a regular ``TOOL_CATEGORIES`` provider
-    row but carries an ``image_gen_plugin_name`` marker so downstream
-    code (config writing, model picker) knows to route through the
-    plugin registry. Every image-gen backend is a plugin now — there
-    are no hardcoded rows left in ``TOOL_CATEGORIES["image_gen"]`` for
-    this function to dedupe against (see issue #26241).
-    """
-    try:
-        from agent.image_gen_registry import list_providers
-        from hermes_cli.plugins import _ensure_plugins_discovered
-
-        _ensure_plugins_discovered()
-        providers = list_providers()
-    except Exception:
-        return []
-
-    rows: list[dict] = []
-    for provider in providers:
-        try:
-            schema = provider.get_setup_schema()
-        except Exception:
-            continue
-        if not isinstance(schema, dict):
-            continue
-        row = {
-            "name": schema.get("name", provider.display_name),
-            "badge": schema.get("badge", ""),
-            "tag": schema.get("tag", ""),
-            "env_vars": schema.get("env_vars", []),
-            "image_gen_plugin_name": provider.name,
-        }
-        if schema.get("post_setup"):
-            row["post_setup"] = schema["post_setup"]
-        rows.append(row)
-    return rows
 
 
 def _plugin_video_gen_providers() -> list[dict]:
@@ -2432,12 +2317,7 @@ def _visible_providers(
             continue
         visible.append(provider)
 
-    # Inject plugin-registered image_gen backends (OpenAI today, more
-    # later) so the picker lists them alongside FAL / Nous Subscription.
-    if cat.get("name") == "Image Generation":
-        visible.extend(_plugin_image_gen_providers())
-
-    # Inject plugin-registered video_gen backends. Unlike image_gen,
+    # Inject plugin-registered video_gen backends.
     # video_gen has NO hardcoded providers — every backend is a plugin.
     if cat.get("name") == "Video Generation":
         visible.extend(_plugin_video_gen_providers())
@@ -2546,25 +2426,6 @@ def _toolset_needs_configuration_prompt(
     if ts_key == "browser":
         browser_cfg = config.get("browser", {})
         return not isinstance(browser_cfg, dict) or "cloud_provider" not in browser_cfg
-    if ts_key == "image_gen":
-        # Satisfied when the in-tree FAL backend is configured OR any
-        # plugin-registered image gen provider is available.
-        if fal_key_is_configured():
-            return False
-        try:
-            from agent.image_gen_registry import list_providers
-            from hermes_cli.plugins import _ensure_plugins_discovered
-
-            _ensure_plugins_discovered()
-            for provider in list_providers():
-                try:
-                    if provider.is_available():
-                        return False
-                except Exception:
-                    continue
-        except Exception:
-            pass
-        return True
     if ts_key == "video_gen":
         # Satisfied when any plugin-registered video gen provider reports
         # available — no in-tree fallback (every backend is a plugin).

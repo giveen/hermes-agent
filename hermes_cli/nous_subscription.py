@@ -36,7 +36,6 @@ _DEFAULT_PLATFORM_TOOLSETS = {
 # consistent with the per-category feature gates in get_nous_subscription_features.
 MANAGED_FEATURE_COVERAGE_CATEGORY: Dict[str, str] = {
     "web": "firecrawl",
-    "image_gen": "fal",
     "video_gen": "fal-video",
     "tts": "openai-audio",
     # STT shares the TTS coverage category: both ride the managed
@@ -80,9 +79,6 @@ class NousSubscriptionFeatures:
     def web(self) -> NousFeatureState:
         return self.features["web"]
 
-    @property
-    def image_gen(self) -> NousFeatureState:
-        return self.features["image_gen"]
 
     @property
     def tts(self) -> NousFeatureState:
@@ -105,7 +101,7 @@ class NousSubscriptionFeatures:
         return self.features["modal"]
 
     def items(self) -> Iterable[NousFeatureState]:
-        ordered = ("web", "image_gen", "video_gen", "tts", "stt", "browser", "modal")
+        ordered = ("web", "video_gen", "tts", "stt", "browser", "modal")
         for key in ordered:
             yield self.features[key]
 
@@ -360,7 +356,6 @@ def get_nous_subscription_features(
     subscribed = provider_is_nous or nous_auth_present
 
     web_tool_enabled = _toolset_enabled(config, "web")
-    image_tool_enabled = _toolset_enabled(config, "image_gen")
     video_tool_enabled = _toolset_enabled(config, "video_gen")
     tts_tool_enabled = _toolset_enabled(config, "tts")
     browser_tool_enabled = _toolset_enabled(config, "browser")
@@ -401,8 +396,6 @@ def get_nous_subscription_features(
     tts_use_gateway = _uses_gateway(tts_cfg)
     stt_use_gateway = _uses_gateway(stt_cfg)
     browser_use_gateway = _uses_gateway(browser_cfg)
-    image_gen_cfg = config.get("image_gen") if isinstance(config.get("image_gen"), dict) else {}
-    image_use_gateway = _uses_gateway(image_gen_cfg)
     video_gen_cfg = config.get("video_gen") if isinstance(config.get("video_gen"), dict) else {}
     video_use_gateway = _uses_gateway(video_gen_cfg)
 
@@ -442,8 +435,6 @@ def get_nous_subscription_features(
         direct_exa = False
         direct_parallel = False
         direct_tavily = False
-    if image_use_gateway:
-        direct_fal = False
     if video_use_gateway:
         direct_fal_video = False
     if tts_use_gateway:
@@ -463,12 +454,6 @@ def get_nous_subscription_features(
         and nous_auth_present
         and is_managed_tool_gateway_ready("firecrawl")
         and _entitled_for("firecrawl")
-    )
-    managed_image_available = (
-        managed_tools_flag
-        and nous_auth_present
-        and is_managed_tool_gateway_ready("fal-queue")
-        and _entitled_for("fal")
     )
     # Video gen rides the same fal-queue gateway as image gen, but the free tool
     # pool funds image and NOT video — so gate it on its own coverage category
@@ -531,9 +516,6 @@ def get_nous_subscription_features(
         managed_web_available or direct_exa or direct_firecrawl or direct_parallel or direct_tavily or direct_searxng
     )
 
-    image_managed = image_tool_enabled and managed_image_available and not direct_fal
-    image_active = bool(image_tool_enabled and (image_managed or direct_fal))
-    image_available = bool(managed_image_available or direct_fal)
 
     video_managed = video_tool_enabled and managed_video_available and not direct_fal_video
     video_active = bool(video_tool_enabled and (video_managed or direct_fal_video))
@@ -647,18 +629,6 @@ def get_nous_subscription_features(
             toolset_enabled=web_tool_enabled,
             current_provider=web_backend or web_search_backend or "",
             explicit_configured=bool(web_backend or web_search_backend),
-        ),
-        "image_gen": NousFeatureState(
-            key="image_gen",
-            label="Image generation",
-            included_by_default=True,
-            available=image_available,
-            active=image_active,
-            managed_by_nous=image_managed,
-            direct_override=image_active and not image_managed,
-            toolset_enabled=image_tool_enabled,
-            current_provider="FAL" if direct_fal else ("Nous Subscription" if image_managed else ""),
-            explicit_configured=direct_fal,
         ),
         "video_gen": NousFeatureState(
             key="video_gen",
@@ -823,13 +793,6 @@ def apply_nous_managed_defaults(
         browser_cfg["cloud_provider"] = "browser-use"
         changed.add("browser")
 
-    if "image_gen" in selected_toolsets and not fal_key_is_configured():
-        image_cfg = config.get("image_gen")
-        if not isinstance(image_cfg, dict):
-            image_cfg = {}
-            config["image_gen"] = image_cfg
-        image_cfg["use_gateway"] = True
-        changed.add("image_gen")
 
     # Video gen is not funded by the free tool pool, so only wire managed video
     # defaults for users entitled to it (paid). Pool-only users keep video off.
@@ -855,7 +818,6 @@ def apply_nous_managed_defaults(
 
 _GATEWAY_TOOL_LABELS = {
     "web": "Web search & extract (Firecrawl)",
-    "image_gen": "Image generation (FAL)",
     "video_gen": "Video generation (FAL)",
     "tts": "Text-to-speech (OpenAI TTS)",
     "stt": "Speech-to-text (OpenAI Whisper)",
@@ -874,7 +836,6 @@ def _get_gateway_direct_credentials() -> Dict[str, bool]:
             or get_env_value("TAVILY_API_KEY")
             or get_env_value("EXA_API_KEY")
         ),
-        "image_gen": fal_direct,
         "video_gen": fal_direct,
         "tts": bool(
             resolve_openai_audio_api_key()
@@ -898,14 +859,13 @@ def _get_gateway_direct_credentials() -> Dict[str, bool]:
 
 _GATEWAY_DIRECT_LABELS = {
     "web": "Firecrawl/Exa/Parallel/Tavily key",
-    "image_gen": "FAL key",
     "video_gen": "FAL key",
     "tts": "OpenAI/ElevenLabs key",
     "stt": "OpenAI/Groq/Mistral key",
     "browser": "Browser Use/Browserbase key",
 }
 
-_ALL_GATEWAY_KEYS = ("web", "image_gen", "video_gen", "tts", "stt", "browser")
+_ALL_GATEWAY_KEYS = ("web", "video_gen", "tts", "stt", "browser")
 
 
 def get_gateway_eligible_tools(
@@ -948,7 +908,6 @@ def get_gateway_eligible_tools(
     # use_gateway was explicitly set.
     opted_in = {
         "web": _uses_gateway(config.get("web")),
-        "image_gen": _uses_gateway(config.get("image_gen")),
         "video_gen": _uses_gateway(config.get("video_gen")),
         "tts": _uses_gateway(config.get("tts")),
         "stt": _uses_gateway(config.get("stt")),

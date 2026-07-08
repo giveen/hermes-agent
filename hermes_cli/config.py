@@ -169,8 +169,7 @@ _ENV_VAR_NAME_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 #   the dashboard. ``config.yaml`` is the supported surface for these.
 #
 # IMPORTANT: ``HERMES_*`` overall is NOT blocked. Many legitimate
-# integration credentials follow that prefix (HERMES_LANGFUSE_PUBLIC_KEY,
-# HERMES_SPOTIFY_CLIENT_ID, ...). The
+# integration credentials follow that prefix (HERMES_LANGFUSE_PUBLIC_KEY). The
 # denylist is name-by-name on purpose so the gate stays narrow and
 # doesn't accidentally break provider setup wizards.
 #
@@ -194,7 +193,7 @@ _ENV_VAR_NAME_DENYLIST: frozenset[str] = frozenset({
     "GIT_SSH_COMMAND", "GIT_EXEC_PATH", "GIT_SHELL",
     # Hermes runtime location — never via dashboard env writer.
     # NOT a HERMES_* blanket: integration credentials (HERMES_GEMINI_*,
-    # HERMES_LANGFUSE_*, HERMES_SPOTIFY_*, ...) ARE allowed.
+    # HERMES_LANGFUSE_*) ARE allowed.
     "HERMES_HOME", "HERMES_PROFILE", "HERMES_CONFIG", "HERMES_ENV",
 })
 
@@ -3745,15 +3744,7 @@ OPTIONAL_ENV_VARS = {
         "description": "FAL API key for image and video generation",
         "prompt": "FAL API key",
         "url": "https://fal.ai/",
-        "tools": ["image_generate", "video_generate"],
-        "password": True,
-        "category": "tool",
-    },
-    "KREA_API_KEY": {
-        "description": "Krea API key for Krea 2 image generation (Medium + Large)",
-        "prompt": "Krea API key",
-        "url": "https://www.krea.ai/settings/api-tokens",
-        "tools": ["image_generate"],
+        "tools": ["video_generate"],
         "password": True,
         "category": "tool",
     },

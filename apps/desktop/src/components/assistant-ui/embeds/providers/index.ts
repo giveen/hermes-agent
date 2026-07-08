@@ -1,7 +1,6 @@
 import { instagram } from './instagram'
 import { maps } from './maps'
 import { pinterest } from './pinterest'
-import { spotify } from './spotify'
 import { tiktok } from './tiktok'
 import { twitter } from './twitter'
 import type { EmbedDescriptor, EmbedMatcher } from './types'
@@ -11,7 +10,7 @@ import { youtube } from './youtube'
 export type { EmbedDescriptor, EmbedProvider, EmbedRenderer, FrameEmbed, TweetEmbed } from './types'
 
 // All provider hosts are disjoint, so order is irrelevant — first match wins.
-const MATCHERS: EmbedMatcher[] = [youtube, vimeo, instagram, pinterest, tiktok, twitter, spotify, maps]
+const MATCHERS: EmbedMatcher[] = [youtube, vimeo, instagram, pinterest, tiktok, twitter, maps]
 
 function parseUrl(raw: string): URL | null {
   try {

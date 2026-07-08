@@ -138,7 +138,6 @@ TIPS = [
     "read_file auto-deduplicates — re-reading an unchanged file returns a lightweight stub.",
     "browser_vision takes a screenshot and analyzes it with AI — works for CAPTCHAs and visual content.",
     "browser_console can evaluate JavaScript expressions in the page context.",
-    "image_generate creates images with FLUX 2 Pro and automatic 2x upscaling.",
     "text_to_speech converts text to audio — plays as voice bubbles on Telegram.",
     "send_message can reach any connected messaging platform from within a session.",
     "The todo tool helps the agent track complex multi-step tasks during a session.",
@@ -456,9 +455,7 @@ TIPS = [
     'HERMES_RESTART_DRAIN_TIMEOUT (default 900s) caps how long /restart waits for in-flight runs before forcing.',
     'HERMES_CHECKPOINT_TIMEOUT (default 30s) caps filesystem checkpoint creation — raise it on huge monorepos.',
 
-    # --- Auxiliary Tasks & Image Generation ---
-    'image_gen.model in config.yaml picks the FAL model: flux-2/klein, gpt-image-2, nano-banana-pro, and more.',
-    'image_gen.provider routes image generation through a plugin (OpenAI Images, Codex, FAL) instead of the default.',
+    # --- Auxiliary Tasks ---
     'AUXILIARY_VISION_BASE_URL + AUXILIARY_VISION_API_KEY point vision analysis at any OpenAI-compatible endpoint.',
 
     # --- Security ---

@@ -69,9 +69,6 @@ _PROFILE_REJECTED = object()
 _BUILTIN_DELIVER_PLATFORMS = {
     "discord", "signal",
     "email",
-    "wecom_callback", "weixin", "bluebubbles",
-    "qqbot", "yuanbao",
-}
 
 DEFAULT_HOST = "0.0.0.0"
 DEFAULT_PORT = 8644

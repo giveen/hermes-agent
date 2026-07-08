@@ -222,7 +222,7 @@ class GatewayStreamConsumer:
     ) -> dict | None:
         """Return per-send metadata for stream-created messages.
 
-        Mattermost treats notify-worthy sends as user-visible final content
+        Notify-worthy sends are treated as user-visible final content
         when deciding whether a broken thread root may fall back flat.  Preview
         and progress sends keep their original metadata and remain thread-strict.
 

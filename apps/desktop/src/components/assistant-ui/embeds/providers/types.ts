@@ -7,7 +7,6 @@ export type EmbedProvider =
   | 'instagram'
   | 'openstreetmap'
   | 'pinterest'
-  | 'spotify'
   | 'tiktok'
   | 'twitter'
   | 'vimeo'

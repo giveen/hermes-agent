@@ -182,7 +182,6 @@ class Platform(Enum):
     WHATSAPP_CLOUD = "whatsapp_cloud"
     SLACK = "slack"
     SIGNAL = "signal"
-    MATTERMOST = "mattermost"
     MATRIX = "matrix"
     HOMEASSISTANT = "homeassistant"
     EMAIL = "email"
@@ -197,7 +196,6 @@ class Platform(Enum):
     WEIXIN = "weixin"
     BLUEBUBBLES = "bluebubbles"
     QQBOT = "qqbot"
-    YUANBAO = "yuanbao"
     RELAY = "relay"  # generic relay adapter fronted by the connector (EXPERIMENTAL)
     @classmethod
     def _missing_(cls, value):
@@ -588,9 +586,6 @@ _PLATFORM_CONNECTED_CHECKERS: dict[Platform, Callable[[PlatformConfig], bool]] =
     ),
     Platform.QQBOT: lambda cfg: bool(
         cfg.extra.get("app_id") and cfg.extra.get("client_secret")
-    ),
-    Platform.YUANBAO: lambda cfg: bool(
-        cfg.extra.get("app_id") and cfg.extra.get("app_secret")
     ),
     # Relay dials OUT to a connector; it is "connected" once an endpoint URL is
     # configured (extra["relay_url"] or extra["url"]). The capability descriptor
@@ -1626,48 +1621,6 @@ def _apply_env_overrides(config: GatewayConfig) -> None:
                 ),
             )
 
-    # Yuanbao — YUANBAO_APP_ID preferred
-    yuanbao_app_id = getenv("YUANBAO_APP_ID") or getenv("YUANBAO_APP_KEY")
-    yuanbao_app_secret = getenv("YUANBAO_APP_SECRET")
-    if yuanbao_app_id and yuanbao_app_secret:
-        if Platform.YUANBAO not in config.platforms:
-            config.platforms[Platform.YUANBAO] = PlatformConfig()
-        config.platforms[Platform.YUANBAO].enabled = True
-        extra = config.platforms[Platform.YUANBAO].extra
-        extra["app_id"] = yuanbao_app_id
-        extra["app_secret"] = yuanbao_app_secret
-        yuanbao_bot_id = getenv("YUANBAO_BOT_ID")
-        if yuanbao_bot_id:
-            extra["bot_id"] = yuanbao_bot_id
-        yuanbao_ws_url = getenv("YUANBAO_WS_URL")
-        if yuanbao_ws_url:
-            extra["ws_url"] = yuanbao_ws_url
-        yuanbao_api_domain = getenv("YUANBAO_API_DOMAIN")
-        if yuanbao_api_domain:
-            extra["api_domain"] = yuanbao_api_domain
-        yuanbao_route_env = getenv("YUANBAO_ROUTE_ENV")
-        if yuanbao_route_env:
-            extra["route_env"] = yuanbao_route_env
-        yuanbao_home = getenv("YUANBAO_HOME_CHANNEL")
-        if yuanbao_home:
-            config.platforms[Platform.YUANBAO].home_channel = HomeChannel(
-                platform=Platform.YUANBAO,
-                chat_id=yuanbao_home,
-                name=getenv("YUANBAO_HOME_CHANNEL_NAME", "Home"),
-                thread_id=getenv("YUANBAO_HOME_CHANNEL_THREAD_ID") or None,
-            )
-        yuanbao_dm_policy = getenv("YUANBAO_DM_POLICY")
-        if yuanbao_dm_policy:
-            extra["dm_policy"] = yuanbao_dm_policy.strip().lower()
-        yuanbao_dm_allow_from = getenv("YUANBAO_DM_ALLOW_FROM")
-        if yuanbao_dm_allow_from:
-            extra["dm_allow_from"] = yuanbao_dm_allow_from
-        yuanbao_group_policy = getenv("YUANBAO_GROUP_POLICY")
-        if yuanbao_group_policy:
-            extra["group_policy"] = yuanbao_group_policy.strip().lower()
-        yuanbao_group_allow_from = getenv("YUANBAO_GROUP_ALLOW_FROM")
-        if yuanbao_group_allow_from:
-            extra["group_allow_from"] = yuanbao_group_allow_from
 
     # Session settings
     idle_minutes = getenv("SESSION_IDLE_MINUTES")
