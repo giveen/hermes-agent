@@ -1366,7 +1366,19 @@ def check_vision_requirements() -> bool:
     Without the auto-fallback step the tool would disappear from the model's
     tool list whenever the explicit provider name was unresolvable, even
     when the auto chain would have served the request (issue #31179).
+
+    Short-circuits for custom:local providers — they don't support vision
+    and probing them wastes startup time on HTTP timeouts.
     """
+    # Fast reject for custom/local providers — no HTTP probing needed.
+    try:
+        from hermes_cli.config import load_config
+        _cfg = load_config()
+        provider = (_cfg.get("model") or {}).get("provider", "").strip().lower()
+        if provider in ("custom",) or provider.startswith("custom:"):
+            return False
+    except Exception:
+        pass
     try:
         from agent.auxiliary_client import resolve_vision_provider_client
     except ImportError:
