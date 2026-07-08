@@ -2057,7 +2057,13 @@ def list_authenticated_providers(
                         headers=_extra_headers_from_config(ep_cfg) or None,
                     )
                     if live_models:
-                        models_list = live_models
+                        # Merge: keep configured model IDs, append live-discovered IDs not already present.
+                        # fetch_api_models returns list[str]; models_list is also list[str].
+                        existing = set(models_list)
+                        for lm in live_models:
+                            if lm and lm not in existing:
+                                models_list.append(lm)
+                                existing.add(lm)
                 except Exception:
                     pass
 
@@ -2317,19 +2323,23 @@ def list_authenticated_providers(
                 and bool(api_url)
                 and (bool(api_key) or not grp["models"])
                 and grp.get("discover_models", True)
-            )
+)
             if should_probe:
                 try:
                     from hermes_cli.models import fetch_api_models
-
                     live_models = fetch_api_models(
                         api_key,
                         api_url,
                         headers=grp.get("extra_headers") or None,
                     )
                     if live_models:
-                        grp["models"] = live_models
-                        grp["total_models"] = len(live_models)
+                        # Merge: keep configured model IDs, append live-discovered IDs not already present.
+                        existing = set(grp["models"])
+                        for lm in live_models:
+                            if lm and lm not in existing:
+                                grp["models"].append(lm)
+                                existing.add(lm)
+                        grp["total_models"] = len(grp["models"])
                 except Exception:
                     pass
             results.append({

@@ -188,9 +188,9 @@ def _cmd_run(args) -> int:
         print("curator: running review pass...")
     if consolidate is None and not curator.get_consolidate():
         print(
-            "curator: consolidation is off — running prune-only "
-            "(deterministic stale/archive). Pass --consolidate or set "
-            "`curator.consolidate: true` to enable the LLM merge pass."
+            "curator: consolidation is off for this run — running prune-only "
+            "(deterministic stale/archive). Set `curator.consolidate: true` or "
+            "pass --consolidate to enable the LLM merge pass."
         )
 
     def _on_summary(msg: str) -> None:

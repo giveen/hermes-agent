@@ -416,6 +416,36 @@ def _read_skill_name(skill_md: Path, fallback: str) -> str:
     return fallback
 
 
+def read_skill_description(skill_name: str) -> str:
+    """Return the ``description`` frontmatter field from a skill's SKILL.md.
+
+    Returns empty string when the skill can't be found or has no description.
+    """
+    skill_dir = _find_skill_dir(skill_name)
+    if skill_dir is None:
+        return ""
+    skill_md = skill_dir / "SKILL.md"
+    if not skill_md.is_file():
+        return ""
+    try:
+        text = skill_md.read_text(encoding="utf-8", errors="replace")[:4000]
+    except OSError:
+        return ""
+    in_frontmatter = False
+    for line in text.split("\n"):
+        stripped = line.strip()
+        if stripped == "---":
+            if in_frontmatter:
+                break
+            in_frontmatter = True
+            continue
+        if in_frontmatter and stripped.startswith("description:"):
+            value = stripped.split(":", 1)[1].strip().strip("\"'")
+            if value:
+                return value
+    return ""
+
+
 def is_agent_created(skill_name: str) -> bool:
     """Whether *skill_name* is neither bundled nor hub-installed."""
     off_limits = _read_bundled_manifest_names() | _read_hub_installed_names()

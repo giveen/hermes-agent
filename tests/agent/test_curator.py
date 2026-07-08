@@ -702,11 +702,10 @@ def test_run_review_skips_llm_when_no_candidates(curator_env, monkeypatch):
     assert any("skipped" in s for s in captured)
 
 
-def test_consolidate_default_off(curator_env):
-    """Consolidation (the LLM umbrella pass) is OFF by default — only the
-    deterministic inactivity prune runs unless the user opts in."""
+def test_consolidate_default_on(curator_env):
+    """Consolidation (the LLM umbrella pass) is ON by default."""
     c = curator_env["curator"]
-    assert c.get_consolidate() is False
+    assert c.get_consolidate() is True
 
 
 def test_consolidate_enabled_via_config(curator_env, monkeypatch):
@@ -716,7 +715,7 @@ def test_consolidate_enabled_via_config(curator_env, monkeypatch):
 
 
 def test_run_review_skips_llm_when_consolidate_off(curator_env, monkeypatch):
-    """With consolidation off (the default), a run does the deterministic
+    """With consolidation explicitly off, a run does the deterministic
     prune but never spawns the LLM consolidation fork — even with candidates
     present. The run is still recorded and a 'consolidation off' summary is
     surfaced."""
@@ -733,7 +732,7 @@ def test_run_review_skips_llm_when_consolidate_off(curator_env, monkeypatch):
     )
 
     captured = []
-    c.run_curator_review(on_summary=lambda s: captured.append(s), synchronous=True)
+    c.run_curator_review(on_summary=lambda s: captured.append(s), synchronous=True, consolidate=False)
 
     assert calls == []  # LLM consolidation fork not invoked
     assert any("consolidation off" in s for s in captured)
@@ -744,7 +743,7 @@ def test_run_review_skips_llm_when_consolidate_off(curator_env, monkeypatch):
 
 
 def test_run_review_consolidate_override_runs_llm(curator_env, monkeypatch):
-    """Passing consolidate=True overrides the config default (off) and drives
+    """Passing consolidate=True overrides the config default (on) and drives
     the LLM consolidation pass — mirrors `hermes curator run --consolidate`."""
     c = curator_env["curator"]
     u = curator_env["usage"]

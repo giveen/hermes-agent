@@ -144,8 +144,11 @@ dependencies = [
   # / pywin32 tree) ships only where it's actually used.
   "concurrent-log-handler==0.9.29; sys_platform == 'win32'",
   "diskcache==5.6.3",
-  "mnemosyne-memory>=3.11.0,<4",
-  "ddgs>=9.14.4,<10",
+  # Document extraction — .docx reading (python-docx) and .xlsx reading (openpyxl).
+  # Replaced the stdlib zipfile+ElementTree extractors in tools/read_extract.py
+  # for better fidelity (headers, footers, tables, cell types, formulas).
+  "python-docx>=1.2.0,<2",
+  "openpyxl>=3.1.5,<4",
   "crawl4ai>=0.9.0,<0.11",
   "tree-sitter>=0.26.0,<0.27",
   "tree-sitter-python>=0.25.0,<0.26",

@@ -35,25 +35,62 @@ def _write_notebook(path, cells, nbformat=4):
 
 
 def _write_docx(path, document_xml):
+    ct = "http://schemas.openxmlformats.org/package/2006/content-types"
+    rel = "http://schemas.openxmlformats.org/package/2006/relationships"
+    off = "http://schemas.openxmlformats.org/officeDocument/2006"
     with zipfile.ZipFile(path, "w") as z:
-        z.writestr("[Content_Types].xml", "<Types/>")
+        z.writestr("[Content_Types].xml",
+                   f'<Types xmlns="{ct}">'
+                   f'<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+                   f'<Override PartName="/word/document.xml" '
+                   f'ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>'
+                   f'</Types>')
         z.writestr("word/document.xml", document_xml)
-
+        z.writestr("word/_rels/document.xml.rels",
+                   f'<Relationships xmlns="{rel}"/>')
+        z.writestr("_rels/.rels",
+                   f'<Relationships xmlns="{rel}">'
+                   f'<Relationship Id="rId1" Target="/word/document.xml" '
+                   f'Type="{off}/relationships/officeDocument"/>'
+                   f'</Relationships>')
 
 def _write_xlsx(path, *, workbook, rels, shared, sheets):
     """sheets: dict of part-name -> xml string."""
+    ct = "http://schemas.openxmlformats.org/package/2006/content-types"
+    office = "http://schemas.openxmlformats.org/officeDocument/2006"
     with zipfile.ZipFile(path, "w") as z:
+        types_xml = (
+            f'<Types xmlns="{ct}">'
+            f'<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+            f'<Override PartName="/xl/workbook.xml" '
+            f'ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+        )
+        for part_name in sheets:
+            types_xml += (
+                f'<Override PartName="/{part_name}" '
+                f'ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
+            )
+        if shared is not None:
+            types_xml += (
+                f'<Override PartName="/xl/sharedStrings.xml" '
+                f'ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>'
+            )
+        types_xml += '</Types>'
+        z.writestr("[Content_Types].xml", types_xml)
         z.writestr("xl/workbook.xml", workbook)
         z.writestr("xl/_rels/workbook.xml.rels", rels)
         if shared is not None:
             z.writestr("xl/sharedStrings.xml", shared)
         for part, xml in sheets.items():
             z.writestr(part, xml)
-
+        z.writestr("_rels/.rels",
+                    f'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                    f'<Relationship Id="rId1" Target="/xl/workbook.xml" '
+                    f'Type="{office}/relationships/officeDocument"/>'
+                    f'</Relationships>')
 
 _NS_W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 _NS_S = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
-
 
 # ---------------------------------------------------------------------------
 # is_extractable_document

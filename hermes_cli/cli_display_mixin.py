@@ -4,13 +4,23 @@ CLIDisplayMixin — extracted from cli.py.
 
 from __future__ import annotations
 
+import base64
+import json
 import logging
-
+import math
+import os
+import queue
+import re
+import shutil
+import sys
+import textwrap
+import threading
+import time
+from collections import deque
 from contextlib import contextmanager
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Optional
-
-logger = logging.getLogger(__name__)
 
 
 class CLIDisplayMixin:
@@ -1781,6 +1791,7 @@ class CLIDisplayMixin:
 
         # Slash commands: dispatch directly, same as the Enter handler's
         # _looks_like_slash_command branch.
+        from hermes_cli.cli_helpers import _looks_like_slash_command
         if _looks_like_slash_command(text):
             try:
                 if not self.process_command(text):
@@ -1824,6 +1835,11 @@ class CLIDisplayMixin:
         """Install tool callbacks that need the live prompt UI."""
         if getattr(self, "_tool_callbacks_installed", False):
             return
+        from hermes_cli.cli_helpers import (
+            set_approval_callback,
+            set_secret_capture_callback,
+            set_sudo_password_callback,
+        )
         set_sudo_password_callback(self._sudo_password_callback)
         set_approval_callback(self._approval_callback)
         set_secret_capture_callback(self._secret_capture_callback)
@@ -3174,6 +3190,7 @@ class CLIDisplayMixin:
 
     def _should_handle_model_command_inline(self, text: str, has_images: bool = False) -> bool:
         """Return True when /model should be handled immediately on the UI thread."""
+        from hermes_cli.cli_helpers import _looks_like_slash_command
         if not text or has_images or not _looks_like_slash_command(text):
             return False
         try:
@@ -3196,6 +3213,7 @@ class CLIDisplayMixin:
         injecting it mid-run.  Dispatching inline on the UI thread calls
         agent.steer() directly, which is thread-safe (uses _pending_steer_lock).
         """
+        from hermes_cli.cli_helpers import _looks_like_slash_command
         if not text or has_images or not _looks_like_slash_command(text):
             return False
         if not getattr(self, "_agent_running", False):
@@ -4263,6 +4281,7 @@ class CLIDisplayMixin:
         this method.  Override this only when you need full control over widget
         ordering.
         """
+        from prompt_toolkit.layout import Window
         return [
             item for item in [
                 Window(height=0),

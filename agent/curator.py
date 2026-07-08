@@ -57,11 +57,11 @@ DEFAULT_INTERVAL_HOURS = 24 * 7  # 7 days
 DEFAULT_MIN_IDLE_HOURS = 2
 DEFAULT_STALE_AFTER_DAYS = 30
 DEFAULT_ARCHIVE_AFTER_DAYS = 90
-# Consolidation (the LLM umbrella-building fork) is OFF by default. The
+# Consolidation (the LLM umbrella-building fork) is ON by default. The
 # deterministic inactivity prune (apply_automatic_transitions) still runs
-# whenever the curator is enabled; only the opinionated, aux-model-cost
-# consolidation pass is opt-in.
-DEFAULT_CONSOLIDATE = False
+# whenever the curator is enabled; the opinionated, aux-model-cost
+# consolidation pass also runs unless explicitly disabled.
+DEFAULT_CONSOLIDATE = True
 
 
 # ---------------------------------------------------------------------------
@@ -190,14 +190,14 @@ def get_prune_builtins() -> bool:
 def get_consolidate() -> bool:
     """Whether the curator runs its LLM consolidation (umbrella-building) pass.
 
-    OFF by default. When off, a curator run does ONLY the deterministic
-    inactivity prune (mark stale / archive long-unused skills) and skips the
-    forked aux-model review entirely — no consolidation, no umbrella-building,
-    no aux-model cost. Set ``curator.consolidate: true`` to opt back into the
-    LLM pass that merges overlapping skills into class-level umbrellas.
+    ON by default. When on, each curator run does the deterministic inactivity
+    prune AND the forked aux-model review that merges overlapping skills into
+    class-level umbrellas. Set ``curator.consolidate: false`` in config to run
+    only the deterministic stale/archive prune without LLM cost.
 
-    The explicit ``hermes curator run --consolidate`` flag overrides this for
-    a single invocation regardless of the config value.
+    The explicit ``hermes curator run --consolidate`` and
+    ``hermes curator run --no-consolidate`` flags override this for a single
+    invocation regardless of the config value.
     """
     cfg = _load_config()
     return bool(cfg.get("consolidate", DEFAULT_CONSOLIDATE))
@@ -527,9 +527,9 @@ CURATOR_REVIEW_PROMPT = (
     "is NOT a reason to keep — it's a reason to move it under an "
     "umbrella as a subsection or support file.\n\n"
     "Expected output: real umbrella-ification. Process every obvious "
-    "cluster. If you end the pass with fewer than 10 archives, you "
-    "stopped too early — go back and look at the clusters you left "
-    "alone.\n\n"
+    "cluster. Aim to archive at least 20% of the candidate count "
+    "(minimum 2, maximum 25). If you fall well short of that target, "
+    "go back and look at the clusters you left alone.\n\n"
     "When done, write a human summary AND a structured machine-readable "
     "block so downstream tooling can distinguish consolidation from "
     "pruning. Format EXACTLY:\n\n"
@@ -1463,20 +1463,22 @@ def _render_candidate_list() -> str:
     cron_referenced = _cron_referenced_skills()
     lines = [f"Agent-created skills ({len(rows)}):\n"]
     for r in rows:
+        name = r["name"]
+        desc = skill_usage.read_skill_description(name)
+        desc_part = f'  desc="{desc}"' if desc else ""
         lines.append(
-            f"- {r['name']}  "
+            f"- {name}  "
             f"state={r['state']}  "
             f"pinned={'yes' if r.get('pinned') else 'no'}  "
-            f"cron={'yes' if r['name'] in cron_referenced else 'no'}  "
+            f"cron={'yes' if name in cron_referenced else 'no'}  "
             f"activity={r.get('activity_count', 0)}  "
             f"use={r.get('use_count', 0)}  "
             f"view={r.get('view_count', 0)}  "
             f"patches={r.get('patch_count', 0)}  "
             f"last_activity={r.get('last_activity_at') or 'never'}"
+            f"{desc_part}"
         )
     return "\n".join(lines)
-
-
 def run_curator_review(
     on_summary: Optional[Callable[[str], None]] = None,
     synchronous: bool = False,
@@ -1497,11 +1499,11 @@ def run_curator_review(
     default is to spawn a daemon thread so the caller returns immediately.
 
     *consolidate* gates the LLM umbrella-building pass. ``None`` (the default)
-    reads ``curator.consolidate`` from config (OFF by default). Passing
+    reads ``curator.consolidate`` from config (ON by default). Passing
     ``True``/``False`` overrides the config for this invocation — used by the
-    ``hermes curator run --consolidate`` flag. When consolidation is off, only
-    the deterministic inactivity prune runs and the forked aux-model review is
-    skipped entirely (no aux-model cost).
+    ``hermes curator run --consolidate`` and ``--no-consolidate`` flags. When
+    consolidation is off, only the deterministic inactivity prune runs and the
+    forked aux-model review is skipped entirely (no aux-model cost).
 
     If *dry_run* is True, the automatic stale/archive transitions are SKIPPED
     and the LLM review pass is instructed to produce a report only — no
