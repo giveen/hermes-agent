@@ -4388,6 +4388,9 @@ def _inject_cli_globals():
         '_AGGREGATOR_PROVIDERS',
         # String constants
         '_TERMINAL_INPUT_MODE_RESET_SEQ',
+        # Slow-command spinner frames (defined in cli.py, used by
+        # _command_spinner_frame — must be injected so LOAD_GLOBAL resolves it)
+        '_COMMAND_SPINNER_FRAMES',
     }
     _all_found = True
     for name in _needed:
