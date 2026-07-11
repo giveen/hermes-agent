@@ -1334,6 +1334,13 @@ class ShellFileOperations(FileOperations):
         Uses cat so the full file is returned regardless of size.
         """
         path = self._expand_path(path)
+
+        # Native fast path for the local backend: zero subprocess spawns.
+        # Remote backends (docker/ssh/modal/daytona) expose a filesystem
+        # unreachable from host Python, so they keep the shell read.
+        if self._is_local_backend():
+            return self._native_read_file_raw(path)
+
         stat_cmd = f"wc -c < {self._escape_shell_arg(path)} 2>/dev/null"
         stat_result = self._exec(stat_cmd)
         if stat_result.exit_code != 0:
@@ -1361,6 +1368,55 @@ class ShellFileOperations(FileOperations):
         # back out — it re-probes the on-disk file, which still has the
         # marker — so the round-trip preserves it.
         raw_content, _ = _strip_bom(_strip_terminal_fence_leaks(cat_result.stdout))
+        return ReadResult(
+            content=raw_content,
+            file_size=file_size,
+        )
+
+    def _native_read_file_raw(self, path: str) -> ReadResult:
+        """Local-backend full-file read via stdlib — no subprocess spawns.
+
+        Mirrors :meth:`read_file_raw` shell semantics exactly: same
+        image/binary redirect, same BOM strip, identical ``ReadResult``
+        contract and byte-identical ``content`` (terminal fence-leak
+        stripping is applied for parity even though the native read cannot
+        itself leak shell escapes). Backs every ``patch``/``edit`` operation
+        on the local backend, so removing the ``cat`` + ``wc -c`` + ``head``
+        spawns here speeds up the whole edit loop.
+        """
+        if not os.path.isfile(path):
+            return self._suggest_similar_files(path)
+
+        try:
+            file_size = os.path.getsize(path)
+        except OSError:
+            file_size = 0
+
+        if self._is_image(path):
+            return ReadResult(is_image=True, is_binary=True, file_size=file_size)
+
+        # Binary detection: 1000-byte sample, same rule as the shell path.
+        try:
+            with open(path, "rb") as fh:
+                sample_bytes = fh.read(1000)
+        except OSError as e:
+            return ReadResult(error=f"Failed to read file: {e}")
+        sample_text = sample_bytes.decode("utf-8", errors="replace")
+        if self._is_likely_binary(path, sample_text):
+            return ReadResult(
+                is_binary=True, file_size=file_size,
+                error="Binary file — cannot display as text."
+            )
+
+        try:
+            with open(path, "r", encoding="utf-8", errors="replace") as fh:
+                raw_content = fh.read()
+        except OSError as e:
+            return ReadResult(error=f"Failed to read file: {e}")
+
+        # Strip a leading UTF-8 BOM + any terminal fence-leak artifacts
+        # (parity with the shell path; harmless on a clean native read).
+        raw_content, _ = _strip_bom(_strip_terminal_fence_leaks(raw_content))
         return ReadResult(
             content=raw_content,
             file_size=file_size,
