@@ -451,7 +451,10 @@ class TestShellFileOpsHelpers:
         assert normalize_read_pagination(offset=0, limit=0) == (1, 1)
         assert normalize_read_pagination(offset=-10, limit=-5) == (1, 1)
         assert normalize_read_pagination(offset="bad", limit="bad") == (1, 500)
-        assert normalize_read_pagination(offset=2, limit=999999) == (2, 2000)
+        # max_lines default is 500 (tool_output.max_lines in config.yaml),
+        # not the historical 2000 — a single read_file can no longer dump 4
+        # default pages into the cached prefix at once.
+        assert normalize_read_pagination(offset=2, limit=999999) == (2, 500)
 
     def test_normalize_search_pagination_clamps_invalid_values(self):
         assert normalize_search_pagination(offset=-10, limit=-5) == (0, 1)

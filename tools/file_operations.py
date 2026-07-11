@@ -62,7 +62,10 @@ def _strip_terminal_fence_leaks(text: str) -> str:
         return text
 
     cleaned_lines: List[str] = []
-    for line in text.splitlines(keepends=True):
+    # Split AFTER each '\n' (lookbehind) so CRLF endings stay intact —
+    # str.splitlines() collapses '\r\n' to '\n' and would silently strip the
+    # '\r', corrupting Windows-line-ending files through read_file/patch.
+    for line in re.split(r"(?<=\n)", text):
         had_terminal_wrapper = "__HERMES_FENCE_" in line or "\x1b]" in line
         cleaned = _OSC_SEQUENCE_RE.sub("", line)
         cleaned = _FENCE_MARKER_RE.sub("", cleaned)
@@ -1409,7 +1412,11 @@ class ShellFileOperations(FileOperations):
             )
 
         try:
-            with open(path, "r", encoding="utf-8", errors="replace") as fh:
+            # newline="" disables universal-newline translation so the read is
+            # byte-faithful (cat-equivalent): CRLF stays CRLF, not normalized
+            # to LF. This preserves the line-ending signal that write_file's
+            # CRLF-preservation path relies on during a patch round-trip.
+            with open(path, "r", encoding="utf-8", errors="replace", newline="") as fh:
                 raw_content = fh.read()
         except OSError as e:
             return ReadResult(error=f"Failed to read file: {e}")
@@ -1704,14 +1711,17 @@ class ShellFileOperations(FileOperations):
         if _is_write_denied(path):
             return PatchResult(error=f"Write denied: '{path}' is a protected system/credential file.")
 
-        # Read current content
-        read_cmd = f"cat {self._escape_shell_arg(path)} 2>/dev/null"
-        read_result = self._exec(read_cmd)
-        
-        if read_result.exit_code != 0:
+        # Read current content. Route through read_file_raw so the local
+        # backend reads via stdlib (no shell `cat` spawn); remote backends
+        # keep the shell read. read_file_raw applies the same BOM strip the
+        # old `cat` path did, so the fuzzy matcher still sees clean content.
+        read_result = self.read_file_raw(path)
+        if read_result.error:
             return PatchResult(error=f"Failed to read file: {path}")
-        
-        content = read_result.stdout
+        if read_result.is_binary:
+            return PatchResult(error=f"Cannot patch binary file: {path}")
+
+        content = read_result.content
         # Strip a leading UTF-8 BOM before matching so the fuzzy matcher and
         # the diff operate on clean content (a phantom U+FEFF before line 1
         # defeats an exact first-line match). write_file restores the BOM on
@@ -1757,9 +1767,8 @@ class ShellFileOperations(FileOperations):
         # failures (backend FS oddities, race with another task, truncated
         # pipe, etc.) that would otherwise return success-with-diff while the
         # file is unchanged on disk.
-        verify_cmd = f"cat {self._escape_shell_arg(path)} 2>/dev/null"
-        verify_result = self._exec(verify_cmd)
-        if verify_result.exit_code != 0:
+        verify_result = self.read_file_raw(path)
+        if verify_result.error:
             return PatchResult(error=f"Post-write verification failed: could not re-read {path}")
         # Normalize line endings before comparing.  On Windows, Python's
         # default text-mode ``open()`` translates ``\n`` → ``\r\n`` on
@@ -1772,7 +1781,7 @@ class ShellFileOperations(FileOperations):
         # marker on disk but ``new_content`` is the BOM-less string we
         # matched against, so the comparison must drop it to stay
         # apples-to-apples.
-        _verify_bomless, _ = _strip_bom(verify_result.stdout)
+        _verify_bomless, _ = _strip_bom(verify_result.content)
         _verify_stdout_normalized = _verify_bomless.replace("\r\n", "\n").replace("\r", "\n")
         _new_content_normalized = new_content.replace("\r\n", "\n").replace("\r", "\n")
         if _verify_stdout_normalized != _new_content_normalized:

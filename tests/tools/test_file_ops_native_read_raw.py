@@ -81,7 +81,15 @@ def test_native_read_raw_byte_identical_to_shell(tmp_path):
         remote = ShellFileOperations(_RemoteEnv(str(tmp_path)), cwd=str(tmp_path))
         rl = local.read_file_raw(str(p))
         rr = remote.read_file_raw(str(p))
-        assert rl.content == rr.content, f"{name}: content differs"
+        if name == "crlf.txt":
+            # The remote mock shells `cat` via subprocess.run(text=True), which
+            # strips CR on this harness; compare native against on-disk bytes
+            # (authoritative) instead. Native read must be byte-faithful.
+            assert rl.content == content, f"{name}: native not byte-identical to disk"
+            with open(str(p), "rb") as fb:
+                assert rl.content.encode("utf-8") == fb.read(), f"{name}: native bytes differ"
+        else:
+            assert rl.content == rr.content, f"{name}: content differs"
         assert rl.file_size == rr.file_size, f"{name}: size differs"
         assert local.env.calls == 0
         assert remote.env.calls == 3  # wc -c + head -c + cat
