@@ -981,6 +981,60 @@ class ShellFileOperations(FileOperations):
         )
         return self._exec(script, stdin_data=content)
 
+    def _is_local_backend(self) -> bool:
+        """True iff this file-ops instance targets the host filesystem.
+
+        Native (os/pathlib) writes are only safe when the terminal backend
+        IS the host — remote backends (docker/ssh/modal/daytona) expose a
+        filesystem Python's ``os`` module cannot reach, so they must stay on
+        the shell path.  Detection is dependency-free: prefer an explicit
+        ``is_local`` flag, otherwise match the canonical local-env class by
+        module/name without importing it (avoids any import-cycle coupling).
+        """
+        env = self.env
+        if getattr(env, "is_local", False):
+            return True
+        cls = type(env)
+        return (getattr(cls, "__module__", "") == "tools.environments.local"
+                and cls.__name__ == "LocalEnvironment")
+
+    def _native_atomic_write(self, path: str, content: str) -> dict:
+        """Write ``content`` to ``path`` on the host FS via temp-file + rename.
+
+        Mirrors :meth:`_atomic_write` semantics with native calls: temp file
+        in the same directory (so ``os.replace`` is a real rename, not a
+        cross-device copy), existing file mode preserved, content written as
+        UTF-8 with fsync, temp removed on any failure so a crash leaves the
+        original intact.  No subprocess is spawned.
+
+        Returns ``{"error": Optional[str], "bytes_written": int}``.
+        """
+        import tempfile
+        parent = os.path.dirname(path) or "."
+        tmp = None
+        try:
+            fd, tmp = tempfile.mkstemp(prefix=".hermes-tmp.", dir=parent)
+            with os.fdopen(fd, "w", encoding="utf-8") as fh:
+                fh.write(content)
+                fh.flush()
+                os.fsync(fh.fileno())
+            # Preserve mode of an existing target (best-effort, never fatal).
+            if os.path.exists(path):
+                try:
+                    os.chmod(tmp, os.stat(path).st_mode)
+                except OSError:
+                    pass
+            os.replace(tmp, path)
+            tmp = None  # already renamed into place
+            return {"error": None, "bytes_written": os.path.getsize(path)}
+        except Exception as e:
+            if tmp and os.path.exists(tmp):
+                try:
+                    os.remove(tmp)
+                except OSError:
+                    pass
+            return {"error": f"Failed to write file: {e}", "bytes_written": 0}
+
     def _detect_file_line_ending(self, path: str, pre_content: Optional[str] = None) -> Optional[str]:
         """Detect the dominant line ending of a file on disk.
 
@@ -1387,6 +1441,34 @@ class ShellFileOperations(FileOperations):
         # ``beforeFileEdited`` pattern but wired to the local LSP
         # rather than an external IDE.
         self._snapshot_lsp_baseline(path)
+
+        # Native fast path for the local backend: skip the shell entirely.
+        # Remote backends (docker/ssh/modal/daytona) expose a filesystem
+        # unreachable from host Python, so they keep the shell atomic-write.
+        if self._is_local_backend():
+            dirs_created = False
+            parent = os.path.dirname(path)
+            if parent and not os.path.isdir(parent):
+                os.makedirs(parent, exist_ok=True)
+                dirs_created = True
+            native = self._native_atomic_write(path, content)
+            if native["error"]:
+                return WriteResult(error=native["error"])
+            bytes_written = native["bytes_written"]
+            lint_result = self._check_lint_delta(
+                path, pre_content=pre_content, post_content=content)
+            lsp_diagnostics = None
+            if lint_result.success or lint_result.skipped:
+                block = self._maybe_lsp_diagnostics(
+                    path, pre_content=pre_content, post_content=content)
+                if block:
+                    lsp_diagnostics = block
+            return WriteResult(
+                bytes_written=bytes_written,
+                dirs_created=dirs_created,
+                lint=lint_result.to_dict() if lint_result else None,
+                lsp_diagnostics=lsp_diagnostics,
+            )
 
         # Create parent directories
         parent = os.path.dirname(path)
