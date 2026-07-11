@@ -395,6 +395,7 @@ OPENAI_MODEL_EXECUTION_GUIDANCE = (
     "- Current time, date, timezone → use terminal (e.g. date)\n"
     "- System state: OS, CPU, memory, disk, ports, processes → use terminal\n"
     "- File contents, sizes, line counts → use read_file, search_files, or terminal\n"
+    "- File content search → PREFER `search_files` (ripgrep-backed) over shelling out to `grep`; only use `terminal` for searches the tool can't express\n"
     "- Git history, branches, diffs → use terminal\n"
     "- Current facts (weather, news, versions) → use web_search\n"
     "Your memory and user profile describe the USER, not the system you are "
@@ -779,7 +780,7 @@ _WINDOWS_BASH_SHELL_HINT = (
     "calls. MSYS-style paths like `/c/Users/<user>/...` work alongside "
     "native `C:\\Users\\<user>\\...` paths. PowerShell builtins "
     "(`Get-ChildItem`, `$env:FOO`, `Select-String`) will NOT work — use their "
-    "POSIX equivalents (`ls`, `$FOO`, `grep`)."
+    "POSIX equivalents (`ls`, `$FOO`, `rg`/`grep`); prefer ripgrep (`rg`) for content search."
 )
 
 
