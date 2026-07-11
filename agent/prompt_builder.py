@@ -397,6 +397,7 @@ OPENAI_MODEL_EXECUTION_GUIDANCE = (
     "- File contents, sizes, line counts → use read_file, search_files, or terminal\n"
     "- File content search → PREFER `search_files` (ripgrep-backed) over shelling out to `grep`; only use `terminal` for searches the tool can't express\n"
     "- Web page content → PREFER `web_extract` over `curl` in terminal; only use `terminal` (curl/wget) when you need raw bytes or headers the tool can't return\n"
+    "- Editing an existing file → PREFER `patch` (old_string/new_string) over `read_file` + `write_file`; `patch` returns only the unified diff, which keeps the conversation small. Only read the whole file when you need context you don't already have\n"
     "- Git history, branches, diffs → use terminal\n"
     "- Current facts (weather, news, versions) → use web_search\n"
     "Your memory and user profile describe the USER, not the system you are "

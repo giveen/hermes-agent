@@ -1294,12 +1294,18 @@ DEFAULT_CONFIG = {
     #                    (default 50_000 ≈ 12-15K tokens).
     # - max_lines:       read_file pagination cap — the maximum `limit`
     #                    a single read_file call can request before
-    #                    being clamped (default 2000).
+    #                    being clamped. Tuned to 500 (not 2000) so a
+    #                    single read can't dump 4 default pages into the
+    #                    cached prefix at once; read_file already paginates
+    #                    at 500/page and tells the model to continue, so
+    #                    larger one-shot reads were just recurring-context
+    #                    cost with no capability gain. Models that need more
+    #                    keep paginating via the returned offset hint.
     # - max_line_length: per-line cap applied when read_file emits a
     #                    line-numbered view (default 2000 chars).
     "tool_output": {
         "max_bytes": 50_000,
-        "max_lines": 2000,
+        "max_lines": 500,
         "max_line_length": 2000,
     },
 
