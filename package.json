@@ -45,5 +45,8 @@
   },
   "allowScripts": {
     "agent-browser@0.31.1": true
+  },
+  "overrides": {
+    "@electron/asar": "4.2.0"
   }
 }
