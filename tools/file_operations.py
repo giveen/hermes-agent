@@ -990,9 +990,13 @@ class ShellFileOperations(FileOperations):
         the shell path.  Detection is dependency-free: prefer an explicit
         ``is_local`` flag, otherwise match the canonical local-env class by
         module/name without importing it (avoids any import-cycle coupling).
+
+        The flag is checked with identity (``is True``) rather than truthiness
+        so a MagicMock/arbitrary object attribute does not accidentally select
+        the native path in tests or defensive callers.
         """
         env = self.env
-        if getattr(env, "is_local", False):
+        if getattr(env, "is_local", None) is True:
             return True
         cls = type(env)
         return (getattr(cls, "__module__", "") == "tools.environments.local"
@@ -1091,39 +1095,45 @@ class ShellFileOperations(FileOperations):
     def read_file(self, path: str, offset: int = 1, limit: int = 500) -> ReadResult:
         """
         Read a file with pagination, binary detection, and line numbers.
-        
+
         Args:
             path: File path (absolute or relative to cwd)
             offset: Line number to start from (1-indexed, default 1)
             limit: Maximum lines to return (default 500, max 2000)
-        
+
         Returns:
             ReadResult with content, metadata, or error info
         """
         # Expand ~ and other shell paths
         path = self._expand_path(path)
-        
+
         offset, limit = normalize_read_pagination(offset, limit)
-        
+
+        # Native fast path for the local backend: zero subprocess spawns.
+        # Remote backends (docker/ssh/modal/daytona) expose a filesystem
+        # unreachable from host Python, so they keep the shell read.
+        if self._is_local_backend():
+            return self._native_read_file(path, offset, limit)
+
         # Check if file exists and get size (wc -c is POSIX, works on Linux + macOS)
         stat_cmd = f"wc -c < {self._escape_shell_arg(path)} 2>/dev/null"
         stat_result = self._exec(stat_cmd)
-        
+
         if stat_result.exit_code != 0:
             # File not found - try to suggest similar files
             return self._suggest_similar_files(path)
-        
+
         stat_output = _strip_terminal_fence_leaks(stat_result.stdout)
         try:
             file_size = int(stat_output.strip())
         except ValueError:
             file_size = 0
-        
+
         # Check if file is too large
         if file_size > MAX_FILE_SIZE:
             # Still try to read, but warn
             pass
-        
+
         # Images are never inlined — redirect to the vision tool
         if self._is_image(path):
             return ReadResult(
@@ -1135,24 +1145,24 @@ class ShellFileOperations(FileOperations):
                     "Use vision_analyze with this file path to inspect the image contents."
                 ),
             )
-        
+
         # Read a sample to check for binary content
         sample_cmd = f"head -c 1000 {self._escape_shell_arg(path)} 2>/dev/null"
         sample_result = self._exec(sample_cmd)
         sample_output = _strip_terminal_fence_leaks(sample_result.stdout)
-        
+
         if self._is_likely_binary(path, sample_output):
             return ReadResult(
                 is_binary=True,
                 file_size=file_size,
                 error="Binary file - cannot display as text. Use appropriate tools to handle this file type."
             )
-        
+
         # Read with pagination using sed
         end_line = offset + limit - 1
         read_cmd = f"sed -n '{offset},{end_line}p' {self._escape_shell_arg(path)}"
         read_result = self._exec(read_cmd)
-        
+
         if read_result.exit_code != 0:
             return ReadResult(error=f"Failed to read file: {read_result.stdout}")
         read_output = _strip_terminal_fence_leaks(read_result.stdout)
@@ -1161,7 +1171,7 @@ class ShellFileOperations(FileOperations):
         # chunk (the marker lives at byte 0); later pages can't carry it.
         if offset == 1:
             read_output, _ = _strip_bom(read_output)
-        
+
         # Get total line count
         wc_cmd = f"wc -l < {self._escape_shell_arg(path)}"
         wc_result = self._exec(wc_cmd)
@@ -1170,19 +1180,99 @@ class ShellFileOperations(FileOperations):
             total_lines = int(wc_output.strip())
         except ValueError:
             total_lines = 0
-        
+
         # Check if truncated
         truncated = total_lines > end_line
         hint = None
         if truncated:
             hint = f"Use offset={end_line + 1} to continue reading (showing {offset}-{end_line} of {total_lines} lines)"
-        
+
         return ReadResult(
             content=self._add_line_numbers(read_output, offset),
             total_lines=total_lines,
             file_size=file_size,
             truncated=truncated,
             hint=hint
+        )
+
+    def _native_read_file(self, path: str, offset: int, limit: int) -> ReadResult:
+        """Local-backend read via stdlib — no subprocess spawns.
+
+        Mirrors :meth:`read_file` shell semantics exactly: same
+        image/binary redirect, same BOM strip on the first page, identical
+        ``ReadResult`` contract, byte-identical ``_add_line_numbers`` output.
+        The one behavioral improvement over the shell path is the line
+        count: native splitting counts actual lines (so a final line with no
+        trailing newline no longer undercounts and mis-reports ``truncated``),
+        whereas the shell path inherited ``wc -l`` which counts newlines.
+        """
+        if not os.path.isfile(path):
+            return self._suggest_similar_files(path)
+
+        try:
+            file_size = os.path.getsize(path)
+        except OSError:
+            file_size = 0
+
+        # Images redirect to the vision tool (same as shell path).
+        if self._is_image(path):
+            return ReadResult(
+                is_image=True,
+                is_binary=True,
+                file_size=file_size,
+                hint=(
+                    "Image file detected. Automatically redirected to vision_analyze tool. "
+                    "Use vision_analyze with this file path to inspect the image contents."
+                ),
+            )
+
+        # Binary detection: read a 1000-byte sample and reuse the same
+        # content-analysis rule the shell path applies to head -c 1000.
+        try:
+            with open(path, "rb") as fh:
+                sample_bytes = fh.read(1000)
+        except OSError as e:
+            return ReadResult(error=f"Failed to read file: {e}")
+
+        sample_text = sample_bytes.decode("utf-8", errors="replace")
+        if self._is_likely_binary(path, sample_text):
+            return ReadResult(
+                is_binary=True,
+                file_size=file_size,
+                error="Binary file - cannot display as text. Use appropriate tools to handle this file type."
+            )
+
+        # Full read + decode.  splitlines(keepends=True) preserves line
+        # endings so joining reproduces the exact line stream sed would
+        # emit; _add_line_numbers re-splits on \n, matching the shell path.
+        try:
+            with open(path, "r", encoding="utf-8", errors="replace") as fh:
+                text = fh.read()
+        except OSError as e:
+            return ReadResult(error=f"Failed to read file: {e}")
+
+        all_lines = text.splitlines(keepends=True)
+        total_lines = len(all_lines)
+
+        end_line = offset + limit - 1
+        page = all_lines[offset - 1: end_line]
+        read_output = "".join(page)
+
+        # Strip a leading UTF-8 BOM on the first page (mirrors shell path).
+        if offset == 1:
+            read_output, _ = _strip_bom(read_output)
+
+        truncated = total_lines > end_line
+        hint = None
+        if truncated:
+            hint = f"Use offset={end_line + 1} to continue reading (showing {offset}-{end_line} of {total_lines} lines)"
+
+        return ReadResult(
+            content=self._add_line_numbers(read_output, offset),
+            total_lines=total_lines,
+            file_size=file_size,
+            truncated=truncated,
+            hint=hint,
         )
     
     def _suggest_similar_files(self, path: str) -> ReadResult:
