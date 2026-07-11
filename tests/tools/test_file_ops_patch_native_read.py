@@ -129,3 +129,27 @@ def test_patch_replace_binary_guarded(tmp_path):
     # of attempting a text patch on mojibake (old cat path's silent failure).
     assert res.success is False
     assert res.error is not None and "binary" in res.error.lower()
+
+
+def test_lint_delta_reads_from_disk_without_cat(tmp_path):
+    # _check_lint_delta must read content from disk (content=None) via
+    # read_file_raw, not cat, on the local backend.
+    p = tmp_path / "lintme.py"
+    _write(str(p), "x=1\n")
+    ops = ShellFileOperations(_LocalEnv(str(tmp_path)), cwd=str(tmp_path))
+    res = ops._check_lint_delta(str(p), pre_content=None, post_content="x=1\n")
+    # No cat on the local read path.
+    assert _cat_reads(ops.env.cmds) == [], f"lint delta cat-reads: {_cat_reads(ops.env.cmds)}"
+    # Lint result is a real LintResult (success or skipped, not error).
+    assert res is not None
+
+
+def test_write_file_precontent_read_without_cat(tmp_path):
+    # write_file's pre-content read (for lint delta + LSP shift map) must be
+    # native on local, not cat.
+    p = tmp_path / "w.py"
+    _write(str(p), "y = 2\n")
+    ops = ShellFileOperations(_LocalEnv(str(tmp_path)), cwd=str(tmp_path))
+    ops.write_file(str(p), "y = 3\n")
+    assert _cat_reads(ops.env.cmds) == [], f"write pre-content cat-reads: {_cat_reads(ops.env.cmds)}"
+    assert open(str(p)).read() == "y = 3\n"

@@ -1066,18 +1066,26 @@ class ShellFileOperations(FileOperations):
     def _file_has_bom(self, path: str, pre_content: Optional[str] = None) -> bool:
         """Whether the file on disk starts with a UTF-8 BOM.
 
-        Uses ``pre_content`` if we already read the file (zero extra exec
-        calls); otherwise issues a tiny ``head -c 3`` to sample just the
-        marker. A missing/empty file returns False (new writes get no BOM
-        unless the caller explicitly includes one).
+        The BOM is detected from RAW on-disk bytes, never from ``pre_content``:
+        ``read_file_raw`` strips a leading BOM before returning, so a BOM-
+        stripped ``pre_content`` would report False and a patch/write would
+        silently drop the marker.  For the local backend we sample the first
+        3 bytes via stdlib (no shell spawn); remote backends use ``head -c 3``
+        since their filesystem is unreachable from host Python.
         """
-        if pre_content is not None:
-            return _has_bom(pre_content)
-        head_cmd = f"head -c 3 {self._escape_shell_arg(path)} 2>/dev/null"
-        head_result = self._exec(head_cmd)
-        if head_result.exit_code != 0 or not head_result.stdout:
-            return False
-        return _has_bom(head_result.stdout)
+        if self._is_local_backend():
+            try:
+                with open(path, "rb") as fh:
+                    head = fh.read(3)
+            except OSError:
+                return False
+        else:
+            head_cmd = f"head -c 3 {self._escape_shell_arg(path)} 2>/dev/null"
+            head_result = self._exec(head_cmd)
+            if head_result.exit_code != 0 or not head_result.stdout:
+                return False
+            head = head_result.stdout.encode("utf-8", errors="replace") if isinstance(head_result.stdout, str) else head_result.stdout
+        return _has_bom(head.decode("utf-8", errors="replace"))
 
 
     def _unified_diff(self, old_content: str, new_content: str, filename: str) -> str:
@@ -1559,11 +1567,13 @@ class ShellFileOperations(FileOperations):
             # Best-effort read; failure (file missing, permission) leaves
             # pre_content as None which makes both downstream consumers
             # degrade gracefully (lint reports all errors; LSP skips the
-            # shift map).
-            read_cmd = f"cat {self._escape_shell_arg(path)} 2>/dev/null"
-            read_result = self._exec(read_cmd)
-            if read_result.exit_code == 0 and read_result.stdout:
-                pre_content = read_result.stdout
+            # shift map). Route through read_file_raw so the local backend
+            # uses stdlib (no shell `cat`); remote keeps the shell read.
+            read_result = self.read_file_raw(path)
+            if read_result.error or read_result.is_binary:
+                pre_content = None
+            else:
+                pre_content = read_result.content
 
         # ── Line-ending preservation (Roo Code pattern) ──────────────
         # If the file existed with CRLF endings and the agent's content
@@ -1872,11 +1882,12 @@ class ShellFileOperations(FileOperations):
         if inproc is not None:
             # Need content — either passed in or read from disk.
             if content is None:
-                read_cmd = f"cat {self._escape_shell_arg(path)} 2>/dev/null"
-                read_result = self._exec(read_cmd)
-                if read_result.exit_code != 0:
-                    return LintResult(skipped=True, message=f"Failed to read {path} for lint")
-                content = read_result.stdout
+                # Read via read_file_raw so the local backend uses stdlib
+                # (no shell `cat`); remote backends keep the shell read.
+                read_result = self.read_file_raw(path)
+                if read_result.error or read_result.is_binary:
+                    return LintResult(skipped=True, message=f"Skipped lint for {path}")
+                content = read_result.content
             ok, err = inproc(content)
             if err == "__SKIP__":
                 return LintResult(skipped=True, message=f"No linter available for {ext} (missing dependency)")
