@@ -5,6 +5,29 @@ GatewayConfigLoaderMixin — extracted from gateway/run.py.
 from __future__ import annotations
 
 import logging
+import os
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+from gateway.config import Platform
+from gateway.restart import (
+    DEFAULT_GATEWAY_RESTART_DRAIN_TIMEOUT,
+    parse_restart_drain_timeout,
+)
+from gateway.session import SessionSource
+from hermes_cli.fallback_config import get_fallback_chain
+from utils import is_truthy_value
+# Shared gateway helpers live in gateway.helpers (and gateway.run). Importing
+# them at module top is safe: gateway.helpers does not import this mixin, so
+# there is no circular-import risk. These symbols were left dangling when
+# run.py was split into mixin modules.
+from gateway.helpers import (
+    _get_channel_override,
+    _hermes_home,
+    _load_gateway_runtime_config,
+    _resolve_gateway_model,
+    cfg_get,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -251,6 +274,10 @@ class GatewayConfigLoaderMixin:
         if legacy == "queue":
             return "queue"
         # No explicit legacy knob → follow busy_input_mode.
+        # Lazy import: GatewayRunner lives in gateway.run, which imports this
+        # mixin at module top, so importing it here avoids a circular import.
+        from gateway.run import GatewayRunner
+
         input_mode = GatewayRunner._load_busy_input_mode()
         return "queue" if input_mode == "queue" else "interrupt"
 

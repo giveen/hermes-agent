@@ -4,7 +4,58 @@ GatewayLifecycleMixin — extracted from gateway/run.py.
 
 from __future__ import annotations
 
+# Must be first (UTF-8 stdio on Windows — no-op on POSIX).
+try:
+    import hermes_bootstrap  # noqa: F401
+except ModuleNotFoundError:
+    pass
+
+import asyncio
+import concurrent.futures
+import dataclasses
+import inspect
+import json
 import logging
+import os
+import re
+import shlex
+import site
+import sys
+import signal
+import tempfile
+import threading
+import time
+import sqlite3
+from collections import OrderedDict
+from contextvars import copy_context
+from pathlib import Path
+from datetime import datetime
+from typing import Callable, Dict, Optional, Any, List, Union
+
+# Star import from helpers provides module-level utilities and functions
+# that lifecycle mixin methods depend on (same as run.py).
+from gateway.helpers import *  # noqa: F401,F811,F403
+from gateway.config import Platform
+from agent.onboarding import TOOL_PROGRESS_FLAG
+
+# Explicit imports of private constants that the star-import's __all__ excludes.
+from gateway.helpers import (
+    _ADAPTER_DISCONNECT_TIMEOUT_SECS_DEFAULT,
+    _AGENT_PENDING_SENTINEL,
+    _DOCKER_MEDIA_OUTPUT_CONTAINER_PATHS,
+    _DOCKER_VOLUME_SPEC_RE,
+    _GATEWAY_PROXY_SSE_BUFFER_MAX_CHARS,
+    _INTERRUPT_REASON_TIMEOUT,
+    _PLATFORM_CONNECT_TIMEOUT_SECS_DEFAULT,
+    _PORT_BINDING_PLATFORM_VALUES,
+)
+
+from agent.account_usage import fetch_account_usage, render_account_usage_lines
+from agent.async_utils import safe_schedule_threadsafe
+from agent.conversation_loop import INTERRUPT_WAITING_FOR_MODEL_PREFIX
+from agent.i18n import t
+from hermes_cli.config import cfg_get
+from hermes_cli.fallback_config import get_fallback_chain
 
 logger = logging.getLogger(__name__)
 

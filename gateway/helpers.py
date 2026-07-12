@@ -1786,6 +1786,7 @@ def _own_policy_open_startup_violation(config) -> Optional[str]:
         dm_env, group_env, allow_all_env = open_env
         extra = getattr(platform_config, "extra", None) or {}
         dm_policy = str(
+            extra.get("dm_policy")
             or (os.getenv(dm_env, "pairing") if dm_env else "pairing")
         ).strip().lower()
         group_policy = str(
@@ -3194,6 +3195,11 @@ async def start_gateway(config: Optional[GatewayConfig] = None, replace: bool = 
         if _stderr_level < logging.getLogger().level:
             logging.getLogger().setLevel(_stderr_level)
 
+    # `GatewayRunner` is defined in `gateway.run`; import it lazily here
+    # (call-time) so we don't re-introduce a circular import at module load.
+    # `gateway.run` is always fully imported by the time `start_gateway` runs.
+    from gateway.run import GatewayRunner
+
     runner = GatewayRunner(config)
     
     # Track whether an unexpected signal initiated the shutdown. When an
@@ -3667,6 +3673,8 @@ if __name__ == "__main__":
 
 # Exported for re-import by gateway.run
 __all__ = [
+    "_ADAPTER_DISCONNECT_TIMEOUT_SECS_DEFAULT",
+    "_AGENT_PENDING_SENTINEL",
     "_auto_continue_freshness_window",
     "_await_thread_exit",
     "_bridge_max_turns_from_config",
@@ -3680,13 +3688,18 @@ __all__ = [
     "_coerce_gateway_timestamp",
     "_collect_auto_append_media_tags",
     "_collect_history_media_paths",
+    "_config_path",
+    "_configured_cwd",
     "_credential_pool_for_provider",
     "_current_max_iterations",
     "_dequeue_pending_event",
     "_dispose_unused_adapter",
+    "_DOCKER_MEDIA_OUTPUT_CONTAINER_PATHS",
+    "_DOCKER_VOLUME_SPEC_RE",
     "_drain_gateway_watch_events",
     "_ensure_ssl_certs",
     "_ensure_windows_gateway_venv_imports",
+    "_env_path",
     "_event_media_is_audio",
     "_event_media_is_image",
     "_event_media_is_video",
@@ -3695,6 +3708,7 @@ __all__ = [
     "_float_env",
     "_format_duration",
     "_format_gateway_process_notification",
+    "_GATEWAY_PROXY_SSE_BUFFER_MAX_CHARS",
     "_gateway_config_home",
     "_gateway_loop_exception_handler",
     "_gateway_platform_value",
@@ -3702,8 +3716,10 @@ __all__ = [
     "_gateway_surface_passes_raw_text",
     "_get_channel_override",
     "_has_platform_display_override",
+    "_hermes_home",
     "_home_target_env_var",
     "_home_thread_env_var",
+    "_INTERRUPT_REASON_TIMEOUT",
     "_is_auto_continue_noise",
     "_is_control_interrupt_message",
     "_is_fresh_gateway_interruption",
@@ -3719,7 +3735,9 @@ __all__ = [
     "_parse_session_key",
     "_planned_restart_notification_path",
     "_planned_restart_notification_pending",
+    "_PLATFORM_CONNECT_TIMEOUT_SECS_DEFAULT",
     "_platform_config_key",
+    "_PORT_BINDING_PLATFORM_VALUES",
     "_prepare_gateway_status_message",
     "_preserve_queued_followup_history_offset",
     "_probe_audio_duration",
