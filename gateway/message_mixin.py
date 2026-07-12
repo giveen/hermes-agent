@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from gateway.helpers import *  # noqa: F401,F811,F403
+from gateway.config import Platform
 
 logger = logging.getLogger(__name__)
 
