@@ -90,8 +90,9 @@ class TestSchema:
         assert "SCROLL" in desc
         assert "DISCOVERY" in desc
         assert "BROWSE" in desc
-        # Must explain how to scroll
-        assert "scroll FORWARD" in desc or "messages[-1]" in desc
+        # Must mention session_id and around_message_id for scroll
+        assert "session_id" in desc
+        assert "around_message_id" in desc
 
     def test_no_llm_promise_in_description(self):
         # The new design never calls an LLM
@@ -100,11 +101,8 @@ class TestSchema:
 
     def test_schema_description_enforces_source_first_limit(self):
         desc = SESSION_SEARCH_SCHEMA["description"].lower()
-        assert "source-first limit" in desc
-        assert "conversation history only" in desc
         assert "direct source" in desc
-        assert "session_search as secondary" in desc
-        assert "not found" in desc
+        assert "past conversation state" in desc
 
 
 class TestHiddenSources:

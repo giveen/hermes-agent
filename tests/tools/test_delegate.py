@@ -110,7 +110,8 @@ class TestDelegateRequirements(unittest.TestCase):
         # Top-level description names the user's spawn-depth limit explicitly.
         self.assertIn(f"max_spawn_depth={max_depth}", desc)
         # tasks parameter description repeats the concurrency cap.
-        self.assertIn(f"up to {max_children}", tasks_desc)
+        # tasks parameter description repeats the concurrency cap.
+        self.assertIn(f"max {max_children}", tasks_desc)
         # role parameter description names the spawn-depth limit.
         self.assertIn(f"max_spawn_depth={max_depth}", role_desc)
         # The misleading "default 3" / "default 2" wording is gone from

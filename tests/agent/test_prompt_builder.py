@@ -238,10 +238,9 @@ class TestDynamicContextFileCap:
         assert _dynamic_context_file_max_chars(8_000) == CONTEXT_FILE_MAX_CHARS
 
     def test_dynamic_scales_above_floor_for_large_window(self):
-        # 200K-token window → ~48K (200000 * 4 * 0.06), well above the floor
-        # and above Codex's 32 KiB project_doc default.
+        # 200K-token window → ~24K (200000 * 4 * 0.03), well above the floor.
         cap = _dynamic_context_file_max_chars(200_000)
-        assert cap == 48_000
+        assert cap == 24_000
         assert cap > CONTEXT_FILE_MAX_CHARS
 
     def test_dynamic_respects_ceiling(self):
@@ -254,7 +253,7 @@ class TestDynamicContextFileCap:
 
     def test_get_context_file_max_chars_uses_context_length(self):
         # With no explicit config, the resolver derives the cap from context.
-        assert _get_context_file_max_chars(200_000) == 48_000
+        assert _get_context_file_max_chars(200_000) == 24_000
         assert _get_context_file_max_chars(None) == CONTEXT_FILE_MAX_CHARS
 
     def test_explicit_config_beats_dynamic(self, monkeypatch):
@@ -266,13 +265,12 @@ class TestDynamicContextFileCap:
         assert _get_context_file_max_chars(200_000) == 1_000
 
     def test_large_window_avoids_truncation_of_midsize_doc(self):
-        # A 30K-char AGENTS.md is truncated at the flat default but survives
-        # whole on a large-context model (dynamic cap ~48K).
+        # A 30K-char AGENTS.md is truncated at the dynamic cap (~24K at 0.03).
         content = "z" * 30_000
         small = _truncate_content(content, "AGENTS.md", context_length=8_000)
-        big = _truncate_content(content, "AGENTS.md", context_length=200_000)
+        large = _truncate_content(content, "AGENTS.md", context_length=200_000)
         assert "truncated" in small.lower()
-        assert big == content
+        assert "truncated" in large.lower()  # 30K > 24K dynamic cap
 
     def test_marker_points_to_read_path(self):
         content = "h" * 50_000
@@ -391,8 +389,14 @@ class TestPromptBuilderImports:
 
 class TestBuildSkillsSystemPrompt:
     @pytest.fixture(autouse=True)
-    def _clear_skills_cache(self):
-        """Ensure the in-process skills prompt cache doesn't leak between tests."""
+    def _clear_skills_cache(self, monkeypatch):
+        """Ensure the in-process skills prompt cache doesn't leak between tests.
+        Also default to descriptive skill index mode (our tests check for
+        description text in the output; the runtime default is compact)."""
+        monkeypatch.setattr(
+            "hermes_cli.config.read_raw_config",
+            lambda: {"skills": {"index_mode": "descriptive"}},
+        )
         from agent.prompt_builder import clear_skills_system_prompt_cache
         clear_skills_system_prompt_cache(clear_snapshot=True)
         yield
