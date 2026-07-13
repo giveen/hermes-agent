@@ -185,29 +185,33 @@ def build_system_prompt_parts(agent: Any, system_message: Optional[str] = None) 
         stable_parts.append(PARALLEL_TOOL_CALL_GUIDANCE)
 
     # Tool-aware behavioral guidance: only inject when the tools are loaded
+    # and tool_specific_guidance is enabled.
     tool_guidance = []
-    if "memory" in agent.valid_tool_names:
-        tool_guidance.append(MEMORY_GUIDANCE)
-    if "session_search" in agent.valid_tool_names:
-        tool_guidance.append(SESSION_SEARCH_GUIDANCE)
-    if "skill_manage" in agent.valid_tool_names:
-        tool_guidance.append(SKILLS_GUIDANCE)
-    # Kanban worker/orchestrator lifecycle — only present when the
-    # dispatcher spawned this process (kanban_show check_fn gates on
-    # HERMES_KANBAN_TASK env var). Normal chat sessions never see
-    # this block. Resolved once at __init__ (see _kanban_worker_guidance).
+    if getattr(agent, "_tool_specific_guidance", False):
+        if "memory" in agent.valid_tool_names:
+            tool_guidance.append(MEMORY_GUIDANCE)
+        if "session_search" in agent.valid_tool_names:
+            tool_guidance.append(SESSION_SEARCH_GUIDANCE)
+        if "skill_manage" in agent.valid_tool_names:
+            tool_guidance.append(SKILLS_GUIDANCE)
+        if tool_guidance:
+            stable_parts.append(" ".join(tool_guidance))
+
+    # Kanban worker/orchestrator lifecycle — always injected when active
+    # (dispatcher-spawned process or kanban tool loaded). This is operational
+    # guidance, not optional — kanban workers need lifecycle instructions.
     _kanban_guidance = getattr(agent, "_kanban_worker_guidance", None)
     if _kanban_guidance:
-        tool_guidance.append(_kanban_guidance)
+        stable_parts.append(_kanban_guidance)
     elif _kanban_guidance is None and "kanban_show" in agent.valid_tool_names:
         # Fallback for code paths that bypass agent_init (rare).
-        tool_guidance.append(KANBAN_GUIDANCE)
-    if tool_guidance:
-        stable_parts.append(" ".join(tool_guidance))
+        stable_parts.append(KANBAN_GUIDANCE)
 
     # Steering only lands inside tool results, so it's only reachable when the
     # agent has tools. Static text → byte-stable prompt (no cache hit).
-    if agent.valid_tool_names:
+    # Gated behind tool_specific_guidance since it teaches the model an advanced
+    # interaction pattern — useful but not essential.
+    if getattr(agent, "_tool_specific_guidance", False) and agent.valid_tool_names:
         stable_parts.append(STEER_CHANNEL_NOTE)
 
     # Computer-use — goes in as its own block rather than being merged into

@@ -70,34 +70,17 @@ COMPUTER_USE_SCHEMA: Dict[str, Any] = {
             "app": {
                 "type": "string",
                 "description": (
-                    "Optional. Limit capture/action to a specific app "
-                    "(by name, e.g. 'Safari', or bundle ID, "
-                    "'com.apple.Safari'). If omitted, operates on the "
-                    "frontmost app's window. Pass app='screen' (or "
-                    "'desktop') to capture the OS desktop/shell surface — "
-                    "e.g. to see the wallpaper or click the taskbar. Note: "
-                    "capture is per-window; a single image cannot span "
-                    "multiple monitors, so on a multi-screen setup capture "
-                    "one window or display at a time."
+                    "Limit capture/action to a specific app (name or bundle ID). "
+                    "Omit for frontmost window. Use 'screen'/'desktop' for desktop surface."
                 ),
             },
             "max_elements": {
                 "type": "integer",
                 "description": (
-                    "Optional cap on the AX `elements` array returned by "
-                    "`action='capture'`. Default 100, hard maximum 1000. "
-                    "Dense UIs (Electron apps such as Obsidian or VS Code, "
-                    "JetBrains IDEs) can publish 500+ AX nodes — capping "
-                    "prevents a single capture from blowing session "
-                    "context. When the cap trims the response, "
-                    "`total_elements` and `truncated_elements` are "
-                    "surfaced in the result so you can re-call with "
-                    "`app=` to narrow scope or raise `max_elements` when "
-                    "the full tree is required. Has no effect on "
-                    "`mode='som'` / `mode='vision'` when a screenshot is "
-                    "included in the response; only the rare image-"
-                    "missing fallback returns an `elements` array and is "
-                    "subject to the cap."
+                    "Optional cap on AX elements (default 100, max 1000). "
+                    "Dense UIs can publish 500+ nodes. When trimmed, "
+                    "total_elements and truncated_elements are surfaced. "
+                    "Has no effect on mode='som'/'vision' (screenshot included)."
                 ),
                 "default": 100,
                 "minimum": 1,

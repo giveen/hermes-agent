@@ -952,7 +952,7 @@ DEFAULT_CONFIG = {
         # after a stub instead of finishing the artifact, (2) fabricating
         # plausible-looking output when a real path is blocked.  Costs ~80
         # tokens in the cached system prompt.  Set False to disable globally.
-        "task_completion_guidance": True,
+        "task_completion_guidance": False,
         # Universal parallel-tool-call guidance — short prompt block applied to
         # all models that tells the model to batch independent tool calls
         # (reads, searches, web fetches, read-only commands) into one turn
@@ -961,7 +961,12 @@ DEFAULT_CONFIG = {
         # batch — cutting round-trips and the resent-context cost that
         # compounds over a long conversation.  Costs ~70 tokens in the cached
         # system prompt.  Set False to disable globally.
-        "parallel_tool_call_guidance": True,
+        "parallel_tool_call_guidance": False,
+        # Tool-specific behavioral guidance in the system prompt: when loaded,
+        # the memory/session_search/skill_manage tools inject extra usage
+        # instructions.  Set False to skip all three (saves ~200 tokens in the
+        # cached system prompt).  The model can still use the tools normally.
+        "tool_specific_guidance": False,
         # Local-environment toolchain probe — surfaces Python/pip/uv/PEP-668
         # state in the system prompt when something non-default is detected
         # (e.g. python3 has no pip module, pip→python version mismatch, PEP
@@ -981,17 +986,18 @@ DEFAULT_CONFIG = {
         # app, ACP) in a code workspace, Hermes adds a coding operating brief
         # + a live git/workspace snapshot to the system prompt. See
         # agent/coding_context.py.
-        #   "auto" (default) — prompt-only posture when the surface is
+        #   "auto"             — prompt-only posture when the surface is
         #                      interactive AND cwd is a code workspace.
         #                      Toolsets are never touched; messaging platforms
         #                      unaffected.
-        #   "focus"          — auto + collapse the toolset to the lean coding
+        #   "focus" (default)  — auto + collapse the toolset to the lean coding
         #                      set (+ enabled MCP servers) + demote non-coding
         #                      skill categories to names-only in the prompt's
-        #                      skill index. Explicit opt-in.
+        #                      skill index. Toolsets are narrowed; messaging
+        #                      platforms unaffected.
         #   "on"             — force the prompt posture everywhere.
         #   "off"            — disable entirely.
-        "coding_context": "auto",
+        "coding_context": "focus",       # "auto" | "focus" | "on" | "off"
         # Standing operator instructions for the coding posture. A string (or
         # list of strings) appended to the coding brief as an extra stable
         # system block — pin project-wide workflow rules here instead of editing
@@ -1329,9 +1335,9 @@ DEFAULT_CONFIG = {
 
     "compression": {
         "enabled": True,
-        "threshold": 0.50,            # compress when context usage exceeds this ratio
+        "threshold": 0.35,            # compress when context usage exceeds this ratio
         "target_ratio": 0.20,         # fraction of threshold to preserve as recent tail
-        "protect_last_n": 20,         # minimum recent messages to keep uncompressed
+        "protect_last_n": 10,         # minimum recent messages to keep uncompressed
         "hygiene_hard_message_limit": 5000,  # gateway session-hygiene force-compress threshold by message count
         "protect_first_n": 3,         # non-system head messages always preserved
                                       # verbatim, in ADDITION to the system prompt
@@ -2228,6 +2234,11 @@ DEFAULT_CONFIG = {
     # always goes to ~/.hermes/skills/.
     "skills": {
         "external_dirs": [],   # e.g. ["~/.agents/skills", "/shared/team-skills"]
+        # Skill index mode in the system prompt: "compact" (names-only
+        # listing — saves ~1,500+ tokens), "descriptive" (names + descriptions),
+        # or "off" (no skills index at all — use skills_list/skill_view to
+        # discover skills on demand).
+        "index_mode": "compact",
         # Substitute ${HERMES_SKILL_DIR} and ${HERMES_SESSION_ID} in SKILL.md
         # content with the absolute skill directory and the active session id
         # before the agent sees it.  Lets skill authors reference bundled

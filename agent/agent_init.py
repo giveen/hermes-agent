@@ -1452,6 +1452,11 @@ def init_agent(
     # single turn; the runtime already executes such batches concurrently.
     agent._parallel_tool_call_guidance = bool(_agent_section.get("parallel_tool_call_guidance", True))
 
+    # Tool-specific behavioral guidance toggle. Default False. When False,
+    # MEMORY_GUIDANCE, SESSION_SEARCH_GUIDANCE, SKILLS_GUIDANCE, and
+    # STEER_CHANNEL_NOTE are omitted from the system prompt.
+    agent._tool_specific_guidance = bool(_agent_section.get("tool_specific_guidance", False))
+
     # Local Python toolchain probe toggle.  Default True.  When False,
     # the probe is skipped entirely (no subprocess calls, no system-prompt
     # line).  Useful for users on exotic setups where the probe heuristics

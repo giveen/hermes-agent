@@ -1054,7 +1054,7 @@ CONTEXT_TRUNCATE_TAIL_RATIO = 0.2
 # slice of the window on context files since they share the cached prefix with
 # the system prompt, tools, memory, and the whole conversation.
 _CONTEXT_FILE_CHARS_PER_TOKEN = 4
-_CONTEXT_FILE_WINDOW_FRACTION = 0.06
+_CONTEXT_FILE_WINDOW_FRACTION = 0.03  # fraction of context window for dynamic context-file cap; lower = smaller files auto-injected
 _CONTEXT_FILE_DYNAMIC_CEILING = 500_000
 
 
@@ -1319,6 +1319,17 @@ def build_skills_system_prompt(
     if not skills_dir.exists() and not external_dirs:
         return ""
 
+    # Determine index mode: compact (names-only), descriptive (names+descriptions),
+    # or off (no index at all).  Falls back to "compact" for this fork.
+    _index_mode = "compact"
+    try:
+        from hermes_cli.config import read_raw_config
+        _index_mode = (read_raw_config().get("skills", {}).get("index_mode") or "compact")
+    except Exception:
+        pass
+    if _index_mode == "off":
+        return ""
+
     # ── Layer 1: in-process LRU cache ─────────────────────────────────
     # Include the resolved platform so per-platform disabled-skill lists
     # produce distinct cache entries (gateway serves multiple platforms).
@@ -1337,6 +1348,7 @@ def build_skills_system_prompt(
         _platform_hint,
         tuple(sorted(disabled)),
         tuple(sorted(compact_categories or ())),
+        _index_mode,
     )
     with _SKILLS_PROMPT_CACHE_LOCK:
         cached = _SKILLS_PROMPT_CACHE.get(cache_key)
@@ -1496,28 +1508,43 @@ def build_skills_system_prompt(
         result = ""
     else:
         index_lines = []
-        for category in sorted(skills_by_category.keys()):
-            # Deduplicate and sort skills within each category
-            seen = set()
-            if category in demoted:
-                names = sorted({name for name, _ in skills_by_category[category]})
-                index_lines.append(f"  {category} [names only]: {', '.join(names)}")
-                continue
-            cat_desc = category_descriptions.get(category, "")
-            if cat_desc:
-                index_lines.append(f"  {category}: {cat_desc}")
-            else:
-                index_lines.append(f"  {category}:")
-            for name, desc in sorted(skills_by_category[category], key=lambda x: x[0]):
-                if name in seen:
+        if _index_mode == "compact":
+            # Names-only: just list skill names per category. Descriptions
+            # omitted — the model uses skill_view(name) to see details.
+            for category in sorted(skills_by_category.keys()):
+                seen = set()
+                names = sorted({
+                    name for name, _ in skills_by_category[category]
+                    if name not in seen and not seen.add(name)
+                })
+                if names:
+                    index_lines.append(f"  {category}:")
+                    for name in names:
+                        index_lines.append(f"    - {name}")
+        else:
+            # Descriptive mode: include descriptions (current behavior)
+            for category in sorted(skills_by_category.keys()):
+                seen = set()
+                if category in demoted:
+                    names = sorted({name for name, _ in skills_by_category[category]})
+                    index_lines.append(f"  {category} [names only]: {', '.join(names)}")
                     continue
-                seen.add(name)
-                if desc:
-                    index_lines.append(f"    - {name}: {desc}")
+                cat_desc = category_descriptions.get(category, "")
+                if cat_desc:
+                    index_lines.append(f"  {category}: {cat_desc}")
                 else:
-                    index_lines.append(f"    - {name}")
+                    index_lines.append(f"  {category}:")
+                for name, desc in sorted(skills_by_category[category], key=lambda x: x[0]):
+                    if name in seen:
+                        continue
+                    seen.add(name)
+                    if desc:
+                        index_lines.append(f"    - {name}: {desc}")
+                    else:
+                        index_lines.append(f"    - {name}")
 
-        result = (
+        # Header guidance
+        header = (
             "## Skills (mandatory)\n"
             "Before replying, scan the skills below. If a skill matches or is even partially relevant "
             "to your task, you MUST load it with skill_view(name) and follow its instructions. "
@@ -1544,8 +1571,15 @@ def build_skills_system_prompt(
             "</available_skills>\n"
             "\n"
             "Only proceed without loading a skill if genuinely none are relevant to the task."
-            + hidden_note
         )
+        if _index_mode == "compact":
+            header += (
+                "\n\n"
+                "(Index shows names only. Use skill_view(name) to see a skill's "
+                "full description and instructions before using it.)"
+            )
+        header += hidden_note
+        result = header
 
     # ── Store in LRU cache ────────────────────────────────────────────
     with _SKILLS_PROMPT_CACHE_LOCK:
